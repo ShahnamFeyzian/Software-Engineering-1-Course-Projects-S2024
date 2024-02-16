@@ -3,7 +3,9 @@ package org.example;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,22 +16,39 @@ public class Main {
         Date nextDay = date.nextDay();
         System.out.println("Given Date: " + date + ", Next Date: " + nextDay);
 
-
         String filePath = "src/main/resources/data/players.csv";
         Map<String, Player> players = readPlayersFromCSV(filePath);
-        for (Player player : players.values()) {
-            System.out.println("Player: " + player.getName());
-            Map<String, Integer> daysAsMemberByTeam = player.getDaysAsMemberByTeam();
+        try (
+            PrintWriter writer = new PrintWriter(
+                new FileWriter("src/main/resources/data/result.ansi", false)
+            )
+        ) {
+            for (Player player : players.values()) {
+                writer.println(
+                    "\u001B[34mPlayer: " + player.getName() + "\u001B[0m"
+                );
 
-            for (Map.Entry<String, Integer> entry : daysAsMemberByTeam.entrySet()) {
-                String teamName = entry.getKey();
-                int totalMembershipDays = entry.getValue();
+                Map<String, Integer> daysAsMemberByTeam = player.getDaysAsMemberByTeam();
 
-                System.out.println("  Team: " + teamName + " - Total Membership Days: " + totalMembershipDays);
-                System.out.println("--------------------");
+                for (Map.Entry<String, Integer> entry : daysAsMemberByTeam.entrySet()) {
+                    String teamName = entry.getKey();
+                    int totalMembershipDays = entry.getValue();
+
+                    writer.println(
+                        "\u001B[32m  Team: " +
+                        teamName +
+                        " - Total Membership Days: " +
+                        totalMembershipDays +
+                        "\u001B[0m"
+                    );
+                    writer.println("\u001B[35m--------------------\u001B[0m");
+                }
+
+                writer.println("\u001B[36m\n*********************\n\u001B[0m");
             }
-
-            System.out.println("\n*********************\n");
+            System.out.println("Result written to result.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

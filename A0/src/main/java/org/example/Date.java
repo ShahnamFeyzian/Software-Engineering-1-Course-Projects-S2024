@@ -72,9 +72,7 @@ public class Date implements Comparable<Date> {
         if (month < 1 || month > 12) throw new IllegalArgumentException(
             "Invalid value for month"
         );
-        if (month < 7) return 31; else if (
-            month < 12
-        ) return 30; else return isLeapYear(year) ? 30 : 29;
+        if (month < 7) return 31; else if (month < 12) return 30; else return isLeapYear(year) ? 30 : 29;
     }
 
     private static boolean isLeapYear(int year) {
