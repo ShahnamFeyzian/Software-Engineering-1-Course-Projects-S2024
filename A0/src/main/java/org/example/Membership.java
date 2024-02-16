@@ -21,4 +21,8 @@ public class Membership {
     public int getMembershipDays() {
         return startDate.daysBetween(endDate);
     }
+
+    public String getTeamName() {
+        return teamName;
+    }
 }

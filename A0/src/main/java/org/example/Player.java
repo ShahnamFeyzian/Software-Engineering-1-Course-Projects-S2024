@@ -1,8 +1,11 @@
 package org.example;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Player {
+
     private String name;
     private ArrayList<Membership> memberships = new ArrayList<>();
 
@@ -17,5 +20,16 @@ public class Player {
             }
         }
         memberships.add(membership);
+    }
+
+    public Map<String, Integer> getDaysAsMemberByTeam() {
+        return memberships
+            .stream()
+            .collect(
+                Collectors.groupingBy(
+                    Membership::getTeamName,
+                    Collectors.summingInt(Membership::getMembershipDays)
+                )
+            );
     }
 }
