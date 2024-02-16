@@ -90,4 +90,14 @@ public class Date implements Comparable<Date> {
             r == 30
         );
     }
+
+    public int daysBetween(Date other) {
+        int days = 0;
+        Date d = new Date(day, month, year);
+        while (d.compareTo(other) < 0) {
+            days++;
+            d = d.nextDay();
+        }
+        return days;
+    }
 }
