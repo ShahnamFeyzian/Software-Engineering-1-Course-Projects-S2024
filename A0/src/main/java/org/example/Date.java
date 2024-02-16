@@ -2,7 +2,7 @@ package org.example;
 
 import java.util.Objects;
 
-public class Date {
+public class Date implements Comparable<Date> {
 
     private final int day;
     private final int month;
@@ -20,6 +20,17 @@ public class Date {
         this.day = day;
         this.month = month;
         this.year = year;
+    }
+
+    @Override
+    public int compareTo(Date other) {
+        if (this.year != other.year) {
+            return this.year - other.year;
+        }
+        if (this.month != other.month) {
+            return this.month - other.month;
+        }
+        return this.day - other.day;
     }
 
     public Date nextDay() {
