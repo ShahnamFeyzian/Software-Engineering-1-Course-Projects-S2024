@@ -1,3 +1,8 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
 # Compiled class file
 *.class
 
@@ -30,6 +35,7 @@ replay_pid*
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+.idea/
 
 # antlr
 .antlr
