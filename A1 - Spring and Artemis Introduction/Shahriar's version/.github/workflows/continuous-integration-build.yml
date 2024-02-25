@@ -25,17 +25,17 @@ jobs:
           cache: maven
 
       - name: Build Initial with Maven
-        working-directory: ${{ github.workspace }}/initial
+        working-directory: ${{ github.workspace }}/A1 - Spring and Artemis Introduction/Shahriar's version/initial
         run: ./mvnw --batch-mode clean package
 
       - name: Build Initial with Gradle
-        working-directory: ${{ github.workspace }}/initial
+        working-directory: ${{ github.workspace }}/A1 - Spring and Artemis Introduction/Shahriar's version/initial
         run: ./gradlew build
 
       - name: Build Complete with Maven
-        working-directory: ${{ github.workspace }}/complete
+        working-directory: ${{ github.workspace }}/A1 - Spring and Artemis Introduction/Shahriar's version/complete
         run: ./mvnw --batch-mode clean package
 
       - name: Build Complete with Gradle
-        working-directory: ${{ github.workspace }}/complete
+        working-directory: ${{ github.workspace }}/A1 - Spring and Artemis Introduction/Shahriar's version/complete
         run: ./gradlew build
