@@ -36,8 +36,54 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 .idea/
+*.iws
+*.iml
+*.ipr
 
 # antlr
 .antlr
 libraries/
 gen/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Eclipse
+.classpath
+.project
+.settings/
+*.launch
+*.iml
+*.ipr
+*.iws
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
+.factorypath
+.cproject
+.settings
+.remoteSystemsTempFiles
