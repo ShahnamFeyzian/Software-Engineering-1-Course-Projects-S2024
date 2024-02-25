@@ -10,13 +10,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Main {
-
+    
+    private static final String filePath = "src/main/resources/data/players.csv";
+    
     public static void main(String[] args) {
         Date date = new Date(18, 11, 1402);
         Date nextDay = date.nextDay();
         System.out.println("Given Date: " + date + ", Next Date: " + nextDay);
 
-        String filePath = "src/main/resources/data/players.csv";
         Map<String, Player> players = readPlayersFromCSV(filePath);
         try (
             PrintWriter writer = new PrintWriter(

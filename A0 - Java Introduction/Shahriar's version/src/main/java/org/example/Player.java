@@ -12,6 +12,11 @@ public class Player {
     public Player(String name) {
         this.name = name;
     }
+    
+    public Player(String name, ArrayList<Membership> memberships) {
+        this.name = name;
+        this.memberships = memberships;
+    }
 
     public void addMembership(Membership membership) {
         for (Membership m : memberships) {
@@ -31,6 +36,10 @@ public class Player {
                     Collectors.summingInt(Membership::getMembershipDays)
                 )
             );
+    }
+
+    public int getDaysAsMemberByTeam(String teamName) {
+        return getDaysAsMemberByTeam().get(teamName);
     }
 
     public String getName() {
