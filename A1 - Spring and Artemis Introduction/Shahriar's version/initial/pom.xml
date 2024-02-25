@@ -75,6 +75,20 @@
 				test
 			</scope>
 		</dependency>
+		<dependency>
+			<groupId>
+				org.apache.activemq
+			</groupId>
+			<artifactId>
+				artemis-junit-5
+			</artifactId>
+			<version>
+				2.32.0
+			</version>
+			<scope>
+				test
+			</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
