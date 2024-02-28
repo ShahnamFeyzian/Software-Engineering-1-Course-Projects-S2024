@@ -12,7 +12,7 @@ public class Bank {
     private static final String INQ = "INQ";
 
     @Autowired
-    private BankAccountService bankAccountService;
+    private BankAccountsService bankAccountService;
 
     @JmsListener(destination = INQ)
     public void listener(String message) {

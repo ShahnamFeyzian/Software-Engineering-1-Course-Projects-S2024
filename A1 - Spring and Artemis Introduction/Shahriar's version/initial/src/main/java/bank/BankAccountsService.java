@@ -8,7 +8,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-public class BankAccountService {
+public class BankAccountsService {
 
     private static final String OUTQ = "OUTQ";
 
