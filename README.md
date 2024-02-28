@@ -16,6 +16,6 @@ In this assignment, we were supposed to implement a simple console-based applica
 
 ## Assignment 1
 
-In this assignment, we were supposed to implement a simple JMS application using Spring Boot and Artemis. The application is a simple chat application that uses JMS to send and receive messages. 
+In this assignment, we were supposed to implement a simple JMS application using Spring Boot and Artemis. The application is a simple chat application that uses JMS to send and receive messages.
 
 ## Assignment 2
