@@ -4,6 +4,7 @@ For further reference, please consider the following sections:
 
 * [Introduction to Matching Engine](https://docs.google.com/document/d/1flJFnrSlIbnBzFYMGcPgkrp4qjbuk9RGwOjKvhudEFo/edit?usp=sharing)
 * [Chronicle Matching Engine](https://chronicle.software/wp-content/uploads/2022/11/Matching_Engine_TR.pdf)
+* [TinyME](https://github.com/SE1-ECE-UT/TinyME)
 
 ### Guides
 
