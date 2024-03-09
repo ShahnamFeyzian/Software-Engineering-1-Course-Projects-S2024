@@ -9,6 +9,6 @@ import org.springframework.jms.annotation.EnableJms;
 public class TinyMeApplication {
 
 	public static void main(String[] args) {
-		// SpringApplication.run(TinyMeApplication.class, args);
+		SpringApplication.run(TinyMeApplication.class, args);
 	}
 }
