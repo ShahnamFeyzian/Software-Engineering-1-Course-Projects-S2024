@@ -5,6 +5,7 @@
   - [Assignment 0](#assignment-0)
   - [Assignment 1](#assignment-1)
   - [Assignment 2](#assignment-2)
+  - [Assignment 3](#assignment-3)
 
 ## Intro
 
@@ -19,3 +20,9 @@ In this assignment, we were supposed to implement a simple console-based applica
 In this assignment, we were supposed to implement a simple JMS application using Spring Boot and Artemis. The application is a simple chat application that uses JMS to send and receive messages.
 
 ## Assignment 2
+
+This assignment was about code review and refactoring. We were given a simple Java application as `TinyME` (a simple matching engine) and we were supposed to review the code and refactor it.
+
+## Assignment 3
+
+In this assignment, we were supposed to add complementary unit tests to the `TinyME` application to increase the code coverage. The tests were supposed to be written using JUnit and Mockito. Each individual was supposed to write the tests for the corresponding version of the `TinyME` application, and then we added the tests to the main `TinyME` folder.
