@@ -20,29 +20,6 @@ git stash pop -q
 # print a message
 echo "building and testing done"
 echo "the result is $RESULT (0 is good)"
-if [ $RESULT -ne 0 ]; then
-    echo "commit aborted"
-    exit 1
-fi
-
-# Prettier formatting
-CLR_YLW="\033[1;33m"
-CLR_GRN="\033[1;32m"
-CLR_RST="\033[0m"
-
-format_file() {
-    file="$1"
-    if [[ -f $file ]]; then
-        echo -e "${CLR_GRN}Formatting ${file}${CLR_RST}"
-        prettier --write "$file"
-        git add "$file"
-    fi
-}
-
-echo -e "${CLR_YLW}Running Prettier on staged files${CLR_RST}"
-for file in $(git diff-index --cached --name-only HEAD | grep -iE '\.(js|jsx|ts|tsx|css|html|json|md)$'); do
-    format_file "$file"
-done
 
 # return the 'mvn clean install' exit code
 exit $RESULT
