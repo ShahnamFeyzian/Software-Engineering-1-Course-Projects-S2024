@@ -1,0 +1,3 @@
+.githooks/* linguist-vendored
+*.in text eol=lf
+*.csv text eol=lf
