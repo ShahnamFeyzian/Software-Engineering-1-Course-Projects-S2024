@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Import(MockedJMSTestConfig.class)
@@ -414,5 +415,49 @@ class SecurityTest {
 			.isThrownBy(() -> security.updateOrder(updateOrderRq, matcher));
 		assertThat(security.getOrderBook().getBuyQueue().get(2).getOrderId())
 			.isEqualTo(3);
+	}
+
+	@Test
+	void order_update_with_different_side() {
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.BUY,
+			350,
+			15700,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(5).snapshotWithQuantity(350));
+		assertThrows(
+			InvalidRequestException.class,
+			() -> security.updateOrder(updateOrderRq, matcher)
+		);
+	}
+
+	@Test
+	void order_update_with_non_existing_order() {
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			11,
+			java.time.LocalDateTime.now(),
+			Side.SELL,
+			350,
+			15700,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(5).snapshotWithQuantity(350));
+		assertThrows(
+			InvalidRequestException.class,
+			() -> security.updateOrder(updateOrderRq, matcher)
+		);
 	}
 }
