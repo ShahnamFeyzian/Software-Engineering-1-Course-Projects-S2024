@@ -2,6 +2,7 @@ package ir.ramtung.tinyme.domain;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import ir.ramtung.tinyme.config.MockedJMSTestConfig;
 import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
@@ -12,7 +13,13 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 
+@SpringBootTest
+@Import(MockedJMSTestConfig.class)
+@DirtiesContext
 public class BrokerCreditTest {
 
 	private Security security;
@@ -363,30 +370,6 @@ public class BrokerCreditTest {
 	}
 
 	@Test
-	void credit_changes_after_order_update() {
-		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
-			1,
-			security.getIsin(),
-			6,
-			java.time.LocalDateTime.now(),
-			Side.SELL,
-			350,
-			15700,
-			0,
-			0,
-			0
-		);
-		matcher = new Matcher();
-		matcher.match(orders.get(5).snapshotWithQuantity(350));
-		try {
-			security.updateOrder(updateOrderRq, matcher);
-			assertEquals(4872800, broker.getCredit());
-		} catch (InvalidRequestException e) {
-			fail("Exception thrown");
-		}
-	}
-
-	@Test
 	void credit_changes_after_order_update_with_different_price() {
 		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
 			1,
@@ -429,6 +412,117 @@ public class BrokerCreditTest {
 		try {
 			security.updateOrder(updateOrderRq, matcher);
 			assertEquals(4810000, broker.getCredit());
+		} catch (InvalidRequestException e) {
+			fail("Exception thrown");
+		}
+	}
+
+	@Test
+	void credit_changes_after_delete_order() {
+		DeleteOrderRq deleteOrderRq = new DeleteOrderRq(
+			1,
+			security.getIsin(),
+			Side.BUY,
+			1
+		);
+		matcher = new Matcher();
+		try {
+			security.deleteOrder(deleteOrderRq);
+			assertEquals(4872800, broker.getCredit());
+		} catch (InvalidRequestException e) {
+			fail("Exception thrown");
+		}
+	}
+
+	@Test
+	void test_update_order_with_different_price() {
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.SELL,
+			350,
+			15750,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(5).snapshotWithQuantity(350));
+		try {
+			security.updateOrder(updateOrderRq, matcher);
+			assertEquals(100000, broker.getCredit());
+		} catch (InvalidRequestException e) {
+			fail("Exception thrown");
+		}
+	}
+
+	@Test
+	void update_order_of_different_side() {
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.BUY,
+			350,
+			15700,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(5).snapshotWithQuantity(350));
+		assertThrows(
+			InvalidRequestException.class,
+			() -> security.updateOrder(updateOrderRq, matcher)
+		);
+	}
+
+	@Test
+	void credit_update_after_seller_update_quantity() {
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.SELL,
+			300,
+			15700,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(4).snapshotWithQuantity(300));
+		try {
+			security.updateOrder(updateOrderRq, matcher);
+			assertEquals(4810000, broker.getCredit());
+		} catch (InvalidRequestException e) {
+			fail("Exception thrown");
+		}
+	}
+
+	@Test
+	void credit_update_after_seller_update_price() {
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.SELL,
+			350,
+			15750,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(3).snapshotWithQuantity(350));
+		try {
+			security.updateOrder(updateOrderRq, matcher);
+			assertEquals(100000, broker.getCredit());
 		} catch (InvalidRequestException e) {
 			fail("Exception thrown");
 		}
