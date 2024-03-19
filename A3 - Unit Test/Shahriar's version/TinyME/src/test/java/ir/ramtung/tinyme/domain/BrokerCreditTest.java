@@ -16,6 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 @SpringBootTest
 @Import(MockedJMSTestConfig.class)
@@ -525,6 +528,174 @@ public class BrokerCreditTest {
 			assertEquals(100000, broker.getCredit());
 		} catch (InvalidRequestException e) {
 			fail("Exception thrown");
+		}
+	}
+
+	@Test 
+	void check_match_result_not_matched_when_credit_zero() {
+		security = Security.builder().build();
+		broker = Broker.builder().brokerId(0).credit(0).build();
+		orders.forEach(order -> security.getOrderBook().enqueue(order));
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.SELL,
+			350,
+			15700,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(5).snapshotWithQuantity(350));
+		try {
+			MatchResult result = security.updateOrder(updateOrderRq, matcher);
+			assertThat(result.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+			assertEquals(MatchResult.notEnoughCredit(), result);
+		} catch (InvalidRequestException e) {
+			assertEquals("Not enough credit", e.getMessage());
+		}
+	}
+
+	@Test
+	void check_match_result_not_matched_when_credit_negative() {
+		security = Security.builder().build();
+		broker = Broker.builder().brokerId(0).credit(-100).build();
+		orders.forEach(order -> security.getOrderBook().enqueue(order));
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.SELL,
+			350,
+			15700,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(5).snapshotWithQuantity(350));
+		try {
+			MatchResult result = security.updateOrder(updateOrderRq, matcher);
+			assertThat(result.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+			assertEquals(MatchResult.notEnoughCredit(), result);
+		} catch (InvalidRequestException e) {
+			assertEquals("Not enough credit", e.getMessage());
+		}
+	}
+
+	@Test
+	void check_match_result_not_matched_when_credit_less_than_order_value() {
+		security = Security.builder().build();
+		broker = Broker.builder().brokerId(0).credit(100).build();
+		orders.forEach(order -> security.getOrderBook().enqueue(order));
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.SELL,
+			350,
+			15700,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(5).snapshotWithQuantity(350));
+		try {
+			MatchResult result = security.updateOrder(updateOrderRq, matcher);
+			assertThat(result.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+			assertEquals(MatchResult.notEnoughCredit(), result);
+		} catch (InvalidRequestException e) {
+			assertEquals("Not enough credit", e.getMessage());
+		}
+	}
+
+	@Test
+	void check_match_result_not_matched_when_credit_less_than_order_value_after_update() {
+		security = Security.builder().build();
+		broker = Broker.builder().brokerId(0).credit(100).build();
+		orders.forEach(order -> security.getOrderBook().enqueue(order));
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.SELL,
+			350,
+			15700,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(5).snapshotWithQuantity(350));
+		try {
+			MatchResult result = security.updateOrder(updateOrderRq, matcher);
+			assertThat(result.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+			assertEquals(MatchResult.notEnoughCredit(), result);
+		} catch (InvalidRequestException e) {
+			assertEquals("Not enough credit", e.getMessage());
+		}
+	}
+
+	@Test
+	void check_match_result_not_matched_when_credit_zero_after_update() {
+		security = Security.builder().build();
+		broker = Broker.builder().brokerId(0).credit(0).build();
+		orders.forEach(order -> security.getOrderBook().enqueue(order));
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.SELL,
+			350,
+			15700,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(5).snapshotWithQuantity(350));
+		try {
+			MatchResult result = security.updateOrder(updateOrderRq, matcher);
+			assertThat(result.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+			assertEquals(MatchResult.notEnoughCredit(), result);
+		} catch (InvalidRequestException e) {
+			assertEquals("Not enough credit", e.getMessage());
+		}
+	}
+
+	@Test
+	void check_match_result_not_matched_when_credit_negative_after_update() {
+		security = Security.builder().build();
+		broker = Broker.builder().brokerId(0).credit(-100).build();
+		orders.forEach(order -> security.getOrderBook().enqueue(order));
+		EnterOrderRq updateOrderRq = EnterOrderRq.createUpdateOrderRq(
+			1,
+			security.getIsin(),
+			6,
+			java.time.LocalDateTime.now(),
+			Side.SELL,
+			350,
+			15700,
+			0,
+			0,
+			0
+		);
+		matcher = new Matcher();
+		matcher.match(orders.get(5).snapshotWithQuantity(350));
+		try {
+			MatchResult result = security.updateOrder(updateOrderRq, matcher);
+			assertThat(result.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+			assertEquals(MatchResult.notEnoughCredit(), result);
+		} catch (InvalidRequestException e) {
+			assertEquals("Not enough credit", e.getMessage());
 		}
 	}
 }
