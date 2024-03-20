@@ -11,6 +11,14 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    services:
+      activemq:
+        image: vromero/activemq-artemis
+        ports:
+          - 61616:61616
+
+    
     permissions:
       contents: read
       packages: write
