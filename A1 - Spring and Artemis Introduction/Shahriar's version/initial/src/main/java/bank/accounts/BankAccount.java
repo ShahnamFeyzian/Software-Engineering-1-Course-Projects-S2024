@@ -1,10 +1,12 @@
-package bank;
+package bank.accounts;
+
+import bank.communication.Messages;
+import bank.communication.Codes;
 
 public class BankAccount {
     private String id;
     private int balance;
 
-    // constructor, getters and setters
     public BankAccount(String id, int balance) {
         this.id = id;
         this.balance = balance;
@@ -18,21 +20,13 @@ public class BankAccount {
         return balance;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setBalance(int balance) {
-        this.balance = balance;
-    }
-
     public void deposit(int amount) {
         balance += amount;
     }
 
     public void withdraw(int amount) {
         if (amount > balance) {
-            throw new IllegalArgumentException("1 Insufficient balance");
+            throw new IllegalArgumentException(Messages.getInsufficientMessage(Codes.INSUFFICIENT));
         }
         balance -= amount;
     }

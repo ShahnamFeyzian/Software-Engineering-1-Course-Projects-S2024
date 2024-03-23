@@ -87,15 +87,10 @@ public class Main {
 			while ((nextLine = reader.readNext()) != null) {
 				String playerName = nextLine[0];
 				Membership membership = getMembership(nextLine);
-
-				if (playerMap.containsKey(playerName)) {
-					Player existingPlayer = playerMap.get(playerName);
-					existingPlayer.addMembership(membership);
-				} else {
-					Player newPlayer = new Player(playerName);
-					newPlayer.addMembership(membership);
-					playerMap.put(playerName, newPlayer);
-				}
+				playerMap.computeIfAbsent(
+					playerName,
+					k -> new Player(playerName)
+				).addMembership(membership);
 			}
 		} catch (IOException | CsvValidationException e) {
 			e.printStackTrace();
