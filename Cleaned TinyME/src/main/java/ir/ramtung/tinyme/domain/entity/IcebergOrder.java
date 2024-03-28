@@ -52,9 +52,18 @@ public class IcebergOrder extends Order {
     }
 
     @Override
+    public void queue() {
+        super.queue();
+        if (displayedQuantity > quantity)
+            displayedQuantity = quantity;
+        // TODO
+        // asking for replenish
+    }
+
+    @Override
     public void decreaseQuantity(int amount) {
         if (status == OrderStatus.NEW) {
-            super.decreaseQuantity(amount);
+            super.decreaseQuantity(amount); 
             return;
         }
         if (amount > displayedQuantity || amount <= 0)
