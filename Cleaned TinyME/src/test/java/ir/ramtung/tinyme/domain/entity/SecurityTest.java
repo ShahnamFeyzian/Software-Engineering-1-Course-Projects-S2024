@@ -1,6 +1,7 @@
 package ir.ramtung.tinyme.domain.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import ir.ramtung.tinyme.domain.exception.NotFoundException;
 import ir.ramtung.tinyme.domain.service.Matcher;
 
 @SpringBootTest
@@ -79,12 +81,23 @@ public class SecurityTest {
         private static void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int price) {
             Order order = (side == Side.BUY) ? buyQueue.get(idx) : sellQueue.get(idx);
             long actualId = order.getOrderId();
-            int actualquantity = order.getQuantity();
+            int actualquantity = order.getTotalQuantity();
             int actualPrice = order.getPrice();
 
             assertThat(actualId).isEqualTo(orderId);
             assertThat(actualquantity).isEqualTo(quantity);
             assertThat(actualPrice).isEqualTo(price);
+        }
+
+        private static void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int price, int peakSize, int displayedQuantity) {
+            assertOrderInQueue(side, idx, orderId, quantity, price);
+            Order order = (side == Side.BUY) ? buyQueue.get(idx) : sellQueue.get(idx);
+            IcebergOrder iceOrder = (IcebergOrder) order;
+            int actualPeakSize = iceOrder.getPeakSize(); 
+            int actualDisplayedQuantity = iceOrder.getDisplayedQuantity();
+
+            assertThat(actualPeakSize).isEqualTo(peakSize);
+            assertThat(actualDisplayedQuantity).isEqualTo(displayedQuantity);
         }
     }
 
@@ -119,5 +132,52 @@ public class SecurityTest {
         AssertingPack.sellQueue = orderBook.getSellQueue();
         AssertingPack.buyQueue = orderBook.getBuyQueue();
         AssertingPack.initialize();
+    }
+
+    @Test
+    public void delete_sell_order() {
+        security.deleteOrder(Side.SELL, 2);
+        
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 1, 3, 10, 800);
+        AssertingPack.assertOrderInQueue(Side.BUY, 3, 2, 10, 200);
+    }
+
+    @Test
+    public void delete_buy_order() {
+        security.deleteOrder(Side.BUY, 3);
+        
+        AssertingPack.exceptedBuyerCredit = 3000;
+        
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
+        AssertingPack.assertOrderInQueue(Side.BUY, 2, 2, 10, 200);
+    }
+
+    @Test
+    public void delete_sell_ice_order() {
+        security.deleteOrder(Side.SELL, 5);
+
+        AssertingPack.assertAll();
+        assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> orderBook.getSellQueue().get(4));
+        AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+    }
+
+    @Test
+    public void delete_buy_ice_order() {
+        security.deleteOrder(Side.BUY, 5);
+
+        AssertingPack.exceptedBuyerCredit = 22500;
+
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
+        AssertingPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
+    }
+
+    @Test
+    public void delete_non_existing_order() {
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> security.deleteOrder(Side.SELL, 6));
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> security.deleteOrder(Side.BUY, 8));
+        AssertingPack.assertAll();
     }
 }
