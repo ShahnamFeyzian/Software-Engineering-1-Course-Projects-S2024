@@ -240,5 +240,6 @@ public class SecurityTest {
 
         AssertingPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+        AssertingPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
     }
 }
