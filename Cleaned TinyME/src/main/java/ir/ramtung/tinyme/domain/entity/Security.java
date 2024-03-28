@@ -84,8 +84,8 @@ public class Security {
             return;
         
         Shareholder shareholder = mainOrder.getShareholder();
-        int pervSalesAmount = mainOrder.getQuantity();
-        int newSalesAmount = tempOrder.getQuantity();
+        int pervSalesAmount = mainOrder.getTotalQuantity();
+        int newSalesAmount = tempOrder.getTotalQuantity();
         int queuedPositionAmount = orderBook.totalSellQuantityByShareholder(shareholder);
         int totalNeededPosition = newSalesAmount + queuedPositionAmount - pervSalesAmount;
         if (!shareholder.hasEnoughPositionsOn(this, totalNeededPosition)) 
