@@ -180,4 +180,13 @@ public class SecurityTest {
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> security.deleteOrder(Side.BUY, 8));
         AssertingPack.assertAll();
     }
+
+    @Test
+    public void decrease_sell_order_quantity() {
+        Order updatedSellOrder = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
+        security.updateOrder(updatedSellOrder, matcher);
+
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 4, 600);
+    }
 }
