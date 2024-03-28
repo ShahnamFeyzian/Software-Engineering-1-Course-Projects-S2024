@@ -189,4 +189,15 @@ public class SecurityTest {
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 4, 600);
     }
+
+    @Test
+    public void decrease_buy_order_quantity() {
+        Order updatedBuyOrder = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
+        security.updateOrder(updatedBuyOrder, matcher);
+
+        AssertingPack.exceptedBuyerCredit = 900;
+
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.BUY, 2, 3, 7, 300);
+    }
 }
