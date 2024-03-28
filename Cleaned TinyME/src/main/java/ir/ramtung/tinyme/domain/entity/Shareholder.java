@@ -33,7 +33,12 @@ public class Shareholder {
             throw new IllegalArgumentException("Amount to be decreased is greater than shareholder's current position");
         positions.put(security, currentPositions - amount);
     }
+
     public boolean hasEnoughPositionsOn(Security security, int position) {
         return positions.getOrDefault(security, 0) >= position;
     }
+
+    public Integer getPositionBySecurity(Security security) {
+        return positions.getOrDefault(security, 0);
+    } 
 }
