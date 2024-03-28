@@ -183,21 +183,32 @@ public class SecurityTest {
 
     @Test
     public void decrease_sell_order_quantity() {
-        Order updatedSellOrder = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
-        security.updateOrder(updatedSellOrder, matcher);
+        Order updatedOrder = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
+        security.updateOrder(updatedOrder, matcher);
 
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 4, 600);
+        // TODO
+        // what if new quantity be zero? what should happend in that case?
     }
 
     @Test
     public void decrease_buy_order_quantity() {
-        Order updatedBuyOrder = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        security.updateOrder(updatedBuyOrder, matcher);
+        Order updatedOrder = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
+        security.updateOrder(updatedOrder, matcher);
 
         AssertingPack.exceptedBuyerCredit = 900;
 
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.BUY, 2, 3, 7, 300);
+    }
+
+    @Test 
+    public void decrease_sell_ice_order_quantity() {
+        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
+        security.updateOrder(updatedOrder, matcher);
+
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 30, 1000, 10, 10);
     }
 }
