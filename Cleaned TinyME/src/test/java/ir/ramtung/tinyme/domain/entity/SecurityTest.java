@@ -105,7 +105,7 @@ public class SecurityTest {
     void setup() {
         security = Security.builder().build();
         sellerBroker = Broker.builder().credit(0).build();
-        buyerBroker = Broker.builder().credit(0).build();
+        buyerBroker = Broker.builder().credit(32500).build();
         sellerShareholder = Shareholder.builder().build();
         buyerShareholder = Shareholder.builder().build();
         sellerShareholder.incPosition(security, 85);
@@ -324,5 +324,19 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
         AssertingPack.assertOrderInQueue(Side.SELL, 1, 5, 45, 600, 10, 10);
         AssertingPack.assertOrderInQueue(Side.SELL, 2, 2, 10, 700);
+    }
+
+    @Test
+    public void decrease_sell_order_price_and_completely_traded() {
+        Order updatedOrder = new Order(3, security, Side.SELL, 10, 450, sellerBroker, sellerShareholder);
+        security.updateOrder(updatedOrder, matcher);
+
+        AssertingPack.exceptedSellerCredit = 5000;
+        AssertingPack.exceptedBuyerPosition = 10;
+        AssertingPack.exceptedSellerPosition = 75;
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 2, 4, 10, 900);
+        assertThat(orderBook.isThereOrderWithId(Side.SELL, 3)).isFalse();
+        AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 35, 500, 10, 10);
     }
 }
