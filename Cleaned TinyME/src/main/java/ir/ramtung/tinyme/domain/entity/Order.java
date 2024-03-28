@@ -110,11 +110,9 @@ public class Order {
     }
 
     public void updateFromTempOrder(Order tempOrder) {
-        if (this.side == Side.BUY)
+        if (!this.willPriortyLostInUpdate(tempOrder) && this.side == Side.BUY) {
             broker.increaseCreditBy(this.getValue());
-        if (!this.willPriortyLostInUpdate(tempOrder)) {
-            if (this.side == Side.BUY)
-                broker.decreaseCreditBy(tempOrder.getValue());
+            broker.decreaseCreditBy(tempOrder.getValue());
         }
         else
             this.status = OrderStatus.NEW;

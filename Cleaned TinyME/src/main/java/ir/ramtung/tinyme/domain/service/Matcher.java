@@ -53,15 +53,15 @@ public class Matcher {
     }
 
     private void addOrderToQueue(Order order, List<Trade> trades) {
-        if (order.getQuantity() == 0)
+        if (order.getTotalQuantity() == 0)
             return;
 
         if (order.getSide() == Side.BUY) {
-            if (!order.getBroker().hasEnoughCredit((long)order.getPrice() * order.getQuantity())) {
+            if (!order.getBroker().hasEnoughCredit(order.getValue())) {
                 rollbackTrades(trades);
                 throw new NotEnoughCreditException();
             }
-            order.getBroker().decreaseCreditBy((long)order.getPrice() * order.getQuantity());
+            order.getBroker().decreaseCreditBy(order.getValue());
         }
         order.getSecurity().getOrderBook().enqueue(order);
         // TODO

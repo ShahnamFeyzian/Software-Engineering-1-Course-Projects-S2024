@@ -53,12 +53,16 @@ public class Security {
             Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
             checkPositionForUpdateOrder(mainOrder, tempOrder);
             boolean losesPriority = mainOrder.willPriortyLostInUpdate(tempOrder);
-            Order originalOrder = mainOrder.snapshot();
-            mainOrder.updateFromTempOrder(tempOrder);
-            if (losesPriority) 
+            if (losesPriority) {
+                Order originalOrder = mainOrder.snapshot();
+                orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
+                mainOrder.updateFromTempOrder(tempOrder);
                 return reAddUpdatedOrder(mainOrder, originalOrder, matcher);
-            else
+            }
+            else {
+                mainOrder.updateFromTempOrder(tempOrder);
                 return MatchResult.executed(null, List.of());
+            }
         }
         catch (NotEnoughPositionException exp) {
             return MatchResult.notEnoughPositions();
@@ -66,7 +70,6 @@ public class Security {
     }
 
     private MatchResult reAddUpdatedOrder(Order updatOrder, Order originalOrder, Matcher matcher) {
-        orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
         MatchResult matchResult = matcher.execute(updatOrder);
         if (matchResult.outcome() != MatchingOutcome.EXECUTED) {
             orderBook.enqueue(originalOrder);
