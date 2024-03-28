@@ -1,5 +1,7 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,6 +22,59 @@ public class SecurityTest {
     private List<Order> orders;
     @Autowired
     private Matcher matcher;
+
+    private static class AssertingPack {
+        private static long actualSellerCredit;
+        private static long exceptedSellerCredit;
+        private static long actualBuyerCredit;
+        private static long exceptedBuyerCredit;
+        private static Integer actualSellerPosition;
+        private static Integer exceptedSellerPosition;
+        private static Integer actualBuyerPosition;
+        private static Integer exceptedBuyerPosition;
+        
+        private static void initialize() {
+            actualSellerCredit = 0;
+            exceptedSellerCredit = 0;
+            actualBuyerCredit = 0;
+            exceptedBuyerCredit = 0;
+            actualSellerPosition = 0;
+            exceptedSellerPosition = 0;
+            actualBuyerPosition = 0;
+            exceptedBuyerPosition = 0;
+        }
+
+        private static void assertSellerCredit() {
+            assertThat(actualSellerCredit).isEqualTo(exceptedSellerCredit);
+        }
+
+        private static void assertBuyerCredit() {
+            assertThat(actualBuyerCredit).isEqualTo(exceptedBuyerCredit);
+        }
+
+        private static void assertSellerPosition() {
+            assertThat(actualSellerPosition).isEqualTo(exceptedSellerPosition);
+        }
+
+        private static void assertBuyerPosition() {
+            assertThat(actualBuyerPosition).isEqualTo(exceptedBuyerPosition);
+        }
+
+        private static void assertCredits() {
+            assertSellerCredit();
+            assertBuyerCredit();
+        }
+
+        private static void assertPositions() {
+            assertSellerPosition();
+            assertBuyerPosition();
+        }
+
+        private static void assertAll() {
+            assertCredits();
+            assertPositions();
+        }
+    }
 
     @BeforeEach
     void setup() {
@@ -44,5 +99,6 @@ public class SecurityTest {
             new IcebergOrder(5, security, Side.SELL, 45, 1000, sellerBroker, sellerShareholder, 10)
         );
         orders.forEach(order -> orderBook.enqueue(order));
+        AssertingPack.initialize();
     }
 }
