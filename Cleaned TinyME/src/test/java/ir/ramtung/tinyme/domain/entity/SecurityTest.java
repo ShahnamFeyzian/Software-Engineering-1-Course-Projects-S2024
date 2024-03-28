@@ -232,4 +232,13 @@ public class SecurityTest {
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 1, 2, 15, 700);
     }
+
+    @Test
+    public void increase_sell_order_quantity_but_hasnt_enough_position() {
+        Order updatedOrder = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+
+        AssertingPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+    }
 }
