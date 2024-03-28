@@ -55,15 +55,13 @@ public class Matcher {
     private void addOrderToQueue(Order order, List<Trade> trades) {
         if (order.getTotalQuantity() == 0)
             return;
-
-        if (order.getSide() == Side.BUY) {
-            if (!order.getBroker().hasEnoughCredit(order.getValue())) {
-                rollbackTrades(trades);
-                throw new NotEnoughCreditException();
-            }
-            order.getBroker().decreaseCreditBy(order.getValue());
+        try {
+            order.getSecurity().getOrderBook().enqueue(order);   
         }
-        order.getSecurity().getOrderBook().enqueue(order);
+        catch (NotEnoughCreditException exp) {
+            rollbackTrades(trades);
+            throw exp;
+        }
         // TODO
         // this is just painkiller, it should be treated properly
     }

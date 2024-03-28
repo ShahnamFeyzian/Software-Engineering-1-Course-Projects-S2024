@@ -73,9 +73,6 @@ public class Security {
         MatchResult matchResult = matcher.execute(updatOrder);
         if (matchResult.outcome() != MatchingOutcome.EXECUTED) {
             orderBook.enqueue(originalOrder);
-            if (originalOrder.getSide() == Side.BUY) {
-                originalOrder.getBroker().decreaseCreditBy(originalOrder.getValue());
-            }
         }
         return matchResult;
         // TODO

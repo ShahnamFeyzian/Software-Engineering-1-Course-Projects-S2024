@@ -19,6 +19,9 @@ public class OrderBook {
     }
 
     public void enqueue(Order order) {
+        if(order.getSide() == Side.BUY)
+            order.getBroker().decreaseCreditBy(order.getValue());
+        
         List<Order> queue = getQueue(order.getSide());
         ListIterator<Order> it = queue.listIterator();
         while (it.hasNext()) {
