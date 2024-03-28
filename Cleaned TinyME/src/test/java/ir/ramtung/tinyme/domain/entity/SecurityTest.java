@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -25,42 +26,39 @@ public class SecurityTest {
     private Matcher matcher;
 
     private static class AssertingPack {
-        private static long actualSellerCredit;
+        private static Security security;
+        private static Broker sellerBroker;
+        private static Broker buyerBroker;
+        private static Shareholder sellerShareholder;
+        private static Shareholder buyerShareholder;
         private static long exceptedSellerCredit;
-        private static long actualBuyerCredit;
         private static long exceptedBuyerCredit;
-        private static Integer actualSellerPosition;
         private static Integer exceptedSellerPosition;
-        private static Integer actualBuyerPosition;
         private static Integer exceptedBuyerPosition;
         private static LinkedList<Order> sellQueue;
         private static LinkedList<Order> buyQueue;
 
         private static void initialize() {
-            actualSellerCredit = 0;
-            exceptedSellerCredit = 0;
-            actualBuyerCredit = 0;
-            exceptedBuyerCredit = 0;
-            actualSellerPosition = 85;
-            exceptedSellerPosition = 0;
-            actualBuyerPosition = 0;
-            exceptedBuyerPosition = 0;
+            exceptedSellerCredit = sellerBroker.getCredit();
+            exceptedBuyerCredit = buyerBroker.getCredit();
+            exceptedSellerPosition = sellerShareholder.getPositionBySecurity(security);
+            exceptedBuyerPosition = buyerShareholder.getPositionBySecurity(security);
         }
 
         private static void assertSellerCredit() {
-            assertThat(actualSellerCredit).isEqualTo(exceptedSellerCredit);
+            assertThat(sellerBroker.getCredit()).isEqualTo(exceptedSellerCredit);
         }
 
         private static void assertBuyerCredit() {
-            assertThat(actualBuyerCredit).isEqualTo(exceptedBuyerCredit);
+            assertThat(buyerBroker.getCredit()).isEqualTo(exceptedBuyerCredit);
         }
 
         private static void assertSellerPosition() {
-            assertThat(actualSellerPosition).isEqualTo(exceptedSellerPosition);
+            assertThat(sellerShareholder.getPositionBySecurity(security)).isEqualTo(exceptedSellerPosition);
         }
 
         private static void assertBuyerPosition() {
-            assertThat(actualBuyerPosition).isEqualTo(exceptedBuyerPosition);
+            assertThat(buyerShareholder.getPositionBySecurity(security)).isEqualTo(exceptedBuyerPosition);
         }
 
         private static void assertCredits() {
@@ -88,7 +86,6 @@ public class SecurityTest {
             assertThat(actualquantity).isEqualTo(quantity);
             assertThat(actualPrice).isEqualTo(price);
         }
-
     }
 
     @BeforeEach
@@ -114,8 +111,13 @@ public class SecurityTest {
             new IcebergOrder(5, security, Side.SELL, 45, 1000, sellerBroker, sellerShareholder, 10)
         );
         orders.forEach(order -> orderBook.enqueue(order));
-        AssertingPack.initialize();
+        AssertingPack.security = this.security;
+        AssertingPack.sellerBroker = this.sellerBroker;
+        AssertingPack.buyerBroker = this.buyerBroker;
+        AssertingPack.sellerShareholder = this.sellerShareholder;
+        AssertingPack.buyerShareholder = this.buyerShareholder;
         AssertingPack.sellQueue = orderBook.getSellQueue();
         AssertingPack.buyQueue = orderBook.getBuyQueue();
+        AssertingPack.initialize();
     }
 }
