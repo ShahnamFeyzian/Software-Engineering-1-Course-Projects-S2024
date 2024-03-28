@@ -90,9 +90,11 @@ public class IcebergOrder extends Order {
     public void updateFromTempOrder(Order tempOrder) {
         super.updateFromTempOrder(tempOrder);
         IcebergOrder tempIcebergOrder =  (IcebergOrder) tempOrder;
-        if (peakSize < tempIcebergOrder.peakSize)
+        if (peakSize < tempIcebergOrder.peakSize || displayedQuantity > quantity)
             displayedQuantity = Math.min(quantity, tempIcebergOrder.peakSize);
         peakSize = tempIcebergOrder.peakSize;
+        // TODO
+        // after getting answer about what should happend to displayedQuantity after update fix this part
     }
 
     @Override
