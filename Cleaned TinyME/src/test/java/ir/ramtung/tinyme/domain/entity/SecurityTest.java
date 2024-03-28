@@ -3,6 +3,7 @@ package ir.ramtung.tinyme.domain.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -32,13 +33,15 @@ public class SecurityTest {
         private static Integer exceptedSellerPosition;
         private static Integer actualBuyerPosition;
         private static Integer exceptedBuyerPosition;
-        
+        private static LinkedList<Order> sellQueue;
+        private static LinkedList<Order> buyQueue;
+
         private static void initialize() {
             actualSellerCredit = 0;
             exceptedSellerCredit = 0;
             actualBuyerCredit = 0;
             exceptedBuyerCredit = 0;
-            actualSellerPosition = 0;
+            actualSellerPosition = 85;
             exceptedSellerPosition = 0;
             actualBuyerPosition = 0;
             exceptedBuyerPosition = 0;
@@ -74,6 +77,18 @@ public class SecurityTest {
             assertCredits();
             assertPositions();
         }
+
+        private static void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int price) {
+            Order order = (side == Side.BUY) ? buyQueue.get(idx) : sellQueue.get(idx);
+            long actualId = order.getOrderId();
+            int actualquantity = order.getQuantity();
+            int actualPrice = order.getPrice();
+
+            assertThat(actualId).isEqualTo(orderId);
+            assertThat(actualquantity).isEqualTo(quantity);
+            assertThat(actualPrice).isEqualTo(price);
+        }
+
     }
 
     @BeforeEach
@@ -100,5 +115,7 @@ public class SecurityTest {
         );
         orders.forEach(order -> orderBook.enqueue(order));
         AssertingPack.initialize();
+        AssertingPack.sellQueue = orderBook.getSellQueue();
+        AssertingPack.buyQueue = orderBook.getBuyQueue();
     }
 }
