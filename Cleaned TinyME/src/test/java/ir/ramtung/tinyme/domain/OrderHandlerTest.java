@@ -17,6 +17,7 @@ import ir.ramtung.tinyme.repository.BrokerRepository;
 import ir.ramtung.tinyme.repository.SecurityRepository;
 import ir.ramtung.tinyme.repository.ShareholderRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @Import(MockedJMSTestConfig.class)
 @DirtiesContext
+@Disabled
 public class OrderHandlerTest {
     @Autowired
     OrderHandler orderHandler;

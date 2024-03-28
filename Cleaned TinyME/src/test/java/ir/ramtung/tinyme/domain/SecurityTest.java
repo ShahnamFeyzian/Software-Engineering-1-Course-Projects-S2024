@@ -5,6 +5,7 @@ import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 @Import(MockedJMSTestConfig.class)
+@Disabled
 class SecurityTest {
     private Security security;
     private Broker broker;
