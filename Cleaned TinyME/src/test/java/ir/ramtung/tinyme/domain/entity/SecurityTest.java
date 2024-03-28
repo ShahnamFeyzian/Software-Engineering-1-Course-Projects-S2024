@@ -148,7 +148,6 @@ public class SecurityTest {
         security.deleteOrder(Side.BUY, 3);
         
         AssertingPack.exceptedBuyerCredit = 3000;
-        
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
         AssertingPack.assertOrderInQueue(Side.BUY, 2, 2, 10, 200);
@@ -168,7 +167,6 @@ public class SecurityTest {
         security.deleteOrder(Side.BUY, 5);
 
         AssertingPack.exceptedBuyerCredit = 22500;
-
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
@@ -198,7 +196,6 @@ public class SecurityTest {
         security.updateOrder(updatedOrder, matcher);
 
         AssertingPack.exceptedBuyerCredit = 900;
-
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.BUY, 2, 3, 7, 300);
     }
@@ -218,8 +215,21 @@ public class SecurityTest {
         security.updateOrder(updatedOrder, matcher);
 
         AssertingPack.exceptedBuyerCredit = 19000;
-
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 7, 500, 10, 7);
+    }
+
+    // TODO
+    // add peakSize scenarios after you are sure how they work
+
+    @Test
+    public void increase_sell_order_quantity() {
+        Order updatedOrder = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 5);
+        security.updateOrder(updatedOrder, matcher);
+
+        AssertingPack.exceptedSellerPosition = 90;
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 1, 2, 15, 700);
     }
 }
