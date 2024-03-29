@@ -686,7 +686,7 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_order_sweeps_buyers_queue_and_finish() {
+    public void add_sell_order_matches_with_all_buyers_queue_and_finish() {
         Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
         sellerShareholder.incPosition(security, 85);
         security.addNewOrder(order, matcher);
@@ -699,7 +699,7 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_ice_order_sweeps_buyers_queue_and_finish() {
+    public void add_sell_ice_order_matches_with_all_buyers_queue_and_finish() {
         IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder, 10);
         sellerShareholder.incPosition(security, 85);
         security.addNewOrder(order, matcher);
