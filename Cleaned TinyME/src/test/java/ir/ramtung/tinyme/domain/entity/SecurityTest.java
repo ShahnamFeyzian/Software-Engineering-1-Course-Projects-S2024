@@ -868,4 +868,21 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
         AssertingPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
     }
+
+    @Test
+    public void add_buy_ice_order_not_enough_credit_causes_rollback() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
+        buyerBroker.increaseCreditBy(78000);
+        MatchingOutcome res = security.addNewOrder(order, matcher).outcome();
+
+        AssertingPack.exceptedBuyerCredit = 78000;
+        AssertingPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+        assertThat(orderBook.isThereOrderWithId(Side.BUY, 6)).isFalse();
+        AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+        AssertingPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
+        AssertingPack.assertOrderInQueue(Side.SELL, 2, 3, 10, 800);
+        AssertingPack.assertOrderInQueue(Side.SELL, 3, 4, 10, 900);
+        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000);
+    }
 }
