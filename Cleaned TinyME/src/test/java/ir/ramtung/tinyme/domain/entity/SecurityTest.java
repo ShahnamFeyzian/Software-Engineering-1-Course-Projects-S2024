@@ -612,4 +612,17 @@ public class SecurityTest {
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
         assertThat(orderBook.isThereOrderWithId(Side.SELL, 6)).isFalse();
     }
+
+    @Test
+    public void add_sell_order_and_copletely_traded() {
+        Order order = new Order(8, security, Side.SELL, 13, 400, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 13);
+        security.addNewOrder(order, matcher);
+
+        AssertingPack.exceptedBuyerPosition = 13;
+        AssertingPack.exceptedSellerCredit = 6500;
+        AssertingPack.assertAll();
+        assertThat(orderBook.isThereOrderWithId(Side.SELL, 8)).isFalse();
+        AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 32, 500, 10, 7);
+    }
 }
