@@ -762,4 +762,16 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.BUY, 1, 6, 5, 450, 1, 1);
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
+
+    @Test
+    public void add_buy_order_but_not_enough_credit() {
+        Order order = new Order(10, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(6000);
+        MatchingOutcome res =  security.addNewOrder(order, matcher).outcome();
+
+        AssertingPack.exceptedBuyerCredit = 6000;
+        AssertingPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+        assertThat(orderBook.isThereOrderWithId(Side.BUY, 10));
+    }
 }
