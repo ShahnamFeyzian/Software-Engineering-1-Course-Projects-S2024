@@ -383,4 +383,16 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 5)).isFalse();
     }
+
+    @Test
+    public void decrease_buy_order_price() {
+        Order updatedOrder = new Order(3, security, Side.BUY, 10, 150, buyerBroker, buyerShareholder);
+        security.updateOrder(updatedOrder, matcher);
+
+        AssertingPack.exceptedBuyerCredit = 1500;
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.BUY, 4, 1, 10, 100);
+        AssertingPack.assertOrderInQueue(Side.BUY, 3, 3, 10, 150);
+        AssertingPack.assertOrderInQueue(Side.BUY, 2, 2, 10, 200);
+    }
 }
