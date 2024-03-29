@@ -738,4 +738,16 @@ public class SecurityTest {
         assertThat(orderBook.getBuyQueue().size()).isZero();
         AssertingPack.assertOrderInQueue(Side.SELL, 0, 6, 15, 100, 10, 10);
     }
+
+    @Test
+    public void add_buy_order_no_trades_happens() {
+        Order order = new Order(6, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(6600);
+        security.addNewOrder(order, matcher);
+
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.BUY, 4, 2, 10, 200);
+        AssertingPack.assertOrderInQueue(Side.BUY, 3, 6, 22, 300);
+        AssertingPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
+    }
 }
