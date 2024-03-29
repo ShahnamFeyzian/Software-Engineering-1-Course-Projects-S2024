@@ -580,4 +580,16 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.SELL, 1, 6, 15, 650);
         AssertingPack.assertOrderInQueue(Side.SELL, 2, 2, 10, 700);
     }
+
+    @Test
+    public void add_sell_ice_order_no_trades_happens() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 20, 1000, sellerBroker, sellerShareholder, 7);
+        sellerShareholder.incPosition(security, 20);
+        security.addNewOrder(order, matcher);
+
+        AssertingPack.exceptedSellerPosition = 105;
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
+        AssertingPack.assertOrderInQueue(Side.SELL, 5, 6, 20, 1000, 7, 7);
+    }
 }
