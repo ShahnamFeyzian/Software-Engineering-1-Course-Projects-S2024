@@ -774,4 +774,14 @@ public class SecurityTest {
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 10));
     }
+
+    @Test
+    public void add_buy_ice_order_but_not_enough_credit() {
+        IcebergOrder order = new IcebergOrder(10, security, Side.BUY, 5, 450, buyerBroker, buyerShareholder, 1);
+        MatchingOutcome res =  security.addNewOrder(order, matcher).outcome();
+
+        AssertingPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+        assertThat(orderBook.isThereOrderWithId(Side.BUY, 10));
+    }
 }
