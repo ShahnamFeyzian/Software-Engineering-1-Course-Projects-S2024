@@ -548,4 +548,21 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.SELL, 2, 3, 10, 800);
         AssertingPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
     }
+
+    @Test
+    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit() {
+        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
+        buyerBroker.increaseCreditBy(57000);
+        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+
+        AssertingPack.exceptedBuyerCredit = 57000;
+        AssertingPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+        AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+        AssertingPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
+        AssertingPack.assertOrderInQueue(Side.SELL, 2, 3, 10, 800);
+        AssertingPack.assertOrderInQueue(Side.SELL, 3, 4, 10, 900);
+        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
+        AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500);
+    }
 }
