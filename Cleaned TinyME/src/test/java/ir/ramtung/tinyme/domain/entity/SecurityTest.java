@@ -407,4 +407,15 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.BUY, 3, 5, 45, 200, 10, 10);
         AssertingPack.assertOrderInQueue(Side.BUY, 2, 2, 10, 200);
     }
+
+    @Test
+    public void increase_sell_order_price() {
+        Order updatedOrder = new Order(3, security, Side.SELL, 10, 950, buyerBroker, buyerShareholder);
+        security.updateOrder(updatedOrder, matcher);
+
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
+        AssertingPack.assertOrderInQueue(Side.SELL, 3, 3, 10, 950);
+        AssertingPack.assertOrderInQueue(Side.SELL, 2, 4, 10, 900);
+    }
 }
