@@ -913,4 +913,18 @@ public class SecurityTest {
         assertThat(orderBook.getSellQueue().size()).isZero();
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 6)).isFalse();
     }
+
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_nit_finished() {
+        Order order = new Order(8, security, Side.BUY, 100, 1000, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(90000);
+        security.addNewOrder(order, matcher);
+
+        AssertingPack.exceptedBuyerPosition = 85;
+        AssertingPack.exceptedSellerCredit = 75000;
+        AssertingPack.exceptedSellerPosition = 0;
+        AssertingPack.assertAll();
+        assertThat(orderBook.getSellQueue().size()).isZero();
+        AssertingPack.assertOrderInQueue(Side.BUY, 0, 8, 15, 1000);
+    }
 }
