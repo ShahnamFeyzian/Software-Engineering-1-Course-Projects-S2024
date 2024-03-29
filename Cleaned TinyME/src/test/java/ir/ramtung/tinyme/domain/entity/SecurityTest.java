@@ -686,7 +686,7 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_order_matches_with_all_buyers_queue_and_finished() {
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished() {
         Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
         sellerShareholder.incPosition(security, 85);
         security.addNewOrder(order, matcher);
@@ -699,7 +699,7 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_ice_order_matches_with_all_buyers_queue_and_finished() {
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_finished() {
         IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder, 10);
         sellerShareholder.incPosition(security, 85);
         security.addNewOrder(order, matcher);
@@ -712,7 +712,7 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_order_matches_with_all_buyers_queue_and_not_finished() {
+    public void add_sell_order_matches_with_all_buyer_queue_and_not_finished() {
         Order order = new Order(6, security, Side.SELL, 120, 100, sellerBroker, sellerShareholder);
         sellerShareholder.incPosition(security, 120);
         security.addNewOrder(order, matcher);
@@ -726,7 +726,7 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_ice_order_matches_with_all_buyers_queue_and_not_finished() {
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished() {
         IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
         sellerShareholder.incPosition(security, 100);
         security.addNewOrder(order, matcher);
@@ -884,5 +884,19 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.SELL, 2, 3, 10, 800);
         AssertingPack.assertOrderInQueue(Side.SELL, 3, 4, 10, 900);
         AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000);
+    }
+
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_finished() {
+        Order order = new Order(6, security, Side.BUY, 85, 1000, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(75000);
+        security.addNewOrder(order, matcher);
+
+        AssertingPack.exceptedBuyerPosition = 85;
+        AssertingPack.exceptedSellerCredit = 75000;
+        AssertingPack.exceptedSellerPosition = 0;
+        AssertingPack.assertAll();
+        assertThat(orderBook.getSellQueue().size()).isZero();
+        assertThat(orderBook.isThereOrderWithId(Side.BUY, 6)).isFalse();
     }
 }
