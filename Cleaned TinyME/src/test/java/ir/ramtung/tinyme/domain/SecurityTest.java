@@ -5,7 +5,6 @@ import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,7 +18,6 @@ import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 @Import(MockedJMSTestConfig.class)
-@Disabled
 class SecurityTest {
     private Security security;
     private Broker broker;
@@ -30,7 +28,7 @@ class SecurityTest {
     @BeforeEach
     void setupOrderBook() {
         security = Security.builder().build();
-        broker = Broker.builder().brokerId(0).credit(1_000_000L).build();
+        broker = Broker.builder().brokerId(0).credit(36_841_250L).build();
         shareholder = Shareholder.builder().shareholderId(0).build();
         shareholder.incPosition(security, 100_000);
         orders = Arrays.asList(
@@ -110,6 +108,7 @@ class SecurityTest {
                 new Order(4, security, Side.BUY, 526, 15450, broker, shareholder),
                 new Order(5, security, Side.BUY, 1000, 15400, broker, shareholder)
         );
+        broker.increaseCreditBy(35_841_250);
         orders.forEach(order -> security.getOrderBook().enqueue(order));
         Order updateOrder = new IcebergOrder(3, security, Side.BUY, 445, 15450, broker, shareholder, LocalDateTime.now(), 150);
         assertThatNoException().isThrownBy(() -> security.updateOrder(updateOrder, matcher));
@@ -128,6 +127,7 @@ class SecurityTest {
                 new Order(4, security, Side.BUY, 526, 15450, broker, shareholder),
                 new Order(5, security, Side.BUY, 1000, 15400, broker, shareholder)
         );
+        broker.increaseCreditBy(35_841_250);
         orders.forEach(order -> security.getOrderBook().enqueue(order));
         Order updateOrder = new IcebergOrder(3, security, Side.BUY, 300, 15450, broker, shareholder, LocalDateTime.now(), 100);
         assertThatNoException().isThrownBy(() -> security.updateOrder(updateOrder, matcher));
