@@ -144,6 +144,15 @@ public class SecurityTest {
     }
 
     @Test
+    public void delete_sell_ice_order() {
+        security.deleteOrder(Side.SELL, 5);
+
+        AssertingPack.assertAll();
+        assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> orderBook.getSellQueue().get(4));
+        AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+    }
+
+    @Test
     public void delete_buy_order() {
         security.deleteOrder(Side.BUY, 3);
         
@@ -151,15 +160,6 @@ public class SecurityTest {
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
         AssertingPack.assertOrderInQueue(Side.BUY, 2, 2, 10, 200);
-    }
-
-    @Test
-    public void delete_sell_ice_order() {
-        security.deleteOrder(Side.SELL, 5);
-
-        AssertingPack.assertAll();
-        assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> orderBook.getSellQueue().get(4));
-        AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
 
     @Test
@@ -190,6 +190,15 @@ public class SecurityTest {
         // what if new quantity be zero? what should happend in that case?
     }
 
+    @Test 
+    public void decrease_sell_ice_order_quantity() {
+        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
+        security.updateOrder(updatedOrder, matcher);
+
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 30, 1000, 10, 10);
+    }
+
     @Test
     public void decrease_buy_order_quantity() {
         Order updatedOrder = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
@@ -201,15 +210,6 @@ public class SecurityTest {
     }
 
     @Test 
-    public void decrease_sell_ice_order_quantity() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(updatedOrder, matcher);
-
-        AssertingPack.assertAll();
-        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 30, 1000, 10, 10);
-    }
-
-    @Test 
     public void decrease_buy_ice_order_quantity() {
         IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 7, 500, sellerBroker, sellerShareholder, 10);
         security.updateOrder(updatedOrder, matcher);
@@ -218,9 +218,6 @@ public class SecurityTest {
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 7, 500, 10, 7);
     }
-
-    // TODO
-    // add peakSize scenarios after you are sure how they work
 
     @Test
     public void increase_sell_order_quantity() {
@@ -234,6 +231,17 @@ public class SecurityTest {
     }
 
     @Test
+    public void increase_sell_ice_order_quantity() {
+        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 15);
+        security.updateOrder(updatedOrder, matcher);
+
+        AssertingPack.exceptedSellerPosition = 100;
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 60, 1000, 10, 10);
+    } 
+
+    @Test
     public void increase_sell_order_quantity_but_not_enough_position() {
         Order updatedOrder = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
         MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
@@ -241,6 +249,16 @@ public class SecurityTest {
         AssertingPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
         AssertingPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
+    }
+
+    @Test
+    public void increase_sell_ice_order_quantity_but_not_enough_position() {
+        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+
+        AssertingPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
     }
 
     @Test
@@ -254,37 +272,6 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_buy_order_quantity_but_not_enough_credit() {
-        Order updatedOrder = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
-
-        AssertingPack.assertAll();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
-        AssertingPack.assertOrderInQueue(Side.BUY, 1, 4, 10, 400);
-    }
-
-    @Test
-    public void increase_sell_ice_order_quantity() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 15);
-        security.updateOrder(updatedOrder, matcher);
-
-        AssertingPack.exceptedSellerPosition = 100;
-        AssertingPack.assertAll();
-        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 60, 1000, 10, 10);
-    } 
-    
-    @Test
-    public void increase_sell_ice_order_quantity_but_not_enough_position() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
-
-        AssertingPack.assertAll();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
-        AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
-    }
-    
-    @Test
     public void increase_buy_ice_order_quantity() {
         IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
         buyerBroker.increaseCreditBy(7500);
@@ -292,6 +279,16 @@ public class SecurityTest {
         
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 60, 500, 10, 10);
+    }
+
+    @Test
+    public void increase_buy_order_quantity_but_not_enough_credit() {
+        Order updatedOrder = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+
+        AssertingPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+        AssertingPack.assertOrderInQueue(Side.BUY, 1, 4, 10, 400);
     }
 
     @Test
@@ -303,6 +300,11 @@ public class SecurityTest {
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
+
+
+    // TODO
+    // add peakSize scenarios after you are sure how they work
+
 
     @Test
     public void decrease_sell_order_price_no_trading_happens() {
