@@ -440,4 +440,14 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.BUY, 3, 1, 10, 250);
         AssertingPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
     }
+
+    @Test
+    public void increase_buy_order_price_no_trading_happens_and_hasnt_enough_credit() {
+        Order updatedOrder = new Order(1, security, Side.BUY, 10, 250, buyerBroker, buyerShareholder);
+        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+    
+        AssertingPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+        AssertingPack.assertOrderInQueue(Side.BUY, 4, 1, 10, 100);
+    }
 }
