@@ -18,7 +18,7 @@ class OrderBookTest {
     @BeforeEach
     void setupOrderBook() {
         security = Security.builder().build();
-        Broker broker = Broker.builder().credit(35841250).build();
+        Broker broker = Broker.builder().credit(35_841_250).build();
         Shareholder shareholder = Shareholder.builder().build();
         shareholder.incPosition(security, 100_000);
         orders = Arrays.asList(
