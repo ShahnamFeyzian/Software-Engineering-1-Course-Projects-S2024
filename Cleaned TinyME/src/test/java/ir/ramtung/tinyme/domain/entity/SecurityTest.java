@@ -410,7 +410,7 @@ public class SecurityTest {
 
     @Test
     public void increase_sell_order_price() {
-        Order updatedOrder = new Order(3, security, Side.SELL, 10, 950, buyerBroker, buyerShareholder);
+        Order updatedOrder = new Order(3, security, Side.SELL, 10, 950, sellerBroker, sellerShareholder);
         security.updateOrder(updatedOrder, matcher);
 
         AssertingPack.assertAll();
@@ -421,11 +421,23 @@ public class SecurityTest {
 
     @Test
     public void increase_sell_ice_order_price() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 45, 1100, buyerBroker, buyerShareholder, 10);
+        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 45, 1100, sellerBroker, sellerShareholder, 10);
         security.updateOrder(updatedOrder, matcher);
 
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1100, 10, 10);
         AssertingPack.assertOrderInQueue(Side.SELL, 3, 4, 10, 900);
+    }
+
+    @Test
+    public void increase_buy_order_price_no_trading_happens() {
+        Order updatedOrder = new Order(1, security, Side.BUY, 10, 250, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(1500);
+        security.updateOrder(updatedOrder, matcher);
+    
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.BUY, 4, 2, 10, 200);
+        AssertingPack.assertOrderInQueue(Side.BUY, 3, 1, 10, 250);
+        AssertingPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
     }
 }
