@@ -502,4 +502,20 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
         AssertingPack.assertOrderInQueue(Side.SELL, 0, 5, 40, 1000, 10, 5);
     }
+
+    @Test
+    public void increase_buy_order_price_and_partially_traded() {
+        Order updatedOrder = new Order(3, security, Side.BUY, 25, 700, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(13500);
+        security.updateOrder(updatedOrder, matcher);
+
+        AssertingPack.exceptedBuyerPosition = 20;
+        AssertingPack.exceptedSellerCredit = 13000;
+        AssertingPack.exceptedSellerPosition = 65;
+        AssertingPack.assertAll();
+        assertThat(orderBook.isThereOrderWithId(Side.SELL, 1)).isFalse();
+        assertThat(orderBook.isThereOrderWithId(Side.SELL, 2)).isFalse();
+        AssertingPack.assertOrderInQueue(Side.BUY, 0, 3, 5, 700);
+        AssertingPack.assertOrderInQueue(Side.SELL, 0, 3, 10, 800);
+    }
 }
