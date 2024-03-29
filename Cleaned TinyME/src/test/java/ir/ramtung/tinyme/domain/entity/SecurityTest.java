@@ -697,4 +697,17 @@ public class SecurityTest {
         assertThat(orderBook.getBuyQueue().size()).isZero();
         assertThat(orderBook.isThereOrderWithId(Side.SELL, 6)).isFalse();
     }
+
+    @Test
+    public void add_sell_ice_order_sweeps_buyers_queue_and_finish() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 85);
+        security.addNewOrder(order, matcher);
+
+        AssertingPack.exceptedBuyerPosition = 85;
+        AssertingPack.exceptedSellerCredit = 32500;
+        AssertingPack.assertAll();
+        assertThat(orderBook.getBuyQueue().size()).isZero();
+        assertThat(orderBook.isThereOrderWithId(Side.SELL, 6)).isFalse();
+    }
 }
