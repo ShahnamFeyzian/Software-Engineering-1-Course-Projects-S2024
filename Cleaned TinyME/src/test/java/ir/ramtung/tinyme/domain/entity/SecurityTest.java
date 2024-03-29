@@ -532,7 +532,7 @@ public class SecurityTest {
         AssertingPack.exceptedSellerPosition = 0;
         AssertingPack.exceptedBuyerCredit = 22500;
         AssertingPack.assertAll();
-        assertThat(orderBook.getSellQueue().size()).isEqualTo(0);
+        assertThat(orderBook.getSellQueue().size()).isZero();
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 5, 1000, 10, 5);
     }
 
@@ -683,5 +683,18 @@ public class SecurityTest {
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 4)).isFalse();
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 3, 10, 300);
         AssertingPack.assertOrderInQueue(Side.SELL, 0, 7, 5, 400, 7, 5);
+    }
+
+    @Test
+    public void add_sell_order_sweeps_buyers_queue_and_finish() {
+        Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 85);
+        security.addNewOrder(order, matcher);
+
+        AssertingPack.exceptedBuyerPosition = 85;
+        AssertingPack.exceptedSellerCredit = 32500;
+        AssertingPack.assertAll();
+        assertThat(orderBook.getBuyQueue().size()).isZero();
+        assertThat(orderBook.isThereOrderWithId(Side.SELL, 6)).isFalse();
     }
 }
