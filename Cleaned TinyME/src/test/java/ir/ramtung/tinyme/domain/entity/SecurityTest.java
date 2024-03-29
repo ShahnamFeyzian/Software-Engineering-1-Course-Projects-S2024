@@ -442,6 +442,16 @@ public class SecurityTest {
     }
 
     @Test
+    public void increase_buy_ice_order_price_no_trading_happens() {
+        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
+        buyerBroker.increaseCreditBy(2250);
+        security.updateOrder(updatedOrder, matcher);
+    
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 550, 10, 10);
+    }
+
+    @Test
     public void increase_buy_order_price_no_trading_happens_and_hasnt_enough_credit() {
         Order updatedOrder = new Order(1, security, Side.BUY, 10, 250, buyerBroker, buyerShareholder);
         MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
