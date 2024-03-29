@@ -4,7 +4,6 @@ import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -13,14 +12,13 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-@Disabled
 class OrderBookTest {
     private Security security;
     private List<Order> orders;
     @BeforeEach
     void setupOrderBook() {
         security = Security.builder().build();
-        Broker broker = Broker.builder().build();
+        Broker broker = Broker.builder().credit(35841250).build();
         Shareholder shareholder = Shareholder.builder().build();
         shareholder.incPosition(security, 100_000);
         orders = Arrays.asList(
