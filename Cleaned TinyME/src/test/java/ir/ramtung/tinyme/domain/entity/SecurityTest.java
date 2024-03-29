@@ -181,8 +181,8 @@ public class SecurityTest {
 
     @Test
     public void decrease_sell_order_quantity() {
-        Order updatedOrder = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
-        security.updateOrder(updatedOrder, matcher);
+        Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
+        security.updateOrder(order, matcher);
 
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 4, 600);
@@ -192,8 +192,8 @@ public class SecurityTest {
 
     @Test 
     public void decrease_sell_ice_order_quantity() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(updatedOrder, matcher);
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
+        security.updateOrder(order, matcher);
 
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 30, 1000, 10, 10);
@@ -201,8 +201,8 @@ public class SecurityTest {
 
     @Test
     public void decrease_buy_order_quantity() {
-        Order updatedOrder = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        security.updateOrder(updatedOrder, matcher);
+        Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedBuyerCredit = 900;
         AssertingPack.assertAll();
@@ -211,8 +211,8 @@ public class SecurityTest {
 
     @Test 
     public void decrease_buy_ice_order_quantity() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 7, 500, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(updatedOrder, matcher);
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 7, 500, sellerBroker, sellerShareholder, 10);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedBuyerCredit = 19000;
         AssertingPack.assertAll();
@@ -221,9 +221,9 @@ public class SecurityTest {
 
     @Test
     public void increase_sell_order_quantity() {
-        Order updatedOrder = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
         sellerShareholder.incPosition(security, 5);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedSellerPosition = 90;
         AssertingPack.assertAll();
@@ -232,9 +232,9 @@ public class SecurityTest {
 
     @Test
     public void increase_sell_ice_order_quantity() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
         sellerShareholder.incPosition(security, 15);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedSellerPosition = 100;
         AssertingPack.assertAll();
@@ -243,8 +243,8 @@ public class SecurityTest {
 
     @Test
     public void increase_sell_order_quantity_but_not_enough_position() {
-        Order updatedOrder = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
 
         AssertingPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
@@ -253,8 +253,8 @@ public class SecurityTest {
 
     @Test
     public void increase_sell_ice_order_quantity_but_not_enough_position() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
 
         AssertingPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
@@ -263,9 +263,9 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_order_quantity() {
-        Order updatedOrder = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
         buyerBroker.increaseCreditBy(6000);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
         
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.BUY, 1, 4, 25, 400);
@@ -273,9 +273,9 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_ice_order_quantity() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
         buyerBroker.increaseCreditBy(7500);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
         
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 60, 500, 10, 10);
@@ -283,8 +283,8 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_order_quantity_but_not_enough_credit() {
-        Order updatedOrder = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
 
         AssertingPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
@@ -293,8 +293,8 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_ice_order_quantity_but_not_enough_credit() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
-        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
         
         AssertingPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
@@ -308,8 +308,8 @@ public class SecurityTest {
 
     @Test
     public void decrease_sell_order_price_no_trading_happens() {
-        Order updatedOrder = new Order(3, security, Side.SELL, 10, 650, sellerBroker, sellerShareholder);
-        security.updateOrder(updatedOrder, matcher);
+        Order order = new Order(3, security, Side.SELL, 10, 650, sellerBroker, sellerShareholder);
+        security.updateOrder(order, matcher);
 
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
@@ -319,8 +319,8 @@ public class SecurityTest {
 
     @Test
     public void decrease_sell_ice_order_price_no_trading_happens() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 45, 600, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(updatedOrder, matcher);
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 600, sellerBroker, sellerShareholder, 10);
+        security.updateOrder(order, matcher);
 
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
@@ -330,8 +330,8 @@ public class SecurityTest {
 
     @Test
     public void decrease_sell_order_price_and_completely_traded() {
-        Order updatedOrder = new Order(3, security, Side.SELL, 10, 450, sellerBroker, sellerShareholder);
-        security.updateOrder(updatedOrder, matcher);
+        Order order = new Order(3, security, Side.SELL, 10, 450, sellerBroker, sellerShareholder);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedSellerCredit = 5000;
         AssertingPack.exceptedBuyerPosition = 10;
@@ -344,8 +344,8 @@ public class SecurityTest {
 
     @Test
     public void decrease_sell_ice_order_price_and_completely_traded() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 45, 450, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(updatedOrder, matcher);
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 450, sellerBroker, sellerShareholder, 10);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedSellerCredit = 22500;
         AssertingPack.exceptedBuyerPosition = 45;
@@ -358,9 +358,9 @@ public class SecurityTest {
 
     @Test
     public void decrease_sell_order_price_and_partially_traded() {
-        Order updatedOrder = new Order(3, security, Side.SELL, 50, 450, sellerBroker, sellerShareholder);
+        Order order = new Order(3, security, Side.SELL, 50, 450, sellerBroker, sellerShareholder);
         sellerShareholder.incPosition(security, 40);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedSellerCredit = 22500;
         AssertingPack.exceptedBuyerPosition = 45;
@@ -373,9 +373,9 @@ public class SecurityTest {
 
     @Test
     public void decrease_sell_ice_order_price_and_partially_traded() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 50, 450, sellerBroker, sellerShareholder, 10);
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 50, 450, sellerBroker, sellerShareholder, 10);
         sellerShareholder.incPosition(security, 5);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedSellerCredit = 22500;
         AssertingPack.exceptedBuyerPosition = 45;
@@ -388,8 +388,8 @@ public class SecurityTest {
 
     @Test
     public void decrease_buy_order_price() {
-        Order updatedOrder = new Order(3, security, Side.BUY, 10, 150, buyerBroker, buyerShareholder);
-        security.updateOrder(updatedOrder, matcher);
+        Order order = new Order(3, security, Side.BUY, 10, 150, buyerBroker, buyerShareholder);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedBuyerCredit = 1500;
         AssertingPack.assertAll();
@@ -400,8 +400,8 @@ public class SecurityTest {
 
     @Test
     public void decrease_buy_ice_order_price() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 45, 200, buyerBroker, buyerShareholder, 10);
-        security.updateOrder(updatedOrder, matcher);
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 200, buyerBroker, buyerShareholder, 10);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedBuyerCredit = 13500;
         AssertingPack.assertAll();
@@ -412,8 +412,8 @@ public class SecurityTest {
 
     @Test
     public void increase_sell_order_price() {
-        Order updatedOrder = new Order(3, security, Side.SELL, 10, 950, sellerBroker, sellerShareholder);
-        security.updateOrder(updatedOrder, matcher);
+        Order order = new Order(3, security, Side.SELL, 10, 950, sellerBroker, sellerShareholder);
+        security.updateOrder(order, matcher);
 
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
@@ -423,8 +423,8 @@ public class SecurityTest {
 
     @Test
     public void increase_sell_ice_order_price() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.SELL, 45, 1100, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(updatedOrder, matcher);
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 1100, sellerBroker, sellerShareholder, 10);
+        security.updateOrder(order, matcher);
 
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1100, 10, 10);
@@ -433,9 +433,9 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_order_price_no_trading_happens() {
-        Order updatedOrder = new Order(1, security, Side.BUY, 10, 250, buyerBroker, buyerShareholder);
+        Order order = new Order(1, security, Side.BUY, 10, 250, buyerBroker, buyerShareholder);
         buyerBroker.increaseCreditBy(1500);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
     
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.BUY, 4, 2, 10, 200);
@@ -445,9 +445,9 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_ice_order_price_no_trading_happens() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
         buyerBroker.increaseCreditBy(2250);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
     
         AssertingPack.assertAll();
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 550, 10, 10);
@@ -455,8 +455,8 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_order_price_no_trading_happens_and_not_enough_credit() {
-        Order updatedOrder = new Order(1, security, Side.BUY, 10, 250, buyerBroker, buyerShareholder);
-        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+        Order order = new Order(1, security, Side.BUY, 10, 250, buyerBroker, buyerShareholder);
+        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
     
         AssertingPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
@@ -465,8 +465,8 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_ice_order_price_no_trading_happens_and_not_enough_credit() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
-        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
+        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
     
         AssertingPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
@@ -475,9 +475,9 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_order_price_and_completely_traded() {
-        Order updatedOrder = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
+        Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
         buyerBroker.increaseCreditBy(5000);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedBuyerPosition = 10;
         AssertingPack.exceptedSellerCredit = 6000;
@@ -492,9 +492,9 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_ice_order_price_and_completely_traded() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 45, 1000, buyerBroker, buyerShareholder, 10);
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 1000, buyerBroker, buyerShareholder, 10);
         buyerBroker.increaseCreditBy(12500);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedBuyerPosition = 45;
         AssertingPack.exceptedSellerCredit = 35000;
@@ -507,9 +507,9 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_order_price_and_partially_traded() {
-        Order updatedOrder = new Order(3, security, Side.BUY, 25, 700, buyerBroker, buyerShareholder);
+        Order order = new Order(3, security, Side.BUY, 25, 700, buyerBroker, buyerShareholder);
         buyerBroker.increaseCreditBy(13500);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedBuyerPosition = 20;
         AssertingPack.exceptedSellerCredit = 13000;
@@ -523,9 +523,9 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_ice_order_price_and_partially_traded() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
         buyerBroker.increaseCreditBy(80000);
-        security.updateOrder(updatedOrder, matcher);
+        security.updateOrder(order, matcher);
 
         AssertingPack.exceptedBuyerPosition = 85;
         AssertingPack.exceptedSellerCredit = 75000;
@@ -538,9 +538,9 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_order_price_and_trade_happens_but_not_enough_credit() {
-        Order updatedOrder = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
+        Order order = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
         buyerBroker.increaseCreditBy(13500);
-        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
 
         AssertingPack.exceptedBuyerCredit = 13500;
         AssertingPack.assertAll();
@@ -553,9 +553,9 @@ public class SecurityTest {
 
     @Test
     public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit() {
-        IcebergOrder updatedOrder = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
         buyerBroker.increaseCreditBy(57000);
-        MatchingOutcome res = security.updateOrder(updatedOrder, matcher).outcome();
+        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
 
         AssertingPack.exceptedBuyerCredit = 57000;
         AssertingPack.assertAll();
@@ -566,5 +566,18 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.SELL, 3, 4, 10, 900);
         AssertingPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500);
+    }
+
+    @Test
+    public void add_sell_order_no_trades_happens() {
+        Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 15);
+        security.addNewOrder(order, matcher);
+
+        AssertingPack.exceptedSellerPosition = 100;
+        AssertingPack.assertAll();
+        AssertingPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+        AssertingPack.assertOrderInQueue(Side.SELL, 1, 6, 15, 650);
+        AssertingPack.assertOrderInQueue(Side.SELL, 2, 2, 10, 700);
     }
 }
