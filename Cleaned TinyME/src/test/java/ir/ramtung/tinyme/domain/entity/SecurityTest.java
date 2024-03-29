@@ -568,6 +568,11 @@ public class SecurityTest {
         AssertingPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500);
     }
 
+
+    // TODO
+    // add some test about updating a ice order that its display is not equal to its quantity
+
+
     @Test
     public void add_sell_order_no_trades_happens() {
         Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
