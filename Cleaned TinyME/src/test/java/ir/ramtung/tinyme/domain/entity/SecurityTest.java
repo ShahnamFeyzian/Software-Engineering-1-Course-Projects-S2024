@@ -602,4 +602,14 @@ public class SecurityTest {
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
         assertThat(orderBook.isThereOrderWithId(Side.SELL, 6)).isFalse();
     }
+
+    @Test
+    public void add_sell_ice_order_and_not_enough_position() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 20, 1000, sellerBroker, sellerShareholder, 7);
+        MatchingOutcome res =  security.addNewOrder(order, matcher).outcome();
+
+        AssertingPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+        assertThat(orderBook.isThereOrderWithId(Side.SELL, 6)).isFalse();
+    }
 }
