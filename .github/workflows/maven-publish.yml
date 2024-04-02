@@ -34,9 +34,11 @@ jobs:
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Build with Maven
-      run: mvn -B package --file TinyME_v2.0/pom.xml
+      run: mvn -B package --file pom.xml
+      working-directory: ./TinyME_v2.0
 
     - name: Publish to GitHub Packages Apache Maven
       run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
+      working-directory: ./TinyME_v2.0
