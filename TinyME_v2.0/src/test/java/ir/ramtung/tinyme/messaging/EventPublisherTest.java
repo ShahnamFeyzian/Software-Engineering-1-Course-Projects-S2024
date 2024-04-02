@@ -35,7 +35,9 @@ public class EventPublisherTest {
         while (jmsTemplate.receive(responseQueue) != null) ;
         jmsTemplate.setReceiveTimeout(receiveTimeout);
     }
+
     @Test
+    @Disabled("Needs Artemis running to work.")
     void response_channel_integration_works() {
         OrderExecutedEvent orderExecutedEvent = new OrderExecutedEvent(1, 0, List.of());
         eventPublisher.publish(orderExecutedEvent);

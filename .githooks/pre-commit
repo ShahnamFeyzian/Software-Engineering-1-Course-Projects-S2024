@@ -5,7 +5,7 @@ echo "pre commit"
 git stash -q --keep-index
 
 # run the tests with Maven
-cd TinyME
+cd TinyME_v2.0
 mvn clean install -Dstyle.color=always
 
 # store the last exit code in a variable
