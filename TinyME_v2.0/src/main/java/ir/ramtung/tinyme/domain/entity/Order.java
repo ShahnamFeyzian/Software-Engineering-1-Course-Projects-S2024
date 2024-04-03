@@ -115,7 +115,7 @@ public class Order {
             broker.decreaseCreditBy(tempOrder.getValue());
         }
         else
-            this.status = OrderStatus.NEW;
+            this.status = OrderStatus.UPDATING;
         this.quantity = tempOrder.quantity;
         this.price = tempOrder.price;
     }

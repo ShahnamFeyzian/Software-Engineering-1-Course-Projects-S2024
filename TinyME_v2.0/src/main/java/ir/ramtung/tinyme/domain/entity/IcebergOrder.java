@@ -46,7 +46,7 @@ public class IcebergOrder extends Order {
 
     @Override
     public int getQuantity() {
-        if (status == OrderStatus.NEW)
+        if (status != OrderStatus.QUEUED)
             return super.getQuantity();
         return displayedQuantity;
     }
@@ -62,7 +62,7 @@ public class IcebergOrder extends Order {
 
     @Override
     public void decreaseQuantity(int amount) {
-        if (status == OrderStatus.NEW) {
+        if (status != OrderStatus.QUEUED) {
             super.decreaseQuantity(amount); 
             return;
         }

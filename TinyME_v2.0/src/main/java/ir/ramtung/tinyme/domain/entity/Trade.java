@@ -49,7 +49,8 @@ public class Trade {
             this.buy = order1;
             this.sell = order2;
             this.sellFirstVersion = order2.snapshot();
-        } else {
+        } 
+        else {
             this.buy = order2;
             this.sell = order1;
             this.sellFirstVersion = order1.snapshot();
@@ -97,7 +98,7 @@ public class Trade {
     }
 
     public void confirm() {
-        if (buy.getStatus() == OrderStatus.NEW) {
+        if (buy.getStatus() != OrderStatus.QUEUED) {
             if (!buyerHasEnoughCredit()) 
                 throw new NotEnoughCreditException();
             decreaseBuyersCredit();
@@ -110,7 +111,7 @@ public class Trade {
     }
 
     public void rollback() {
-        if (buy.getStatus() != OrderStatus.NEW)
+        if (buy.getStatus() == OrderStatus.QUEUED)
             throw new CantRollbackTradeException();
     
         increaseBuyersCredit();
