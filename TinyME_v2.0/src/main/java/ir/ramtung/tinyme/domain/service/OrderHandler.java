@@ -114,12 +114,14 @@ public class OrderHandler {
     }
 
     private void validateEnterOrderRq(EnterOrderRq enterOrderRq) {
-        generalEnterOrderValidation(enterOrderRq);
-            if (enterOrderRq.getRequestType() == OrderEntryType.UPDATE_ORDER)
-                validateUpdateOrderRq(enterOrderRq, securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin()));
+        List<String> errors = generalEnterOrderValidation(enterOrderRq);
+        if (!errors.isEmpty())
+            throw new InvalidRequestException(errors);
+        else if (enterOrderRq.getRequestType() == OrderEntryType.UPDATE_ORDER)
+            validateUpdateOrderRq(enterOrderRq, securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin()));
     }
 
-    private void generalEnterOrderValidation(EnterOrderRq enterOrderRq) {
+    private List<String> generalEnterOrderValidation(EnterOrderRq enterOrderRq) {
         List<String> errors = enterOrderRq.validateYourFields();
         if (!securityRepository.isThereSecurityWithIsin(enterOrderRq.getSecurityIsin()))
             errors.add(Message.UNKNOWN_SECURITY_ISIN);
@@ -135,8 +137,7 @@ public class OrderHandler {
             //TODO 
             // it can be part of validateYourFields, is order of errors matter ?
             errors.add(Message.INVALID_PEAK_SIZE);
-        if (!errors.isEmpty())
-            throw new InvalidRequestException(errors);
+        return errors;
     }
 
     private void validateUpdateOrderRq(EnterOrderRq updateOrderRq, Security security) {
