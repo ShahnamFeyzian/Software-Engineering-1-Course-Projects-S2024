@@ -41,7 +41,7 @@ public class RequestDispatcherTest {
     @Test
     @Disabled("Needs Artemis running to work.")
     void request_channel_integration_works() {
-        EnterOrderRq rq = EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 0, 0, 0);
+        EnterOrderRq rq = EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 0, 0, 0, 0);
         jmsTemplate.convertAndSend(requestQueue, rq);
         verify(mockOrderHandler, timeout(1000)).handleEnterOrder(rq);
     }
