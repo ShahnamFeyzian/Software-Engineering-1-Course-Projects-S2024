@@ -966,4 +966,17 @@ public class SecurityTest {
         assertThat(orderBook.getSellQueue().size()).isZero();
         assertPack.assertOrderInQueue(Side.BUY, 0, 8, 15, 1000, 10, 10);
     }
+
+    @Test 
+    public void add_buy_order_not_enough_execution_cause_rollback() {
+        Order order = new Order(6, security, Side.BUY, 60, 50, 600, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(36000);
+        MatchingOutcome res = security.addNewOrder(order, matcher).outcome();
+
+        assertPack.exceptedBuyerCredit = 36000;
+        assertPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+        assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+    }
 }
