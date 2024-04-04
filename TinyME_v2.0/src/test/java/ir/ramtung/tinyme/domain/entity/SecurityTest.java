@@ -326,8 +326,13 @@ public class SecurityTest {
     }
 
     @Test
-    public void delete_non_existing_order() {
+    public void delete_non_existing_order_sell_side() {
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> security.deleteOrder(Side.SELL, 6));
+        assertPack.assertAll();
+    }
+
+    @Test
+    public void delete_non_existing_order_buy_side() {
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> security.deleteOrder(Side.BUY, 8));
         assertPack.assertAll();
     }
