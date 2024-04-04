@@ -2,6 +2,7 @@ package ir.ramtung.tinyme.domain.service;
 
 import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
+import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 
 import org.springframework.stereotype.Service;
@@ -42,27 +43,27 @@ public class Matcher {
     }
 
     public MatchResult execute(Order order) {
+        List<Trade> trades = new LinkedList<>();
         try {
-            List<Trade> trades = match(order);
-            addOrderToQueue(order, trades);
+            trades = match(order);
+            order.checkExecutionQuantity(someOfExecutionQuantity(trades));
+            order.addYourselfToQueue();
             return MatchResult.executed(order, trades);
         }
         catch (NotEnoughCreditException exp) {
+            rollbackTrades(trades);
             return MatchResult.notEnoughCredit();
+        }
+        catch (NotEnoughExecutionException exp) {
+            rollbackTrades(trades);
+            return MatchResult.notEnoughExecution();
         }
     }
 
-    private void addOrderToQueue(Order order, List<Trade> trades) {
-        if (order.getTotalQuantity() == 0)
-            return;
-        try {
-            order.getSecurity().getOrderBook().enqueue(order);   
-        }
-        catch (NotEnoughCreditException exp) {
-            rollbackTrades(trades);
-            throw exp;
-        }
-        // TODO
-        // this is just painkiller, it should be treated properly
+    private int someOfExecutionQuantity(List<Trade> trades) {
+        int quantitySome = 0;
+        for (Trade trade: trades) 
+            quantitySome += trade.getQuantity();
+        return quantitySome;
     }
 }

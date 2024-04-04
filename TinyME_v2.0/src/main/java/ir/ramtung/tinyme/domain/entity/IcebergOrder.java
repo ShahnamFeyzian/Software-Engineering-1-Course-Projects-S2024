@@ -45,7 +45,7 @@ public class IcebergOrder extends Order {
 
     @Override
     public Order snapshot() {
-        return new IcebergOrder(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, peakSize, this.status);
+        return new IcebergOrder(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, peakSize, OrderStatus.SNAPSHOT);
     }
 
     @Override
@@ -81,13 +81,12 @@ public class IcebergOrder extends Order {
         quantity -= amount;
         displayedQuantity -= amount;
         if(displayedQuantity == 0) {
+            status = OrderStatus.DONE;
             security.deleteOrder(side, orderId);
             if (quantity != 0) {
                 replenish();
                 security.getOrderBook().enqueue(this);
             }
-            else
-                status = OrderStatus.DONE;
         }
         // TODO
         // clean up this shit

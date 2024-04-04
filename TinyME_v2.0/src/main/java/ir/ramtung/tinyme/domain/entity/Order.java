@@ -1,6 +1,8 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import ir.ramtung.tinyme.domain.exception.CantQueueOrderException;
 import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
+import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -55,7 +57,7 @@ public class Order {
     }
 
     public Order snapshot() {
-        return new Order(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, this.status);
+        return new Order(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, OrderStatus.SNAPSHOT);
     }
 
     public Order snapshotWithQuantity(int newQuantity) {
@@ -85,7 +87,6 @@ public class Order {
     public void rollback(Order firstVersion) {
         this.quantity = firstVersion.quantity;
         if (status == OrderStatus.DONE) {
-            status = OrderStatus.QUEUED; 
             security.getOrderBook().enqueue(this);
         }   
     }
@@ -103,6 +104,8 @@ public class Order {
     }
 
     public void queue() {
+        if (this.status == OrderStatus.QUEUED)
+            throw new CantQueueOrderException();
         status = OrderStatus.QUEUED;
     }
 
@@ -135,6 +138,18 @@ public class Order {
     public void checkNewMinimumExecutionQuantity(int minimumExecutionQuantity) {
         if (this.minimumExecutionQuantity != minimumExecutionQuantity)
             throw new UpdateMinimumExecutionQuantityException();
+    }
+
+    public void checkExecutionQuantity(int quantitySome) {
+        if (this.status != OrderStatus.NEW)
+            return;
+        if (quantitySome < this.minimumExecutionQuantity)
+            throw new NotEnoughExecutionException();
+    }
+
+    public void addYourselfToQueue() {
+        if (this.quantity != 0)
+            this.security.getOrderBook().enqueue(this);
     }
 
     public void delete() {
