@@ -125,6 +125,11 @@ public class SecurityTest {
         public void update_order(Order order) {
             SecurityTest.this.security.updateOrder(order, matcher);
         }
+
+        public void increase_order_quantity_with_position(Order order, int position) {
+            SecurityTest.this.sellerShareholder.incPosition(SecurityTest.this.security, position);
+            SecurityTest.this.security.updateOrder(order, matcher);
+        }
     }
 
 
@@ -504,15 +509,45 @@ public class SecurityTest {
 
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 7, 500, 10, 7);
     }
+    
+    @Test
+    public void increase_sell_order_quantity_with_position_buyer_credit() {
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        scenarioGenerator.increase_order_quantity_with_position(order, 5);
+        
+        assertPack.assertBuyerCredit();
+    }
+    
+    @Test
+    public void increase_sell_order_quantity_with_position_buyer_position() {
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        scenarioGenerator.increase_order_quantity_with_position(order, 5);
+        
+        assertPack.assertBuyerPosition();
+    }
 
     @Test
-    public void increase_sell_order_quantity() {
+    public void increase_sell_order_quantity_with_position_seller_credit() {
         Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 5);
-        security.updateOrder(order, matcher);
-
+        scenarioGenerator.increase_order_quantity_with_position(order, 5);
+        
+        assertPack.assertSellerCredit();
+    }
+    
+    @Test
+    public void increase_sell_order_quantity_with_position_seller_position() {
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        scenarioGenerator.increase_order_quantity_with_position(order, 5);
+        
         assertPack.exceptedSellerPosition = 90;
-        assertPack.assertAll();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_sell_order_quantity_with_position_order_in_queue() {
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        scenarioGenerator.increase_order_quantity_with_position(order, 5);
+
         assertPack.assertOrderInQueue(Side.SELL, 1, 2, 15, 700);
     }
 
