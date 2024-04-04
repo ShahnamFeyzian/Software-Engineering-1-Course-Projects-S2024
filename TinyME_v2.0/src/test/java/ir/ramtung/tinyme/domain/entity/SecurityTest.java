@@ -197,13 +197,56 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.BUY, 3, 2, 10, 200);
     }
 
-    @Test
-    public void delete_sell_ice_order() {
-        security.deleteOrder(Side.SELL, 5);
+    // @Test
+    // public void delete_sell_ice_order() {
+    //     security.deleteOrder(Side.SELL, 5);
 
-        assertPack.assertAll();
-        assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> orderBook.getSellQueue().get(4));
+    //     assertPack.assertAll();
+    //     assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> orderBook.getSellQueue().get(4));
+    //     assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+    // }
+    
+    @Test
+    public void delete_sell_ice_order_buyer_credit() {
+        scenarioGenerator.delete_order(Side.SELL, 5);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void delete_sell_ice_order_buyer_position() {
+        scenarioGenerator.delete_order(Side.SELL, 5);
+
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void delete_sell_ice_order_seller_position() {
+        scenarioGenerator.delete_order(Side.SELL, 5);
+
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void delete_sell_ice_order_seller_credit() {
+        scenarioGenerator.delete_order(Side.SELL, 5);
+
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void delete_sell_ice_order_sell_order_in_queue() {
+        scenarioGenerator.delete_order(Side.SELL, 5);
+
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+    }
+
+
+    @Test
+    public void delete_sell_ice_order_exception() {
+        scenarioGenerator.delete_order(Side.SELL, 5);
+
+        assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> orderBook.getSellQueue().get(4));
     }
 
     @Test
