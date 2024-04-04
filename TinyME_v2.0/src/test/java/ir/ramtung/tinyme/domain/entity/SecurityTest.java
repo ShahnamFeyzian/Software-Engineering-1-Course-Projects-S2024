@@ -25,10 +25,16 @@ public class SecurityTest {
     private OrderBook orderBook;
     private List<Order> orders;
     private AssertingPack assertPack;
+    private ScenarioGenerator scenarioGenerator;
     @Autowired
     private Matcher matcher;
 
 
+    // --------------------------------------------------------------------------------
+    // Helper classes
+    // --------------------------------------------------------------------------------
+
+    // Helper class to assert the state of the system
     private class AssertingPack {
         private long exceptedSellerCredit;
         private long exceptedBuyerCredit;
@@ -110,6 +116,18 @@ public class SecurityTest {
         }
     }
 
+    // Helper class to generate scenarios
+    private class ScenarioGenerator {
+        public void delete_order(Side side, int idx) {
+            SecurityTest.this.security.deleteOrder(side, idx);
+        }
+    }
+
+
+    // --------------------------------------------------------------------------------
+    // Test cases
+    // --------------------------------------------------------------------------------
+
     @BeforeEach
     void setup() {
         security = Security.builder().build();
@@ -134,14 +152,48 @@ public class SecurityTest {
         );
         orders.forEach(order -> orderBook.enqueue(order));
         assertPack = new AssertingPack();
+        scenarioGenerator = new ScenarioGenerator();
     }
 
     @Test
-    public void delete_sell_order() {
-        security.deleteOrder(Side.SELL, 2);
-        
-        assertPack.assertAll();
+    public void delete_sell_order_buyer_credit() {
+        scenarioGenerator.delete_order(Side.SELL, 2);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void delete_sell_order_buyer_position() {
+        scenarioGenerator.delete_order(Side.SELL, 2);
+
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void delete_sell_order_seller_position() {
+        scenarioGenerator.delete_order(Side.SELL, 2);
+
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void delete_sell_order_seller_credit() {
+        scenarioGenerator.delete_order(Side.SELL, 2);
+
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void delete_sell_order_sell_order_in_queue() {
+        scenarioGenerator.delete_order(Side.SELL, 2);
+
         assertPack.assertOrderInQueue(Side.SELL, 1, 3, 10, 800);
+    }
+
+    @Test
+    public void delete_sell_order_buy_order_in_queue() {
+        scenarioGenerator.delete_order(Side.SELL, 2);
+
         assertPack.assertOrderInQueue(Side.BUY, 3, 2, 10, 200);
     }
 
@@ -189,7 +241,7 @@ public class SecurityTest {
         assertPack.assertAll();
         assertPack.assertOrderInQueue(Side.SELL, 0, 1, 4, 600);
         // TODO
-        // what if new quantity be zero? what should happend in that case?
+        // what if new quantity be zero? what should happen in that case?
     }
 
     @Test 
