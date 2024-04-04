@@ -121,6 +121,10 @@ public class SecurityTest {
         public void delete_order(Side side, int idx) {
             SecurityTest.this.security.deleteOrder(side, idx);
         }
+
+        public void update_order(Order order) {
+            SecurityTest.this.security.updateOrder(order, matcher);
+        }
     }
 
 
@@ -337,23 +341,85 @@ public class SecurityTest {
         assertPack.assertAll();
     }
 
+    // TODO
+    // what if new quantity be zero? what should happen in that case?
     @Test
-    public void decrease_sell_order_quantity() {
+    public void decrease_sell_order_quantity_buyer_credit() {
         Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
-        assertPack.assertAll();
-        assertPack.assertOrderInQueue(Side.SELL, 0, 1, 4, 600);
-        // TODO
-        // what if new quantity be zero? what should happen in that case?
+        scenarioGenerator.update_order(order);
+        
+        assertPack.assertBuyerCredit();
     }
 
-    @Test 
-    public void decrease_sell_ice_order_quantity() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(order, matcher);
+    @Test
+    public void decrease_sell_order_quantity_buyer_position() {
+        Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
+        scenarioGenerator.update_order(order);
+        
+        assertPack.assertBuyerPosition();
+    }
 
-        assertPack.assertAll();
+    @Test
+    public void decrease_sell_order_quantity_seller_credit() {
+        Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
+        scenarioGenerator.update_order(order);
+        
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void decrease_sell_order_quantity_seller_position() {
+        Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
+        scenarioGenerator.update_order(order);
+        
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void decrease_sell_order_quantity_order_in_queue() {
+        Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
+        scenarioGenerator.update_order(order);
+        
+        assertPack.assertOrderInQueue(Side.SELL, 0, 1, 4, 600);
+    }
+
+    @Test
+    public void decrease_sell_ice_order_quantity_buyer_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.update_order(order);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void decrease_sell_ice_order_quantity_buyer_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.update_order(order);
+
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void decrease_sell_ice_order_quantity_seller_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.update_order(order);
+
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void decrease_sell_ice_order_quantity_seller_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.update_order(order);
+
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void decrease_sell_ice_order_quantity_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.update_order(order);
+
         assertPack.assertOrderInQueue(Side.SELL, 4, 5, 30, 1000, 10, 10);
     }
 
