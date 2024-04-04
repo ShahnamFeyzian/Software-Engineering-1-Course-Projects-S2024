@@ -749,6 +749,21 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
     }
 
+    @Test 
+    public void add_sell_ice_order_not_enough_execution_cause_rollback() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 70, 300, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 100);
+        MatchingOutcome res = security.addNewOrder(order, matcher).outcome();
+
+        assertPack.exceptedSellerPosition = 185;
+        assertPack.assertAll();
+        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+        assertPack.assertOrderInQueue(Side.BUY, 1, 4, 10, 400);
+        assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
+        assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+    }
+
     @Test
     public void add_buy_order_no_trades_happens() {
         Order order = new Order(6, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
