@@ -133,10 +133,6 @@ public class OrderHandler {
             errors.add(Message.UNKNOWN_BROKER_ID);
         if (!shareholderRepository.isThereShareholderWithId(enterOrderRq.getShareholderId())) 
             errors.add(Message.UNKNOWN_SHAREHOLDER_ID);
-        if (!enterOrderRq.isPeakSizeValid())
-            //TODO 
-            // it can be part of validateYourFields, is order of errors matter ?
-            errors.add(Message.INVALID_PEAK_SIZE);
         return errors;
     }
 

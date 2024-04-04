@@ -16,6 +16,7 @@ public class EnterOrderRq extends BaseOrder{
     private long brokerId;
     private long shareholderId;
     private int peakSize;
+    private int minimumExecutionQuantity;
     // TODO 
     // why update(amend) order should have brokerId and shareholder ?
     // the orderId isn't enough ?
@@ -48,6 +49,8 @@ public class EnterOrderRq extends BaseOrder{
             errors.add(Message.ORDER_QUANTITY_NOT_POSITIVE);
         if (price <= 0)
             errors.add(Message.ORDER_PRICE_NOT_POSITIVE);
+        if (!isPeakSizeValid())
+            errors.add(Message.INVALID_PEAK_SIZE);
 
         return errors;
     }
