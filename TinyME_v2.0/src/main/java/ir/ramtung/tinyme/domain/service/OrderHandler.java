@@ -94,6 +94,8 @@ public class OrderHandler {
             events.add(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.BUYER_HAS_NOT_ENOUGH_CREDIT)));
         else if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_POSITIONS) 
             events.add(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.SELLER_HAS_NOT_ENOUGH_POSITIONS)));
+        else if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_EXECUTION)
+            events.add(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.MINIMUM_EXECUTION_QUANTITY_NOT_MET)));
         return events;
     }
 
