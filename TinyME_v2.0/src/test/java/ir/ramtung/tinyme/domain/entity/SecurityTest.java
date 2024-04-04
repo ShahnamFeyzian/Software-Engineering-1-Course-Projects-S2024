@@ -764,6 +764,19 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
     }
 
+    @Test 
+    public void add_sell_order_quantity_is_equal_to_min_execution_quantity() {
+        Order order = new Order(6, security, Side.SELL, 50, 50, 300, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 50);
+        security.addNewOrder(order, matcher);
+
+        assertPack.exceptedSellerCredit = 24500;
+        assertPack.exceptedBuyerPosition = 50;
+        assertPack.assertAll();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 4, 5, 400);
+        assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+    }
+
     @Test
     public void add_buy_order_no_trades_happens() {
         Order order = new Order(6, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
