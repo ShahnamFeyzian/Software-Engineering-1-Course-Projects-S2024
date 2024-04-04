@@ -114,14 +114,12 @@ public class OrderHandler {
     }
 
     private void validateEnterOrderRq(EnterOrderRq enterOrderRq) {
-        List<String> errors = generalEnterOrderValidation(enterOrderRq);
-        if (!errors.isEmpty())
-            throw new InvalidRequestException(errors);
-        else if (enterOrderRq.getRequestType() == OrderEntryType.UPDATE_ORDER)
+        generalEnterOrderValidation(enterOrderRq);
+        if (enterOrderRq.getRequestType() == OrderEntryType.UPDATE_ORDER)
             validateUpdateOrderRq(enterOrderRq, securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin()));
     }
 
-    private List<String> generalEnterOrderValidation(EnterOrderRq enterOrderRq) {
+    private void generalEnterOrderValidation(EnterOrderRq enterOrderRq) {
         List<String> errors = enterOrderRq.validateYourFields();
         if (!securityRepository.isThereSecurityWithIsin(enterOrderRq.getSecurityIsin()))
             errors.add(Message.UNKNOWN_SECURITY_ISIN);
@@ -133,7 +131,8 @@ public class OrderHandler {
             errors.add(Message.UNKNOWN_BROKER_ID);
         if (!shareholderRepository.isThereShareholderWithId(enterOrderRq.getShareholderId())) 
             errors.add(Message.UNKNOWN_SHAREHOLDER_ID);
-        return errors;
+        if (!errors.isEmpty())
+            throw new InvalidRequestException(errors);
     }
 
     private void validateUpdateOrderRq(EnterOrderRq updateOrderRq, Security security) {
