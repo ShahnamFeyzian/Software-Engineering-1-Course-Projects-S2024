@@ -1506,22 +1506,55 @@ public class SecurityTest {
     
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
-    
 
     @Test
-    public void increase_buy_order_price_and_completely_traded() {
+    public void increase_buy_order_price_and_completely_traded_buyer_credit() {
+        Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(5000);
+        security.updateOrder(order, matcher);
+
+        assertPack.exceptedBuyerCredit = 1000;
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void increase_buy_order_price_and_completely_traded_buyer_position() {
         Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
         buyerBroker.increaseCreditBy(5000);
         security.updateOrder(order, matcher);
 
         assertPack.exceptedBuyerPosition = 10;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void increase_buy_order_price_and_completely_traded_seller_credit() {
+        Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(5000);
+        security.updateOrder(order, matcher);
+
         assertPack.exceptedSellerCredit = 6000;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void increase_buy_order_price_and_completely_traded_seller_position() {
+        Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(5000);
+        security.updateOrder(order, matcher);
+
         assertPack.exceptedSellerPosition = 75;
-        assertPack.exceptedBuyerCredit = 1000;
-        assertPack.assertAll();
-        assertThat(orderBook.isThereOrderWithId(Side.BUY, 2)).isFalse();
-        assertThat(orderBook.isThereOrderWithId(Side.SELL, 1)).isFalse();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_buy_order_price_and_completely_traded_order_in_queue() {
+        Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(5000);
+        security.updateOrder(order, matcher);
+
         assertPack.assertOrderInQueue(Side.BUY, 3, 1, 10, 100);
+        assertThat(orderBook.isThereOrderWithId(Side.SELL, 1)).isFalse();
         assertPack.assertOrderInQueue(Side.SELL, 0, 2, 10, 700);
     }
 
