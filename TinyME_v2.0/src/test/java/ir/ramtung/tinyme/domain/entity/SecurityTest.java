@@ -184,27 +184,18 @@ public class SecurityTest {
     }
 
     @Test
-    public void delete_sell_order_sell_order_in_queue() {
+    public void delete_sell_order_sell_side_in_queue() {
         scenarioGenerator.delete_order(Side.SELL, 2);
 
         assertPack.assertOrderInQueue(Side.SELL, 1, 3, 10, 800);
     }
 
     @Test
-    public void delete_sell_order_buy_order_in_queue() {
+    public void delete_sell_order_buy_side_in_queue() {
         scenarioGenerator.delete_order(Side.SELL, 2);
 
         assertPack.assertOrderInQueue(Side.BUY, 3, 2, 10, 200);
     }
-
-    // @Test
-    // public void delete_sell_ice_order() {
-    //     security.deleteOrder(Side.SELL, 5);
-
-    //     assertPack.assertAll();
-    //     assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> orderBook.getSellQueue().get(4));
-    //     assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
-    // }
     
     @Test
     public void delete_sell_ice_order_buyer_credit() {
@@ -241,7 +232,6 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
 
-
     @Test
     public void delete_sell_ice_order_exception() {
         scenarioGenerator.delete_order(Side.SELL, 5);
@@ -250,14 +240,48 @@ public class SecurityTest {
     }
 
     @Test
-    public void delete_buy_order() {
-        security.deleteOrder(Side.BUY, 3);
-        
+    public void delete_buy_order_buyer_credit() {
+        scenarioGenerator.delete_order(Side.BUY, 3);
+
         assertPack.exceptedBuyerCredit = 3000;
-        assertPack.assertAll();
+        assertPack.assertBuyerCredit();
+    }
+    
+    @Test
+    public void delete_buy_order_buyer_position() {
+        scenarioGenerator.delete_order(Side.BUY, 3);
+        
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void delete_buy_order_seller_credit() {
+        scenarioGenerator.delete_order(Side.BUY, 3);
+
+        assertPack.assertSellerCredit();
+    }
+    
+    @Test
+    public void delete_buy_order_seller_position() {
+        scenarioGenerator.delete_order(Side.BUY, 3);
+
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void delete_buy_order_sell_side_in_queue() {
+        scenarioGenerator.delete_order(Side.BUY, 3);
+
         assertPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
+    }
+
+    @Test
+    public void delete_buy_order_buy_side_in_queue() {
+        scenarioGenerator.delete_order(Side.BUY, 3);
+
         assertPack.assertOrderInQueue(Side.BUY, 2, 2, 10, 200);
     }
+
 
     @Test
     public void delete_buy_ice_order() {
