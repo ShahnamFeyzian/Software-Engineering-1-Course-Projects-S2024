@@ -1035,4 +1035,18 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
         assertPack.assertOrderInQueue(Side.SELL, 0, 5, 45, 1000, 10, 10);
     }
+
+    @Test 
+    public void add_buy_ice_order_quantity_is_equal_to_min_execution_quantity() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 22, 22, 800, buyerBroker, buyerShareholder, 10);
+        buyerBroker.increaseCreditBy(14600);
+        security.addNewOrder(order, matcher);
+
+        assertPack.exceptedSellerCredit = 14600;
+        assertPack.exceptedSellerPosition = 63;
+        assertPack.exceptedBuyerPosition = 22;
+        assertPack.assertAll();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+        assertPack.assertOrderInQueue(Side.SELL, 0, 3, 8, 800);
+    }
 }
