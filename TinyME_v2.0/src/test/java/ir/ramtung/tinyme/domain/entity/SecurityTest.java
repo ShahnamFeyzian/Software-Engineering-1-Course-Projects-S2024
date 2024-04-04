@@ -1158,24 +1158,86 @@ public class SecurityTest {
     }
 
     @Test
-    public void decrease_buy_order_price() {
+    public void decrease_buy_order_price_buyer_credit() {
         Order order = new Order(3, security, Side.BUY, 10, 150, buyerBroker, buyerShareholder);
         security.updateOrder(order, matcher);
 
         assertPack.exceptedBuyerCredit = 1500;
-        assertPack.assertAll();
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void decrease_buy_order_price_buyer_position() {
+        Order order = new Order(3, security, Side.BUY, 10, 150, buyerBroker, buyerShareholder);
+        security.updateOrder(order, matcher);
+
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void decrease_buy_order_price_seller_credit() {
+        Order order = new Order(3, security, Side.BUY, 10, 150, buyerBroker, buyerShareholder);
+        security.updateOrder(order, matcher);
+
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void decrease_buy_order_price_seller_position() {
+        Order order = new Order(3, security, Side.BUY, 10, 150, buyerBroker, buyerShareholder);
+        security.updateOrder(order, matcher);
+
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void decrease_buy_order_price_order_in_queue() {
+        Order order = new Order(3, security, Side.BUY, 10, 150, buyerBroker, buyerShareholder);
+        security.updateOrder(order, matcher);
+
         assertPack.assertOrderInQueue(Side.BUY, 4, 1, 10, 100);
         assertPack.assertOrderInQueue(Side.BUY, 3, 3, 10, 150);
         assertPack.assertOrderInQueue(Side.BUY, 2, 2, 10, 200);
     }
 
     @Test
-    public void decrease_buy_ice_order_price() {
+    public void decrease_buy_ice_order_price_buyer_credit() {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 200, buyerBroker, buyerShareholder, 10);
         security.updateOrder(order, matcher);
 
         assertPack.exceptedBuyerCredit = 13500;
-        assertPack.assertAll();
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void decrease_buy_ice_order_price_buyer_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 200, buyerBroker, buyerShareholder, 10);
+        security.updateOrder(order, matcher);
+
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void decrease_buy_ice_order_price_seller_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 200, buyerBroker, buyerShareholder, 10);
+        security.updateOrder(order, matcher);
+
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void decrease_buy_ice_order_price_seller_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 200, buyerBroker, buyerShareholder, 10);
+        security.updateOrder(order, matcher);
+
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void decrease_buy_ice_order_price_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 200, buyerBroker, buyerShareholder, 10);
+        security.updateOrder(order, matcher);
+
         assertPack.assertOrderInQueue(Side.BUY, 4, 1, 10, 100);
         assertPack.assertOrderInQueue(Side.BUY, 3, 5, 45, 200, 10, 10);
         assertPack.assertOrderInQueue(Side.BUY, 2, 2, 10, 200);
