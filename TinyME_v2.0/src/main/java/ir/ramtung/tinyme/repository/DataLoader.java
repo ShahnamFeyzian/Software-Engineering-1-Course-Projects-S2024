@@ -147,9 +147,10 @@ public class DataLoader {
                                 Side.parse(line[2]),
                                 Integer.parseInt(line[3]),
                                 Integer.parseInt(line[4]),
+                                Integer.parseInt(line[5]),
                                 broker,
                                 shareholder,
-                                LocalDateTime.parse(line[7]),
+                                LocalDateTime.parse(line[8]),
                                 OrderStatus.QUEUED);
                     } else {
                         order = new IcebergOrder(
@@ -158,11 +159,12 @@ public class DataLoader {
                                 Side.parse(line[2]),
                                 Integer.parseInt(line[3]),
                                 Integer.parseInt(line[4]),
+                                Integer.parseInt(line[5]),
                                 broker,
                                 shareholder,
-                                LocalDateTime.parse(line[7]),
-                                Integer.parseInt(line[8]),
+                                LocalDateTime.parse(line[8]),
                                 Integer.parseInt(line[9]),
+                                Integer.parseInt(line[10]),
                                 OrderStatus.QUEUED);
                     }
                     orders.addFirst(order);

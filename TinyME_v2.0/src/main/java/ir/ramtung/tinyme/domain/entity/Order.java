@@ -17,6 +17,7 @@ public class Order {
     protected Security security;
     protected Side side;
     protected int quantity;
+    protected int minimumExecutionQuantity;
     protected int price;
     protected Broker broker;
     protected Shareholder shareholder;
@@ -25,11 +26,13 @@ public class Order {
     @Builder.Default
     protected OrderStatus status = OrderStatus.NEW;
 
-    public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, LocalDateTime entryTime, OrderStatus status) {
+    public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder, 
+    LocalDateTime entryTime, OrderStatus status) {
         this.orderId = orderId;
         this.security = security;
         this.side = side;
         this.quantity = quantity;
+        this.minimumExecutionQuantity = minimumExecutionQuantity;
         this.price = price;
         this.entryTime = entryTime;
         this.broker = broker;
@@ -37,28 +40,25 @@ public class Order {
         this.status = status;
     }
 
-    public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, LocalDateTime entryTime) {
-        this.orderId = orderId;
-        this.security = security;
-        this.side = side;
-        this.quantity = quantity;
-        this.price = price;
-        this.entryTime = entryTime;
-        this.broker = broker;
-        this.shareholder = shareholder;
-        this.status = OrderStatus.NEW;
+    public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder, 
+    LocalDateTime entryTime) {
+        this(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, OrderStatus.NEW);
+    }
+
+    public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder) {
+        this(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, LocalDateTime.now());
     }
 
     public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder) {
-        this(orderId, security, side, quantity, price, broker, shareholder, LocalDateTime.now());
+        this(orderId, security, side, quantity, 0, price, broker, shareholder);
     }
 
     public Order snapshot() {
-        return new Order(orderId, security, side, quantity, price, broker, shareholder, entryTime, this.status);
+        return new Order(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, this.status);
     }
 
     public Order snapshotWithQuantity(int newQuantity) {
-        return new Order(orderId, security, side, newQuantity, price, broker, shareholder, entryTime, this.status);
+        return new Order(orderId, security, side, newQuantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, this.status);
         // TODO
         // this exists just for unit tests and should remove
     }

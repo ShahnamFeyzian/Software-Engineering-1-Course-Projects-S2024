@@ -62,12 +62,17 @@ public class OrderHandler {
         Security security = securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin());
         
         if (enterOrderRq.getPeakSize() == 0)
-            return new Order(enterOrderRq.getOrderId(), security, enterOrderRq.getSide(),
-                    enterOrderRq.getQuantity(), enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime());
+            return new Order(
+                            enterOrderRq.getOrderId(), security, enterOrderRq.getSide(),
+                            enterOrderRq.getQuantity(), enterOrderRq.getMinimumExecutionQuantity(), 
+                            enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime()
+                        );
         else
-            return new IcebergOrder(enterOrderRq.getOrderId(), security, enterOrderRq.getSide(),
-                    enterOrderRq.getQuantity(), enterOrderRq.getPrice(), broker, shareholder,
-                    enterOrderRq.getEntryTime(), enterOrderRq.getPeakSize());
+            return new IcebergOrder(
+                            enterOrderRq.getOrderId(), security, enterOrderRq.getSide(),
+                            enterOrderRq.getQuantity(), enterOrderRq.getMinimumExecutionQuantity(), 
+                            enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime(), enterOrderRq.getPeakSize()
+                        );
     }
 
     private void publishEnterOrderMatchResult(MatchResult matchResult, EnterOrderRq enterOrderRq) {

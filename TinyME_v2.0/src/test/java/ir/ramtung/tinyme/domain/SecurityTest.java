@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,7 +47,7 @@ class SecurityTest {
 
     @Test
     void reducing_quantity_does_not_change_priority() {
-        Order updateOrder = new Order(3, security, Side.BUY, 440, 15450, broker, shareholder, LocalDateTime.now());
+        Order updateOrder = new Order(3, security, Side.BUY, 440, 15450, broker, shareholder);
         assertThatNoException().isThrownBy(() -> security.updateOrder(updateOrder, matcher));
         assertThat(security.getOrderBook().getBuyQueue().get(2).getQuantity()).isEqualTo(440);
         assertThat(security.getOrderBook().getBuyQueue().get(2).getOrderId()).isEqualTo(3);
@@ -56,7 +55,7 @@ class SecurityTest {
 
     @Test
     void increasing_quantity_changes_priority() {
-        Order updateOrder = new Order(3, security, Side.BUY, 450, 15450, broker, shareholder, LocalDateTime.now());
+        Order updateOrder = new Order(3, security, Side.BUY, 450, 15450, broker, shareholder);
         assertThatNoException().isThrownBy(() -> security.updateOrder(updateOrder, matcher));
         assertThat(security.getOrderBook().getBuyQueue().get(3).getQuantity()).isEqualTo(450);
         assertThat(security.getOrderBook().getBuyQueue().get(3).getOrderId()).isEqualTo(3);
@@ -64,7 +63,7 @@ class SecurityTest {
 
     @Test
     void changing_price_changes_priority() {
-        Order updateOrder = new Order(1, security, Side.BUY, 300, 15450, broker, shareholder, LocalDateTime.now());
+        Order updateOrder = new Order(1, security, Side.BUY, 300, 15450, broker, shareholder);
         assertThatNoException().isThrownBy(() -> security.updateOrder(updateOrder, matcher));
         assertThat(security.getOrderBook().getBuyQueue().get(3).getQuantity()).isEqualTo(300);
         assertThat(security.getOrderBook().getBuyQueue().get(3).getPrice()).isEqualTo(15450);
@@ -73,7 +72,7 @@ class SecurityTest {
     }
     @Test
     void changing_price_causes_trades_to_happen() {
-        Order updateOrder = new Order(6, security, Side.SELL, 350, 15700, broker, shareholder, LocalDateTime.now());
+        Order updateOrder = new Order(6, security, Side.SELL, 350, 15700, broker, shareholder);
         assertThatNoException().isThrownBy(() ->
                 assertThat(security.updateOrder(updateOrder, matcher).trades()).isNotEmpty()
         );
@@ -81,7 +80,7 @@ class SecurityTest {
 
     @Test
     void updating_non_existing_order_fails() {
-        Order updateOrder = new Order(6, security, Side.BUY, 350, 15700, broker, shareholder, LocalDateTime.now());
+        Order updateOrder = new Order(6, security, Side.BUY, 350, 15700, broker, shareholder);
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> security.updateOrder(updateOrder, matcher));
     }
 
@@ -110,7 +109,7 @@ class SecurityTest {
         );
         broker.increaseCreditBy(35_841_250);
         orders.forEach(order -> security.getOrderBook().enqueue(order));
-        Order updateOrder = new IcebergOrder(3, security, Side.BUY, 445, 15450, broker, shareholder, LocalDateTime.now(), 150);
+        Order updateOrder = new IcebergOrder(3, security, Side.BUY, 445, 15450, broker, shareholder, 150);
         assertThatNoException().isThrownBy(() -> security.updateOrder(updateOrder, matcher));
         assertThat(security.getOrderBook().getBuyQueue().get(3).getQuantity()).isEqualTo(150);
         assertThat(security.getOrderBook().getBuyQueue().get(3).getOrderId()).isEqualTo(3);
@@ -129,7 +128,7 @@ class SecurityTest {
         );
         broker.increaseCreditBy(35_841_250);
         orders.forEach(order -> security.getOrderBook().enqueue(order));
-        Order updateOrder = new IcebergOrder(3, security, Side.BUY, 300, 15450, broker, shareholder, LocalDateTime.now(), 100);
+        Order updateOrder = new IcebergOrder(3, security, Side.BUY, 300, 15450, broker, shareholder, 100);
         assertThatNoException().isThrownBy(() -> security.updateOrder(updateOrder, matcher));
         assertThat(security.getOrderBook().getBuyQueue().get(2).getOrderId()).isEqualTo(3);
     }
