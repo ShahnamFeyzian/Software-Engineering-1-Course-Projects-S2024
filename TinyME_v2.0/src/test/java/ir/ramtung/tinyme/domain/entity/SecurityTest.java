@@ -77,15 +77,21 @@ public class SecurityTest {
             assertPositions();
         }
 
-        private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int price) {
+        private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int minExeQuantity, int price) {
             Order order = (side == Side.BUY) ? buyQueue.get(idx) : sellQueue.get(idx);
             long actualId = order.getOrderId();
             int actualquantity = order.getTotalQuantity();
             int actualPrice = order.getPrice();
+            int actualMinExeQuantity = order.getMinimumExecutionQuantity();
 
             assertThat(actualId).isEqualTo(orderId);
             assertThat(actualquantity).isEqualTo(quantity);
+            assertThat(actualMinExeQuantity).isEqualTo(minExeQuantity);
             assertThat(actualPrice).isEqualTo(price);
+        }
+
+        private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int price) {
+            assertOrderInQueue(side, idx, orderId, quantity, 0, price);
         }
 
         private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int price, int peakSize, int displayedQuantity) {
