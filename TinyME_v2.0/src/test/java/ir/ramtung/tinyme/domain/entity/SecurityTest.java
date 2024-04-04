@@ -1464,10 +1464,49 @@ public class SecurityTest {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
         MatchingOutcome res = scenarioGenerator.updateOrder(order, matcher).outcome();
     
-        assertPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+    }
+
+    @Test
+    public void increase_buy_ice_order_price_no_trading_happens_and_not_enough_credit_buyer_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
+        scenarioGenerator.updateOrder(order, matcher).outcome();
+    
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void increase_buy_ice_order_price_no_trading_happens_and_not_enough_credit_buyer_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
+        scenarioGenerator.updateOrder(order, matcher).outcome();
+    
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void increase_buy_ice_order_price_no_trading_happens_and_not_enough_credit_seller_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
+        scenarioGenerator.updateOrder(order, matcher).outcome();
+    
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void increase_buy_ice_order_price_no_trading_happens_and_not_enough_credit_seller_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
+        scenarioGenerator.updateOrder(order, matcher).outcome();
+    
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_buy_ice_order_price_no_trading_happens_and_not_enough_credit_in_queue() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
+        scenarioGenerator.updateOrder(order, matcher).outcome();
+    
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
+    
 
     @Test
     public void increase_buy_order_price_and_completely_traded() {
