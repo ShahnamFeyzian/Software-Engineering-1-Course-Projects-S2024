@@ -1046,6 +1046,20 @@ public class SecurityTest {
     }
 
     @Test 
+    public void add_buy_ice_order_and_check_min_execution_quantity() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 32, 20, 700, buyerBroker, buyerShareholder, 10);
+        buyerBroker.increaseCreditBy(21400);
+        security.addNewOrder(order, matcher);
+
+        assertPack.exceptedSellerCredit = 13000;
+        assertPack.exceptedSellerPosition = 65;
+        assertPack.exceptedBuyerPosition = 20;
+        assertPack.assertAll();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 6, 12, 20, 700, 10, 10);
+        assertPack.assertOrderInQueue(Side.SELL, 0, 3, 10, 800);
+    }
+
+    @Test 
     public void add_buy_order_not_enough_execution_cause_rollback() {
         Order order = new Order(6, security, Side.BUY, 60, 50, 600, buyerBroker, buyerShareholder);
         buyerBroker.increaseCreditBy(36000);
