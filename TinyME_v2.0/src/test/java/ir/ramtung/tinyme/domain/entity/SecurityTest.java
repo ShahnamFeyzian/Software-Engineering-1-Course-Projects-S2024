@@ -94,8 +94,8 @@ public class SecurityTest {
             assertOrderInQueue(side, idx, orderId, quantity, 0, price);
         }
 
-        private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int price, int peakSize, int displayedQuantity) {
-            assertOrderInQueue(side, idx, orderId, quantity, price);
+        private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int minExeQuantity, int price, int peakSize, int displayedQuantity) {
+            assertOrderInQueue(side, idx, orderId, quantity, minExeQuantity, price);
             Order order = (side == Side.BUY) ? buyQueue.get(idx) : sellQueue.get(idx);
             IcebergOrder iceOrder = (IcebergOrder) order;
             int actualPeakSize = iceOrder.getPeakSize(); 
@@ -103,6 +103,10 @@ public class SecurityTest {
 
             assertThat(actualPeakSize).isEqualTo(peakSize);
             assertThat(actualDisplayedQuantity).isEqualTo(displayedQuantity);
+        }
+
+        private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int price, int peakSize, int displayedQuantity) {
+            assertOrderInQueue(side, idx, orderId, quantity, 0, price, peakSize, displayedQuantity);
         }
     }
 
