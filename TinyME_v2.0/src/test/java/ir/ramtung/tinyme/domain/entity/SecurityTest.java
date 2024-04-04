@@ -118,17 +118,21 @@ public class SecurityTest {
 
     // Helper class to generate scenarios
     private class ScenarioGenerator {
-        public void delete_order(Side side, int idx) {
+        public void deleteOrder(Side side, int idx) {
             SecurityTest.this.security.deleteOrder(side, idx);
         }
 
-        public void update_order(Order order) {
-            SecurityTest.this.security.updateOrder(order, matcher);
+        public MatchResult updateOrder(Order order) {
+            return SecurityTest.this.security.updateOrder(order, matcher);
         }
 
-        public void increase_order_quantity_with_position(Order order, int position) {
+        public MatchResult increaseOrderQuantityWithPosition(Order order, int position) {
             SecurityTest.this.sellerShareholder.incPosition(SecurityTest.this.security, position);
-            SecurityTest.this.security.updateOrder(order, matcher);
+            return SecurityTest.this.security.updateOrder(order, matcher);
+        }
+
+        public MatchResult increaseOrderQuantityWithoutPosition(Order order) {
+            return SecurityTest.this.security.updateOrder(order, matcher);
         }
     }
 
@@ -166,91 +170,91 @@ public class SecurityTest {
 
     @Test
     public void delete_sell_order_buyer_credit() {
-        scenarioGenerator.delete_order(Side.SELL, 2);
+        scenarioGenerator.deleteOrder(Side.SELL, 2);
 
         assertPack.assertBuyerCredit();
     }
 
     @Test
     public void delete_sell_order_buyer_position() {
-        scenarioGenerator.delete_order(Side.SELL, 2);
+        scenarioGenerator.deleteOrder(Side.SELL, 2);
 
         assertPack.assertBuyerPosition();
     }
 
     @Test
     public void delete_sell_order_seller_position() {
-        scenarioGenerator.delete_order(Side.SELL, 2);
+        scenarioGenerator.deleteOrder(Side.SELL, 2);
 
         assertPack.assertSellerPosition();
     }
 
     @Test
     public void delete_sell_order_seller_credit() {
-        scenarioGenerator.delete_order(Side.SELL, 2);
+        scenarioGenerator.deleteOrder(Side.SELL, 2);
 
         assertPack.assertSellerCredit();
     }
 
     @Test
     public void delete_sell_order_sell_side_in_queue() {
-        scenarioGenerator.delete_order(Side.SELL, 2);
+        scenarioGenerator.deleteOrder(Side.SELL, 2);
 
         assertPack.assertOrderInQueue(Side.SELL, 1, 3, 10, 800);
     }
 
     @Test
     public void delete_sell_order_buy_side_in_queue() {
-        scenarioGenerator.delete_order(Side.SELL, 2);
+        scenarioGenerator.deleteOrder(Side.SELL, 2);
 
         assertPack.assertOrderInQueue(Side.BUY, 3, 2, 10, 200);
     }
     
     @Test
     public void delete_sell_ice_order_buyer_credit() {
-        scenarioGenerator.delete_order(Side.SELL, 5);
+        scenarioGenerator.deleteOrder(Side.SELL, 5);
 
         assertPack.assertBuyerCredit();
     }
 
     @Test
     public void delete_sell_ice_order_buyer_position() {
-        scenarioGenerator.delete_order(Side.SELL, 5);
+        scenarioGenerator.deleteOrder(Side.SELL, 5);
 
         assertPack.assertBuyerPosition();
     }
 
     @Test
     public void delete_sell_ice_order_seller_position() {
-        scenarioGenerator.delete_order(Side.SELL, 5);
+        scenarioGenerator.deleteOrder(Side.SELL, 5);
 
         assertPack.assertSellerPosition();
     }
 
     @Test
     public void delete_sell_ice_order_seller_credit() {
-        scenarioGenerator.delete_order(Side.SELL, 5);
+        scenarioGenerator.deleteOrder(Side.SELL, 5);
 
         assertPack.assertSellerCredit();
     }
 
     @Test
     public void delete_sell_ice_order_sell_order_in_queue() {
-        scenarioGenerator.delete_order(Side.SELL, 5);
+        scenarioGenerator.deleteOrder(Side.SELL, 5);
 
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
 
     @Test
     public void delete_sell_ice_order_exception() {
-        scenarioGenerator.delete_order(Side.SELL, 5);
+        scenarioGenerator.deleteOrder(Side.SELL, 5);
 
         assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> orderBook.getSellQueue().get(4));
     }
 
     @Test
     public void delete_buy_order_buyer_credit() {
-        scenarioGenerator.delete_order(Side.BUY, 3);
+        scenarioGenerator.deleteOrder(Side.BUY, 3);
 
         assertPack.exceptedBuyerCredit = 3000;
         assertPack.assertBuyerCredit();
@@ -258,42 +262,42 @@ public class SecurityTest {
     
     @Test
     public void delete_buy_order_buyer_position() {
-        scenarioGenerator.delete_order(Side.BUY, 3);
+        scenarioGenerator.deleteOrder(Side.BUY, 3);
         
         assertPack.assertBuyerPosition();
     }
 
     @Test
     public void delete_buy_order_seller_credit() {
-        scenarioGenerator.delete_order(Side.BUY, 3);
+        scenarioGenerator.deleteOrder(Side.BUY, 3);
 
         assertPack.assertSellerCredit();
     }
     
     @Test
     public void delete_buy_order_seller_position() {
-        scenarioGenerator.delete_order(Side.BUY, 3);
+        scenarioGenerator.deleteOrder(Side.BUY, 3);
 
         assertPack.assertSellerPosition();
     }
 
     @Test
     public void delete_buy_order_sell_side_in_queue() {
-        scenarioGenerator.delete_order(Side.BUY, 3);
+        scenarioGenerator.deleteOrder(Side.BUY, 3);
 
         assertPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
     }
 
     @Test
     public void delete_buy_order_buy_side_in_queue() {
-        scenarioGenerator.delete_order(Side.BUY, 3);
+        scenarioGenerator.deleteOrder(Side.BUY, 3);
 
         assertPack.assertOrderInQueue(Side.BUY, 2, 2, 10, 200);
     }
 
     @Test
     public void delete_buy_ice_order_buyer_credit() {
-        scenarioGenerator.delete_order(Side.BUY, 5);
+        scenarioGenerator.deleteOrder(Side.BUY, 5);
 
         assertPack.exceptedBuyerCredit = 22500;
         assertPack.assertBuyerCredit();
@@ -301,35 +305,35 @@ public class SecurityTest {
 
     @Test
     public void delete_buy_ice_order_buyer_position() {
-        scenarioGenerator.delete_order(Side.BUY, 5);
+        scenarioGenerator.deleteOrder(Side.BUY, 5);
 
         assertPack.assertBuyerPosition();
     }
 
     @Test
     public void delete_buy_ice_order_seller_credit() {
-        scenarioGenerator.delete_order(Side.BUY, 5);
+        scenarioGenerator.deleteOrder(Side.BUY, 5);
 
         assertPack.assertSellerCredit();
     }
 
     @Test
     public void delete_buy_ice_order_seller_position() {
-        scenarioGenerator.delete_order(Side.BUY, 5);
+        scenarioGenerator.deleteOrder(Side.BUY, 5);
 
         assertPack.assertSellerPosition();
     }
 
     @Test
     public void delete_buy_ice_order_sell_side_in_queue() {
-        scenarioGenerator.delete_order(Side.BUY, 5);
+        scenarioGenerator.deleteOrder(Side.BUY, 5);
 
         assertPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
     }
 
     @Test
     public void delete_buy_ice_order_buy_side_in_queue() {
-        scenarioGenerator.delete_order(Side.BUY, 5);
+        scenarioGenerator.deleteOrder(Side.BUY, 5);
 
         assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
     }
@@ -351,7 +355,7 @@ public class SecurityTest {
     @Test
     public void decrease_sell_order_quantity_buyer_credit() {
         Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
         
         assertPack.assertBuyerCredit();
     }
@@ -359,7 +363,7 @@ public class SecurityTest {
     @Test
     public void decrease_sell_order_quantity_buyer_position() {
         Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
         
         assertPack.assertBuyerPosition();
     }
@@ -367,7 +371,7 @@ public class SecurityTest {
     @Test
     public void decrease_sell_order_quantity_seller_credit() {
         Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
         
         assertPack.assertSellerCredit();
     }
@@ -375,7 +379,7 @@ public class SecurityTest {
     @Test
     public void decrease_sell_order_quantity_seller_position() {
         Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
         
         assertPack.assertSellerPosition();
     }
@@ -383,7 +387,7 @@ public class SecurityTest {
     @Test
     public void decrease_sell_order_quantity_order_in_queue() {
         Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
         
         assertPack.assertOrderInQueue(Side.SELL, 0, 1, 4, 600);
     }
@@ -391,7 +395,7 @@ public class SecurityTest {
     @Test
     public void decrease_sell_ice_order_quantity_buyer_credit() {
         IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertBuyerCredit();
     }
@@ -399,7 +403,7 @@ public class SecurityTest {
     @Test
     public void decrease_sell_ice_order_quantity_buyer_position() {
         IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertBuyerPosition();
     }
@@ -407,7 +411,7 @@ public class SecurityTest {
     @Test
     public void decrease_sell_ice_order_quantity_seller_credit() {
         IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertSellerCredit();
     }
@@ -415,7 +419,7 @@ public class SecurityTest {
     @Test
     public void decrease_sell_ice_order_quantity_seller_position() {
         IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertSellerPosition();
     }
@@ -423,7 +427,7 @@ public class SecurityTest {
     @Test
     public void decrease_sell_ice_order_quantity_order_in_queue() {
         IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertOrderInQueue(Side.SELL, 4, 5, 30, 1000, 10, 10);
     }
@@ -431,7 +435,7 @@ public class SecurityTest {
     @Test
     public void decrease_buy_order_quantity_buyer_credit() {
         Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.exceptedBuyerCredit = 900;
         assertPack.assertBuyerCredit();
@@ -440,7 +444,7 @@ public class SecurityTest {
     @Test
     public void decrease_buy_order_quantity_buyer_position() {
         Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertBuyerPosition();
     }
@@ -448,7 +452,7 @@ public class SecurityTest {
     @Test
     public void decrease_buy_order_quantity_seller_credit() {
         Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertSellerCredit();
     }
@@ -456,7 +460,7 @@ public class SecurityTest {
     @Test
     public void decrease_buy_order_quantity_seller_position() {
         Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertSellerPosition();
     }
@@ -464,7 +468,7 @@ public class SecurityTest {
     @Test
     public void decrease_buy_order_quantity_order_in_queue() {
         Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertOrderInQueue(Side.BUY, 2, 3, 7, 300);
     }
@@ -472,7 +476,7 @@ public class SecurityTest {
     @Test
     public void decrease_buy_ice_order_quantity_buyer_credit() {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 7, 500, buyerBroker, buyerShareholder, 10);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.exceptedBuyerCredit = 19000;
         assertPack.assertBuyerCredit();
@@ -481,7 +485,7 @@ public class SecurityTest {
     @Test
     public void decrease_buy_ice_order_quantity_buyer_position() {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 7, 500, buyerBroker, buyerShareholder, 10);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertBuyerPosition();
     }
@@ -489,7 +493,7 @@ public class SecurityTest {
     @Test
     public void decrease_buy_ice_order_quantity_seller_credit() {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 7, 500, buyerBroker, buyerShareholder, 10);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertSellerCredit();
     }
@@ -497,7 +501,7 @@ public class SecurityTest {
     @Test
     public void decrease_buy_ice_order_quantity_seller_position() {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 7, 500, buyerBroker, buyerShareholder, 10);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertSellerPosition();
     }
@@ -505,7 +509,7 @@ public class SecurityTest {
     @Test
     public void decrease_buy_ice_order_quantity_order_in_queue() {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 7, 500, buyerBroker, buyerShareholder, 10);
-        scenarioGenerator.update_order(order);
+        scenarioGenerator.updateOrder(order);
 
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 7, 500, 10, 7);
     }
@@ -513,7 +517,7 @@ public class SecurityTest {
     @Test
     public void increase_sell_order_quantity_with_position_buyer_credit() {
         Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        scenarioGenerator.increase_order_quantity_with_position(order, 5);
+        scenarioGenerator.increaseOrderQuantityWithPosition(order, 5);
         
         assertPack.assertBuyerCredit();
     }
@@ -521,7 +525,7 @@ public class SecurityTest {
     @Test
     public void increase_sell_order_quantity_with_position_buyer_position() {
         Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        scenarioGenerator.increase_order_quantity_with_position(order, 5);
+        scenarioGenerator.increaseOrderQuantityWithPosition(order, 5);
         
         assertPack.assertBuyerPosition();
     }
@@ -529,7 +533,7 @@ public class SecurityTest {
     @Test
     public void increase_sell_order_quantity_with_position_seller_credit() {
         Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        scenarioGenerator.increase_order_quantity_with_position(order, 5);
+        scenarioGenerator.increaseOrderQuantityWithPosition(order, 5);
         
         assertPack.assertSellerCredit();
     }
@@ -537,7 +541,7 @@ public class SecurityTest {
     @Test
     public void increase_sell_order_quantity_with_position_seller_position() {
         Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        scenarioGenerator.increase_order_quantity_with_position(order, 5);
+        scenarioGenerator.increaseOrderQuantityWithPosition(order, 5);
         
         assertPack.exceptedSellerPosition = 90;
         assertPack.assertSellerPosition();
@@ -546,30 +550,90 @@ public class SecurityTest {
     @Test
     public void increase_sell_order_quantity_with_position_order_in_queue() {
         Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        scenarioGenerator.increase_order_quantity_with_position(order, 5);
+        scenarioGenerator.increaseOrderQuantityWithPosition(order, 5);
 
         assertPack.assertOrderInQueue(Side.SELL, 1, 2, 15, 700);
     }
 
     @Test
-    public void increase_sell_ice_order_quantity() {
+    public void increase_sell_ice_order_quantity_with_position_buyer_credit() {
         IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 15);
-        security.updateOrder(order, matcher);
+        scenarioGenerator.increaseOrderQuantityWithPosition(order, 15);
 
-        assertPack.exceptedSellerPosition = 100;
-        assertPack.assertAll();
-        assertPack.assertOrderInQueue(Side.SELL, 4, 5, 60, 1000, 10, 10);
-    } 
+        assertPack.assertBuyerCredit();
+    }
 
     @Test
-    public void increase_sell_order_quantity_but_not_enough_position() {
-        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
+    public void increase_sell_ice_order_quantity_with_position_buyer_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.increaseOrderQuantityWithPosition(order, 15);
 
-        assertPack.assertAll();
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void increase_sell_ice_order_quantity_with_position_seller_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.increaseOrderQuantityWithPosition(order, 15);
+
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void increase_sell_ice_order_quantity_with_position_seller_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.increaseOrderQuantityWithPosition(order, 15);
+
+        assertPack.exceptedSellerPosition = 100;
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_sell_ice_order_quantity_with_position_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.increaseOrderQuantityWithPosition(order, 15);
+
+        assertPack.assertOrderInQueue(Side.SELL, 4, 5, 60, 1000, 10, 10);
+    }
+
+    @Test
+    public void increase_sell_order_quantity_without_position() {
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        MatchingOutcome res = scenarioGenerator.increaseOrderQuantityWithoutPosition(order).outcome();
+
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
-        assertPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
+    }
+
+    @Test
+    public void increase_sell_order_quantity_without_position_buyer_credit() {
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        scenarioGenerator.increaseOrderQuantityWithoutPosition(order).outcome();
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void increase_sell_order_quantity_without_position_buyer_position() {
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        scenarioGenerator.increaseOrderQuantityWithoutPosition(order).outcome();
+
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void increase_sell_order_quantity_without_position_seller_credit() {
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        scenarioGenerator.increaseOrderQuantityWithoutPosition(order).outcome();
+
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void increase_sell_order_quantity_without_position_seller_position() {
+        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+        scenarioGenerator.increaseOrderQuantityWithoutPosition(order).outcome();
+
+        assertPack.assertSellerPosition();
     }
 
     @Test
