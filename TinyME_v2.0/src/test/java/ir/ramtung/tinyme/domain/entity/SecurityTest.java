@@ -743,6 +743,20 @@ public class SecurityTest {
     }
 
     @Test 
+    public void add_sell_order_and_check_min_execution_quantity() {
+        Order order = new Order(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 50);
+        security.addNewOrder(order, matcher);
+
+        assertPack.exceptedSellerCredit = 22500;
+        assertPack.exceptedSellerPosition = 90;
+        assertPack.exceptedBuyerPosition = 45;
+        assertPack.assertAll();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
+        assertPack.assertOrderInQueue(Side.SELL, 0, 6, 5, 10, 500);
+    }
+
+    @Test 
     public void add_sell_order_not_enough_execution_cause_rollback() {
         Order order = new Order(6, security, Side.SELL, 60, 50, 500, sellerBroker, sellerShareholder);
         sellerShareholder.incPosition(security, 60);
