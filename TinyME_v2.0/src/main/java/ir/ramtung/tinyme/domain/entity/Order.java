@@ -1,6 +1,7 @@
 package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
+import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -129,6 +130,11 @@ public class Order {
     public void checkNewPeakSize(int peakSize) {
         if (peakSize != 0)
             throw new InvalidPeakSizeException();
+    }
+
+    public void checkNewMinimumExecutionQuantity(int minimumExecutionQuantity) {
+        if (this.minimumExecutionQuantity != minimumExecutionQuantity)
+            throw new UpdateMinimumExecutionQuantityException();
     }
 
     public void delete() {

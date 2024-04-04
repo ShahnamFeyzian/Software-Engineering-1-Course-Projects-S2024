@@ -4,6 +4,7 @@ import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.exception.InvalidIcebergPeakSizeException;
 import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
+import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.EventPublisher;
@@ -144,6 +145,7 @@ public class OrderHandler {
         try {
             Order order = security.findByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
             order.checkNewPeakSize(updateOrderRq.getPeakSize());
+            order.checkNewMinimumExecutionQuantity(updateOrderRq.getMinimumExecutionQuantity());
         }
         catch (NotFoundException exp) {
             throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
@@ -153,6 +155,9 @@ public class OrderHandler {
         }
         catch (InvalidPeakSizeException exp) {
             throw new InvalidRequestException(Message.INVALID_PEAK_SIZE);
+        }
+        catch (UpdateMinimumExecutionQuantityException exp){
+            throw new InvalidRequestException(Message.CANNOT_UPDATE_MINIMUM_EXECUTION_QUANTITY);
         }
     }
 
