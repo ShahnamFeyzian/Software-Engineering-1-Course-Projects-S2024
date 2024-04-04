@@ -126,6 +126,10 @@ public class SecurityTest {
             return SecurityTest.this.security.updateOrder(order, matcher);
         }
 
+        public MatchResult updateOrder(Order order, Matcher matcher) {
+            return SecurityTest.this.security.updateOrder(order, matcher);
+        }
+
         public MatchResult increaseOrderQuantityWithPosition(Order order, int position) {
             SecurityTest.this.sellerShareholder.incPosition(SecurityTest.this.security, position);
             return SecurityTest.this.security.updateOrder(order, matcher);
@@ -133,6 +137,10 @@ public class SecurityTest {
 
         public MatchResult increaseOrderQuantityWithoutPosition(Order order) {
             return SecurityTest.this.security.updateOrder(order, matcher);
+        }
+
+        public void increaseBuyerCreditBy(long amount) {
+            SecurityTest.this.buyerBroker.increaseCreditBy(amount);
         }
     }
 
@@ -637,52 +645,220 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_sell_ice_order_quantity_but_not_enough_position() {
+   public void increase_sell_ice_order_quantity_but_not_enough_position() {
         IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
+        MatchingOutcome res = scenarioGenerator.updateOrder(order).outcome();
 
-        assertPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+   }
+
+   @Test
+   public void increase_sell_ice_order_quantity_but_not_enough_position_buyer_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void increase_sell_ice_order_quantity_but_not_enough_position_buyer_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void increase_sell_ice_order_quantity_but_not_enough_position_seller_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void increase_sell_ice_order_quantity_but_not_enough_position_seller_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_sell_ice_order_quantity_but_not_enough_position_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+        scenarioGenerator.updateOrder(order);
+
         assertPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
     }
 
     @Test
-    public void increase_buy_order_quantity() {
+    public void increase_buy_order_quantity_buyer_credit() {
         Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(6000);
-        security.updateOrder(order, matcher);
-        
-        assertPack.assertAll();
+        scenarioGenerator.increaseBuyerCreditBy(6000);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void increase_buy_order_quantity_buyer_position() {
+        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        scenarioGenerator.increaseBuyerCreditBy(6000);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void increase_buy_order_quantity_seller_credit() {
+        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        scenarioGenerator.increaseBuyerCreditBy(6000);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void increase_buy_order_quantity_seller_position() {
+        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        scenarioGenerator.increaseBuyerCreditBy(6000);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_buy_order_quantity_order_in_queue() {
+        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        scenarioGenerator.increaseBuyerCreditBy(6000);
+        scenarioGenerator.updateOrder(order);
+
         assertPack.assertOrderInQueue(Side.BUY, 1, 4, 25, 400);
     }
 
     @Test
-    public void increase_buy_ice_order_quantity() {
+    public void increase_buy_ice_order_quantity_buyer_credit() {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
-        buyerBroker.increaseCreditBy(7500);
-        security.updateOrder(order, matcher);
-        
-        assertPack.assertAll();
+        scenarioGenerator.increaseBuyerCreditBy(7500);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void increase_buy_ice_order_quantity_buyer_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        scenarioGenerator.increaseBuyerCreditBy(7500);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void increase_buy_ice_order_quantity_seller_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        scenarioGenerator.increaseBuyerCreditBy(7500);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void increase_buy_ice_order_quantity_seller_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        scenarioGenerator.increaseBuyerCreditBy(7500);
+        scenarioGenerator.updateOrder(order);
+
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_buy_ice_order_quantity_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        scenarioGenerator.increaseBuyerCreditBy(7500);
+        scenarioGenerator.updateOrder(order);
+
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 60, 500, 10, 10);
     }
 
     @Test
     public void increase_buy_order_quantity_but_not_enough_credit() {
         Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
+        MatchingOutcome res = scenarioGenerator.updateOrder(order).outcome();
 
-        assertPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
-        assertPack.assertOrderInQueue(Side.BUY, 1, 4, 10, 400);
+    }
+    
+    @Test
+    public void increase_buy_order_quantity_but_not_enough_credit_buyer_credit() {
+        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        security.updateOrder(order, matcher);
+        
+        assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void increase_buy_ice_order_quantity_but_not_enough_credit() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
-        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
+    public void increase_buy_order_quantity_but_not_enough_credit_buyer_position() {
+        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        security.updateOrder(order, matcher);
         
-        assertPack.assertAll();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void increase_buy_order_quantity_but_not_enough_credit_seller_credit() {
+        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        security.updateOrder(order, matcher);
+        
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void increase_buy_order_quantity_but_not_enough_credit_seller_position() {
+        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+        security.updateOrder(order, matcher);
+        
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_buy_ice_order_quantity_but_not_enough_credit_buyer_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        security.updateOrder(order, matcher);
+        
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void increase_buy_ice_order_quantity_but_not_enough_credit_buyer_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        security.updateOrder(order, matcher);
+        
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void increase_buy_ice_order_quantity_but_not_enough_credit_seller_credit() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        security.updateOrder(order, matcher);
+        
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void increase_buy_ice_order_quantity_but_not_enough_credit_seller_position() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        security.updateOrder(order, matcher);
+        
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_buy_ice_order_quantity_but_not_enough_credit_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+        scenarioGenerator.updateOrder(order, matcher).outcome();
+        
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
 
@@ -841,7 +1017,7 @@ public class SecurityTest {
     @Test
     public void increase_buy_order_price_no_trading_happens_and_not_enough_credit() {
         Order order = new Order(1, security, Side.BUY, 10, 250, buyerBroker, buyerShareholder);
-        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
+        MatchingOutcome res = scenarioGenerator.updateOrder(order, matcher).outcome();
     
         assertPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
@@ -851,7 +1027,7 @@ public class SecurityTest {
     @Test
     public void increase_buy_ice_order_price_no_trading_happens_and_not_enough_credit() {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
-        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
+        MatchingOutcome res = scenarioGenerator.updateOrder(order, matcher).outcome();
     
         assertPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
@@ -925,7 +1101,7 @@ public class SecurityTest {
     public void increase_buy_order_price_and_trade_happens_but_not_enough_credit() {
         Order order = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
         buyerBroker.increaseCreditBy(13500);
-        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
+        MatchingOutcome res = scenarioGenerator.updateOrder(order, matcher).outcome();
 
         assertPack.exceptedBuyerCredit = 13500;
         assertPack.assertAll();
@@ -940,7 +1116,7 @@ public class SecurityTest {
     public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit() {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
         buyerBroker.increaseCreditBy(57000);
-        MatchingOutcome res = security.updateOrder(order, matcher).outcome();
+        MatchingOutcome res = scenarioGenerator.updateOrder(order, matcher).outcome();
 
         assertPack.exceptedBuyerCredit = 57000;
         assertPack.assertAll();
