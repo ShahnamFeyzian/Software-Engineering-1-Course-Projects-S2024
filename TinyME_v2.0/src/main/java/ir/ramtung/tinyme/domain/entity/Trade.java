@@ -1,6 +1,5 @@
 package ir.ramtung.tinyme.domain.entity;
 
-import ir.ramtung.tinyme.domain.exception.CantRollbackTradeException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -18,6 +17,8 @@ public class Trade {
     private Order buy;
     private Order sell;
     private Order sellFirstVersion;
+    private Order buyFirstVersion;
+    private boolean isBuyQueued;
 
     public Trade(Security security, int price, int quantity, Order order1, Order order2) {
         this.security = security;
@@ -27,18 +28,24 @@ public class Trade {
             this.buy = order1;
             this.sell = order2;
             this.sellFirstVersion = order2.snapshot();
-        } else {
+            this.buyFirstVersion = order1.snapshot();
+        } 
+        else {
             this.buy = order2;
             this.sell = order1;
             this.sellFirstVersion = order1.snapshot();
+            this.buyFirstVersion = order2.snapshot();
         }
+        this.isBuyQueued = (this.buy.getStatus() == OrderStatus.QUEUED);
         // TODO
         // this exists just for unit tests and should remove
     }
 
-    public Trade(Security security, int price, int quantity, Order order1, Order order2, Order sellFirstVersion) {
+    public Trade(Security security, int price, int quantity, Order order1, Order order2, Order sellFirstVersion, Order buyFirstVersion, boolean isBuyQueued) {
         this(security, price, quantity, order1, order2);
         this.sellFirstVersion = sellFirstVersion;
+        this.buyFirstVersion = buyFirstVersion;
+        this.isBuyQueued = isBuyQueued;
     }
 
     public Trade(Order order1, Order order2) {
@@ -49,12 +56,15 @@ public class Trade {
             this.buy = order1;
             this.sell = order2;
             this.sellFirstVersion = order2.snapshot();
+            this.buyFirstVersion = order1.snapshot();
         } 
         else {
             this.buy = order2;
             this.sell = order1;
             this.sellFirstVersion = order1.snapshot();
+            this.buyFirstVersion = order2.snapshot();
         }
+        this.isBuyQueued = (this.buy.getStatus() == OrderStatus.QUEUED);
     }
 
     public long getTradedValue() {
@@ -98,7 +108,7 @@ public class Trade {
     }
 
     public void confirm() {
-        if (buy.getStatus() != OrderStatus.QUEUED) {
+        if (!isBuyQueued) {
             if (!buyerHasEnoughCredit()) 
                 throw new NotEnoughCreditException();
             decreaseBuyersCredit();
@@ -111,13 +121,26 @@ public class Trade {
     }
 
     public void rollback() {
-        if (buy.getStatus() == OrderStatus.QUEUED)
-            throw new CantRollbackTradeException();
-    
+        if (isBuyQueued)
+            buyQueuedRollback();
+        else
+            sellQueuedRollback();
+    }
+
+    private void sellQueuedRollback() {
         increaseBuyersCredit();
         decreaseSellersCredit();
         decreaseBuyersPosition();
         increaseSellersPosition();
         sell.rollback(sellFirstVersion);
+    }
+    
+    private void buyQueuedRollback() {
+        if (buy.getStatus() == OrderStatus.DONE)
+            increaseBuyersCredit();
+        decreaseSellersCredit();
+        decreaseBuyersPosition();
+        increaseSellersPosition();
+        buy.rollback(buyFirstVersion);
     }
 }
