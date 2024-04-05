@@ -393,6 +393,12 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
+        public MatchResult add_sell_order_matches_with_all_buyer_queue_and_finished() {
+            Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
+            sellerShareholder.incPosition(security, 85);
+            return security.addNewOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -2247,52 +2253,48 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_order_matches_with_all_buyer_queue_and_finished_buyer_credit() {
-        Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 85);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_order_matches_with_all_buyer_queue_and_finished();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_and_check_buyer_credit() {
+        scenarioGenerator.add_sell_order_matches_with_all_buyer_queue_and_finished();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void add_sell_order_matches_with_all_buyer_queue_and_finished_buyer_position() {
-        Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 85);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_and_check_buyer_position() {
+        scenarioGenerator.add_sell_order_matches_with_all_buyer_queue_and_finished();
         assertPack.exceptedBuyerPosition = 85;
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void add_sell_order_matches_with_all_buyer_queue_and_finished_seller_credit() {
-        Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 85);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_and_check_seller_credit() {
+        scenarioGenerator.add_sell_order_matches_with_all_buyer_queue_and_finished();
         assertPack.exceptedSellerCredit = 32500;
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void add_sell_order_matches_with_all_buyer_queue_and_finished_seller_position() {
-        Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 85);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_and_check_seller_position() {
+        scenarioGenerator.add_sell_order_matches_with_all_buyer_queue_and_finished();
         assertPack.exceptedSellerPosition = 85;
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void add_sell_order_matches_with_all_buyer_queue_and_finished_order_in_queue() {
-        Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 85);
-        security.addNewOrder(order, matcher);
-
-        assertThat(orderBook.getBuyQueue().size()).isZero();
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_sell_order_matches_with_all_buyer_queue_and_finished();
         assertThat(orderBook.isThereOrderWithId(Side.SELL, 6)).isFalse();
+    }
+
+    @Test
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_sell_order_matches_with_all_buyer_queue_and_finished();
+        assertThat(orderBook.getBuyQueue().size()).isZero();
     }
 
     @Test
