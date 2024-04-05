@@ -199,6 +199,11 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult increase_sell_order_quantity_but_not_enough_position() {
+            Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
+            return security.updateOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -643,43 +648,39 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_sell_order_quantity_without_position() {
-        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        MatchingOutcome res = scenarioGenerator.increaseOrderQuantityWithoutPosition(order).outcome();
-
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+    public void increase_sell_order_quantity_but_not_enough_position_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_sell_order_quantity_but_not_enough_position();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
     }
 
     @Test
-    public void increase_sell_order_quantity_without_position_buyer_credit() {
-        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        scenarioGenerator.increaseOrderQuantityWithoutPosition(order).outcome();
-
+    public void increase_sell_order_quantity_but_not_enough_position_and_check_buyer_credit() {
+        scenarioGenerator.increase_sell_order_quantity_but_not_enough_position();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void increase_sell_order_quantity_without_position_buyer_position() {
-        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        scenarioGenerator.increaseOrderQuantityWithoutPosition(order).outcome();
-
+    public void increase_sell_order_quantity_but_not_enough_position_and_check_buyer_position() {
+        scenarioGenerator.increase_sell_order_quantity_but_not_enough_position();
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void increase_sell_order_quantity_without_position_seller_credit() {
-        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        scenarioGenerator.increaseOrderQuantityWithoutPosition(order).outcome();
-
+    public void increase_sell_order_quantity_but_not_enough_position_and_check_seller_credit() {
+        scenarioGenerator.increase_sell_order_quantity_but_not_enough_position();
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void increase_sell_order_quantity_without_position_seller_position() {
-        Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-        scenarioGenerator.increaseOrderQuantityWithoutPosition(order).outcome();
-
+    public void increase_sell_order_quantity_but_not_enough_position_and_check_seller_position() {
+        scenarioGenerator.increase_sell_order_quantity_but_not_enough_position();
         assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_sell_order_quantity_but_not_enough_position_and_check_sell_side_in_queue() {
+        scenarioGenerator.increase_sell_order_quantity_but_not_enough_position();
+        assertPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
     }
 
     @Test
