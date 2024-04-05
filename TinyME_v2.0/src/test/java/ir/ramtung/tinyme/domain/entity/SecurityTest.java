@@ -146,6 +146,10 @@ public class SecurityTest {
         public void delete_sell_order() {
             security.deleteOrder(Side.SELL, 2);
         }
+
+        public void delete_sell_ice_order() {
+            security.deleteOrder(Side.SELL, 5);
+        }
     }
 
 
@@ -224,42 +228,42 @@ public class SecurityTest {
     
     @Test
     public void delete_sell_ice_order_buyer_credit() {
-        scenarioGenerator.deleteOrder(Side.SELL, 5);
+        scenarioGenerator.delete_sell_ice_order();
 
         assertPack.assertBuyerCredit();
     }
 
     @Test
     public void delete_sell_ice_order_buyer_position() {
-        scenarioGenerator.deleteOrder(Side.SELL, 5);
+        scenarioGenerator.delete_sell_ice_order();
 
         assertPack.assertBuyerPosition();
     }
 
     @Test
     public void delete_sell_ice_order_seller_position() {
-        scenarioGenerator.deleteOrder(Side.SELL, 5);
+        scenarioGenerator.delete_sell_ice_order();
 
         assertPack.assertSellerPosition();
     }
 
     @Test
     public void delete_sell_ice_order_seller_credit() {
-        scenarioGenerator.deleteOrder(Side.SELL, 5);
+        scenarioGenerator.delete_sell_ice_order();
 
         assertPack.assertSellerCredit();
     }
 
     @Test
     public void delete_sell_ice_order_sell_order_in_queue() {
-        scenarioGenerator.deleteOrder(Side.SELL, 5);
+        scenarioGenerator.delete_sell_ice_order();
 
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
 
     @Test
     public void delete_sell_ice_order_exception() {
-        scenarioGenerator.deleteOrder(Side.SELL, 5);
+        scenarioGenerator.delete_sell_ice_order();
 
         assertThatExceptionOfType(IndexOutOfBoundsException.class).isThrownBy(() -> orderBook.getSellQueue().get(4));
     }
