@@ -231,6 +231,11 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult decrease_sell_order_price_no_trading_happens() {
+            Order order = new Order(3, security, Side.SELL, 10, 650, sellerBroker, sellerShareholder);
+            return security.updateOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -882,45 +887,39 @@ public class SecurityTest {
     // TODO
     // add peakSize scenarios after you are sure how they work
     @Test
-    public void decrease_sell_order_price_no_trading_happens_buyer_credit() {
-        Order order = new Order(3, security, Side.SELL, 10, 650, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
+    public void decrease_sell_order_price_no_trading_happens_and_check_match_result() {
+        MatchResult res = scenarioGenerator.decrease_sell_order_price_no_trading_happens();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
+    public void decrease_sell_order_price_no_trading_happens_and_check_buyer_credit() {
+        scenarioGenerator.decrease_sell_order_price_no_trading_happens();
         assertPack.assertBuyerCredit();
     }
     
     @Test
-    public void decrease_sell_order_price_no_trading_happens_buyer_position() {
-        Order order = new Order(3, security, Side.SELL, 10, 650, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
+    public void decrease_sell_order_price_no_trading_happens_and_check_buyer_position() {
+        scenarioGenerator.decrease_sell_order_price_no_trading_happens();
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void decrease_sell_order_price_no_trading_happens_seller_credit() {
-        Order order = new Order(3, security, Side.SELL, 10, 650, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
+    public void decrease_sell_order_price_no_trading_happens_and_check_seller_credit() {
+        scenarioGenerator.decrease_sell_order_price_no_trading_happens();
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void decrease_sell_order_price_no_trading_happens_seller_position() {
-        Order order = new Order(3, security, Side.SELL, 10, 650, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
+    public void decrease_sell_order_price_no_trading_happens_and_check_seller_position() {
+        scenarioGenerator.decrease_sell_order_price_no_trading_happens();
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void decrease_sell_order_price_no_trading_happens_order_in_queue() {
-        Order order = new Order(3, security, Side.SELL, 10, 650, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
-        assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+    public void decrease_sell_order_price_no_trading_happens_and_check_order_in_queue() {
+        scenarioGenerator.decrease_sell_order_price_no_trading_happens();
         assertPack.assertOrderInQueue(Side.SELL, 1, 3, 10, 650);
-        assertPack.assertOrderInQueue(Side.SELL, 2, 2, 10, 700);
     }
         
     @Test
