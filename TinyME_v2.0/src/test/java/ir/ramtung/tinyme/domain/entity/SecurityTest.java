@@ -381,6 +381,12 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
+        public MatchResult add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size() {
+            IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
+            sellerShareholder.incPosition(security, 60);
+            return security.addNewOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -2141,54 +2147,50 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_buyer_credit() {
-        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
-        sellerShareholder.incPosition(security, 60);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_and_check_buyer_credit() {
+        scenarioGenerator.add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_buyer_position() {
-        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
-        sellerShareholder.incPosition(security, 60);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_and_check_buyer_position() {
+        scenarioGenerator.add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size();
         assertPack.exceptedBuyerPosition = 55;
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_seller_credit() {
-        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
-        sellerShareholder.incPosition(security, 60);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_and_check_seller_credit() {
+        scenarioGenerator.add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size();
         assertPack.exceptedSellerCredit = 26500;
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_seller_position() {
-        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
-        sellerShareholder.incPosition(security, 60);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_and_check_seller_position() {
+        scenarioGenerator.add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size();
         assertPack.exceptedSellerPosition = 90;
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_order_in_queue() {
-        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
-        sellerShareholder.incPosition(security, 60);
-        security.addNewOrder(order, matcher);
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size();
+        assertPack.assertOrderInQueue(Side.SELL, 0, 7, 5, 400, 3, 3);
+    }
 
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size();
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 5)).isFalse();
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 4)).isFalse();
         assertPack.assertOrderInQueue(Side.BUY, 0, 3, 10, 300);
-        assertPack.assertOrderInQueue(Side.SELL, 0, 7, 5, 400, 3, 3);
     }
 
     @Test
