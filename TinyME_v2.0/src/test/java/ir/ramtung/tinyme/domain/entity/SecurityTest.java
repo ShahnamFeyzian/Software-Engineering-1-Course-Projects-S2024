@@ -154,6 +154,12 @@ public class SecurityTest {
         public void delete_buy_order() {
             security.deleteOrder(Side.BUY, 3);
         }
+
+        public void delete_buy_ice_order() {
+            security.deleteOrder(Side.BUY, 5);
+        }
+
+        // TODO
     }
 
 
@@ -317,7 +323,7 @@ public class SecurityTest {
 
     @Test
     public void delete_buy_ice_order_buyer_credit() {
-        scenarioGenerator.deleteOrder(Side.BUY, 5);
+        scenarioGenerator.delete_buy_ice_order();
 
         assertPack.exceptedBuyerCredit = 22500;
         assertPack.assertBuyerCredit();
@@ -325,35 +331,35 @@ public class SecurityTest {
 
     @Test
     public void delete_buy_ice_order_buyer_position() {
-        scenarioGenerator.deleteOrder(Side.BUY, 5);
+        scenarioGenerator.delete_buy_ice_order();
 
         assertPack.assertBuyerPosition();
     }
 
     @Test
     public void delete_buy_ice_order_seller_credit() {
-        scenarioGenerator.deleteOrder(Side.BUY, 5);
+        scenarioGenerator.delete_buy_ice_order();
 
         assertPack.assertSellerCredit();
     }
 
     @Test
     public void delete_buy_ice_order_seller_position() {
-        scenarioGenerator.deleteOrder(Side.BUY, 5);
+        scenarioGenerator.delete_buy_ice_order();
 
         assertPack.assertSellerPosition();
     }
 
     @Test
     public void delete_buy_ice_order_sell_side_in_queue() {
-        scenarioGenerator.deleteOrder(Side.BUY, 5);
+        scenarioGenerator.delete_buy_ice_order();
 
         assertPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
     }
 
     @Test
     public void delete_buy_ice_order_buy_side_in_queue() {
-        scenarioGenerator.deleteOrder(Side.BUY, 5);
+        scenarioGenerator.delete_buy_ice_order();
 
         assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
     }
