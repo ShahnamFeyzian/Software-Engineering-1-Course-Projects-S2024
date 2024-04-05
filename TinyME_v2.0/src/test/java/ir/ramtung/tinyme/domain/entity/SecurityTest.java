@@ -221,6 +221,11 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult increase_buy_order_quantity_but_not_enough_credit() {
+            Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+            return security.updateOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -797,43 +802,39 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_buy_order_quantity_but_not_enough_credit() {
-        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        MatchingOutcome res = scenarioGenerator.updateOrder(order).outcome();
-
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+    public void increase_buy_order_quantity_but_not_enough_credit_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_buy_order_quantity_but_not_enough_credit();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
     }
     
     @Test
-    public void increase_buy_order_quantity_but_not_enough_credit_buyer_credit() {
-        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        security.updateOrder(order, matcher);
-        
+    public void increase_buy_order_quantity_but_not_enough_credit_and_check_buyer_credit() {
+        scenarioGenerator.increase_buy_order_quantity_but_not_enough_credit();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void increase_buy_order_quantity_but_not_enough_credit_buyer_position() {
-        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        security.updateOrder(order, matcher);
-        
+    public void increase_buy_order_quantity_but_not_enough_credit_and_check_buyer_position() {
+        scenarioGenerator.increase_buy_order_quantity_but_not_enough_credit();
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void increase_buy_order_quantity_but_not_enough_credit_seller_credit() {
-        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        security.updateOrder(order, matcher);
-        
+    public void increase_buy_order_quantity_but_not_enough_credit_and_check_seller_credit() {
+        scenarioGenerator.increase_buy_order_quantity_but_not_enough_credit();
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void increase_buy_order_quantity_but_not_enough_credit_seller_position() {
-        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        security.updateOrder(order, matcher);
-        
+    public void increase_buy_order_quantity_but_not_enough_credit_and_check_seller_position() {
+        scenarioGenerator.increase_buy_order_quantity_but_not_enough_credit();
         assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_buy_order_quantity_but_not_enough_credit_and_check_order_in_queue() {
+        scenarioGenerator.increase_buy_order_quantity_but_not_enough_credit();
+        assertPack.assertOrderInQueue(Side.BUY, 1, 4, 10, 400);
     }
 
     @Test
