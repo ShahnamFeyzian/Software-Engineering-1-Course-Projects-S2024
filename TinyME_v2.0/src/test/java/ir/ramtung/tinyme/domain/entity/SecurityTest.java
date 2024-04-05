@@ -163,6 +163,10 @@ public class SecurityTest {
             security.deleteOrder(Side.SELL, 6);
         }
 
+        public void delete_non_existing_buy_order() {
+            security.deleteOrder(Side.BUY, 8);
+        }
+
         // TODO
     }
 
@@ -407,9 +411,41 @@ public class SecurityTest {
     }
 
     @Test
-    public void delete_non_existing_order_buy_side() {
-        assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> security.deleteOrder(Side.BUY, 8));
-        assertPack.assertAll();
+    public void delete_non_existing_buy_order_and_check_buyer_credit() {
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> scenarioGenerator.delete_non_existing_buy_order());
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void delete_non_existing_buy_order_and_check_buyer_position() {
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> scenarioGenerator.delete_non_existing_buy_order());
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void delete_non_existing_buy_order_and_check_buy_side_in_queue() {
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> scenarioGenerator.delete_non_existing_buy_order());
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+        assertPack.assertOrderInQueue(Side.BUY, 4, 1, 10, 100);
+    }
+
+    @Test
+    public void delete_non_existing_buy_order_and_check_seller_credit() {
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> scenarioGenerator.delete_non_existing_buy_order());
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void delete_non_existing_buy_order_and_check_seller_position() {
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> scenarioGenerator.delete_non_existing_buy_order());
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void delete_non_existing_buy_order_and_check_sell_side_in_queue() {
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> scenarioGenerator.delete_non_existing_buy_order());
+        assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+        assertPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
     }
 
     // TODO
