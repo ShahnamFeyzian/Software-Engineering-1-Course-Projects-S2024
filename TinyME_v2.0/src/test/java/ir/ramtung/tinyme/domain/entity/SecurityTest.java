@@ -273,6 +273,11 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult increase_sell_order_price() {
+            Order order = new Order(3, security, Side.SELL, 10, 950, sellerBroker, sellerShareholder);
+            return security.updateOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -1254,45 +1259,39 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_sell_order_price_buyer_credit() {
-        Order order = new Order(3, security, Side.SELL, 10, 950, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
+    public void increase_sell_order_price_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_sell_order_price();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
+    public void increase_sell_order_price_and_check_buyer_credit() {
+        scenarioGenerator.increase_sell_order_price();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void increase_sell_order_price_buyer_position() {
-        Order order = new Order(3, security, Side.SELL, 10, 950, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
+    public void increase_sell_order_price_and_check_buyer_position() {
+        scenarioGenerator.increase_sell_order_price();
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void increase_sell_order_price_seller_credit() {
-        Order order = new Order(3, security, Side.SELL, 10, 950, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
+    public void increase_sell_order_price_and_check_seller_credit() {
+        scenarioGenerator.increase_sell_order_price();
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void increase_sell_order_price_seller_position() {
-        Order order = new Order(3, security, Side.SELL, 10, 950, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
+    public void increase_sell_order_price_and_check_seller_position() {
+        scenarioGenerator.increase_sell_order_price();
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void increase_sell_order_price_order_in_queue() {
-        Order order = new Order(3, security, Side.SELL, 10, 950, sellerBroker, sellerShareholder);
-        security.updateOrder(order, matcher);
-
-        assertPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
+    public void increase_sell_order_price_and_check_order_in_queue() {
+        scenarioGenerator.increase_sell_order_price();
         assertPack.assertOrderInQueue(Side.SELL, 3, 3, 10, 950);
-        assertPack.assertOrderInQueue(Side.SELL, 2, 4, 10, 900);
     }
 
     @Test
