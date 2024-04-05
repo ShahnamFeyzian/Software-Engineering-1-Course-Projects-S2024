@@ -305,6 +305,12 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult increase_buy_order_price_and_completely_traded() {
+            Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
+            buyerBroker.increaseCreditBy(5000);
+            return security.updateOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -1502,54 +1508,50 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_buy_order_price_and_completely_traded_buyer_credit() {
-        Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(5000);
-        security.updateOrder(order, matcher);
-
+    public void increase_buy_order_price_and_completely_traded_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_buy_order_price_and_completely_traded();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
+    public void increase_buy_order_price_and_completely_traded_and_check_buyer_credit() {
+        scenarioGenerator.increase_buy_order_price_and_completely_traded();
         assertPack.exceptedBuyerCredit = 1000;
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void increase_buy_order_price_and_completely_traded_buyer_position() {
-        Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(5000);
-        security.updateOrder(order, matcher);
-
+    public void increase_buy_order_price_and_completely_traded_and_check_buyer_position() {
+        scenarioGenerator.increase_buy_order_price_and_completely_traded();
         assertPack.exceptedBuyerPosition = 10;
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void increase_buy_order_price_and_completely_traded_seller_credit() {
-        Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(5000);
-        security.updateOrder(order, matcher);
-
+    public void increase_buy_order_price_and_completely_traded_and_check_seller_credit() {
+        scenarioGenerator.increase_buy_order_price_and_completely_traded();
         assertPack.exceptedSellerCredit = 6000;
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void increase_buy_order_price_and_completely_traded_seller_position() {
-        Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(5000);
-        security.updateOrder(order, matcher);
-
+    public void increase_buy_order_price_and_completely_traded_and_check_seller_position() {
+        scenarioGenerator.increase_buy_order_price_and_completely_traded();
         assertPack.exceptedSellerPosition = 75;
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void increase_buy_order_price_and_completely_traded_order_in_queue() {
-        Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(5000);
-        security.updateOrder(order, matcher);
-
-        assertPack.assertOrderInQueue(Side.BUY, 3, 1, 10, 100);
+    public void increase_buy_order_price_and_completely_traded_and_check_sell_side_in_queue() {
+        scenarioGenerator.increase_buy_order_price_and_completely_traded();
         assertThat(orderBook.isThereOrderWithId(Side.SELL, 1)).isFalse();
         assertPack.assertOrderInQueue(Side.SELL, 0, 2, 10, 700);
+    }
+
+    @Test
+    public void increase_buy_order_price_and_completely_traded_and_check_buy_side_in_queue() {
+        scenarioGenerator.increase_buy_order_price_and_completely_traded();
+        assertPack.assertOrderInQueue(Side.BUY, 3, 1, 10, 100);
     }
 
     // @Test
