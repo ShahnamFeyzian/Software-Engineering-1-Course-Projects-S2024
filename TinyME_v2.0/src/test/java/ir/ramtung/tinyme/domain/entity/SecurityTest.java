@@ -435,6 +435,12 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
+        public MatchResult add_sell_ice_order_not_enough_execution_cause_rollback() {
+            IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 70, 300, sellerBroker, sellerShareholder, 10);
+            sellerShareholder.incPosition(security, 100);
+            return security.addNewOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -2602,59 +2608,48 @@ public class SecurityTest {
     }
 
     @Test 
-    public void add_sell_ice_order_not_enough_execution_cause_rollback_buyer_credit() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 70, 300, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 100);
-        MatchingOutcome res = security.addNewOrder(order, matcher).outcome();
-
+    public void add_sell_ice_order_not_enough_execution_cause_rollback_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_ice_order_not_enough_execution_cause_rollback();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
+    }
+    
+    @Test 
+    public void add_sell_ice_order_not_enough_execution_cause_rollback_and_check_buyer_credit() {
+        scenarioGenerator.add_sell_ice_order_not_enough_execution_cause_rollback();
         assertPack.assertBuyerCredit();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
     }
 
     @Test
-    public void add_sell_ice_order_not_enough_execution_cause_rollback_buyer_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 70, 300, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 100);
-        MatchingOutcome res = security.addNewOrder(order, matcher).outcome();
-
-        assertPack.exceptedBuyerPosition = 0;
+    public void add_sell_ice_order_not_enough_execution_cause_rollback_and_check_buyer_position() {
+        scenarioGenerator.add_sell_ice_order_not_enough_execution_cause_rollback();
         assertPack.assertBuyerPosition();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
     }
 
     @Test
-    public void add_sell_ice_order_not_enough_execution_cause_rollback_seller_credit() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 70, 300, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 100);
-        MatchingOutcome res = security.addNewOrder(order, matcher).outcome();
-
-        assertPack.exceptedSellerCredit = 0;
+    public void add_sell_ice_order_not_enough_execution_cause_rollback_and_check_seller_credit() {
+        scenarioGenerator.add_sell_ice_order_not_enough_execution_cause_rollback();
         assertPack.assertSellerCredit();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
     }
 
     @Test
-    public void add_sell_ice_order_not_enough_execution_cause_rollback_seller_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 70, 300, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 100);
-        MatchingOutcome res = security.addNewOrder(order, matcher).outcome();
-
+    public void add_sell_ice_order_not_enough_execution_cause_rollback_and_check_seller_position() {
+        scenarioGenerator.add_sell_ice_order_not_enough_execution_cause_rollback();
         assertPack.exceptedSellerPosition = 185;
         assertPack.assertSellerPosition();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
     }
 
     @Test
-    public void add_sell_ice_order_not_enough_execution_cause_rollback_order_in_queue() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 70, 300, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 100);
-        MatchingOutcome res = security.addNewOrder(order, matcher).outcome();
+    public void add_sell_ice_order_not_enough_execution_cause_rollback_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_sell_ice_order_not_enough_execution_cause_rollback();
+        assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+    }
 
+    @Test
+    public void add_sell_ice_order_not_enough_execution_cause_rollback_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_sell_ice_order_not_enough_execution_cause_rollback();
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
         assertPack.assertOrderInQueue(Side.BUY, 1, 4, 10, 400);
         assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
-        assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
     }
 
     @Test 
