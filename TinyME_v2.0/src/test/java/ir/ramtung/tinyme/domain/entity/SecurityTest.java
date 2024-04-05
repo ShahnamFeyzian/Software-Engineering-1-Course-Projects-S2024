@@ -167,24 +167,24 @@ public class SecurityTest {
             security.deleteOrder(Side.BUY, 8);
         }
 
-        public void decrease_sell_order_quantity() {
+        public MatchResult decrease_sell_order_quantity() {
             Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
-            security.updateOrder(order, matcher);
+            return security.updateOrder(order, matcher);
         }
 
-        public void decrease_sell_ice_order_quantity() {
+        public MatchResult decrease_sell_ice_order_quantity() {
             IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 30, 1000, sellerBroker, sellerShareholder, 10);
-            security.updateOrder(order, matcher);   
+            return security.updateOrder(order, matcher);   
         }
 
-        public void decrease_buy_order_quantity() {
+        public MatchResult decrease_buy_order_quantity() {
             Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-            security.updateOrder(order, matcher);   
+            return security.updateOrder(order, matcher);   
         }
 
-        public void decrease_buy_ice_order_quantity() {
+        public MatchResult decrease_buy_ice_order_quantity() {
             IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 7, 500, buyerBroker, buyerShareholder, 10);
-            security.updateOrder(order, matcher);
+            return security.updateOrder(order, matcher);
         }
 
         // TODO
