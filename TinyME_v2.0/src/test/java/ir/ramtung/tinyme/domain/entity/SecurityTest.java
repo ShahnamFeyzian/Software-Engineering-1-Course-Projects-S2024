@@ -538,8 +538,6 @@ public class SecurityTest {
             buyerBroker.increaseCreditBy(14600);
             return security.addNewOrder(order, matcher);
         }
-
-        // TODO
     }
 
 
@@ -798,6 +796,13 @@ public class SecurityTest {
 
     // TODO
     // what if new quantity be zero? what should happen in that case?
+
+    @Test
+    public void decrease_sell_order_quantity_and_check_match_result() {
+        MatchResult res = scenarioGenerator.decrease_sell_order_quantity();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
     @Test
     public void decrease_sell_order_quantity_and_check_buyer_credit() {
         scenarioGenerator.decrease_sell_order_quantity();
@@ -829,6 +834,12 @@ public class SecurityTest {
     }
 
     @Test
+    public void decrease_sell_ice_order_quantity_and_check_match_result() {
+        MatchResult res = scenarioGenerator.decrease_sell_ice_order_quantity();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
     public void decrease_sell_ice_order_quantity_and_check_buyer_credit() {
         scenarioGenerator.decrease_sell_ice_order_quantity();
         assertPack.assertBuyerCredit();
@@ -858,6 +869,12 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.SELL, 4, 5, 30, 1000, 10, 10);
     }
 
+    @Test
+    public void decrease_buy_order_quantity_and_check_match_result() {
+        MatchResult res = scenarioGenerator.decrease_buy_order_quantity();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
     @Test
     public void decrease_buy_order_quantity_and_check_buyer_credit() {
         scenarioGenerator.decrease_buy_order_quantity();
@@ -890,6 +907,12 @@ public class SecurityTest {
     }
 
     @Test
+    public void decrease_buy_ice_order_quantity_and_check_match_result() {
+        MatchResult res = scenarioGenerator.decrease_buy_ice_order_quantity();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
     public void decrease_buy_ice_order_quantity_and_check_buyer_credit() {
         scenarioGenerator.decrease_buy_ice_order_quantity();
         assertPack.exceptedBuyerCredit = 19000;
@@ -918,6 +941,12 @@ public class SecurityTest {
     public void decrease_buy_ice_order_quantity_and_check_order_in_queue() {
         scenarioGenerator.decrease_buy_ice_order_quantity();
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 7, 500, 10, 7);
+    }
+    
+    @Test
+    public void increase_sell_order_quantity_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_sell_order_quantity();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
     }
     
     @Test
@@ -951,6 +980,12 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.SELL, 1, 2, 15, 700);
     }
 
+    @Test
+    public void increase_sell_ice_order_quantity_and_check_matcu_result() {
+        MatchResult res = scenarioGenerator.increase_sell_ice_order_quantity();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
     @Test
     public void increase_sell_ice_order_quantity_and_check_buyer_credit() {
         scenarioGenerator.increase_sell_ice_order_quantity();
@@ -1055,6 +1090,12 @@ public class SecurityTest {
     }
 
     @Test
+    public void increase_buy_order_quantity_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_buy_order_quantity();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
     public void increase_buy_order_quantity_and_check_buyer_credit() {
         scenarioGenerator.increase_buy_order_quantity();
         assertPack.assertBuyerCredit();
@@ -1084,6 +1125,12 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.BUY, 1, 4, 25, 400);
     }
 
+    @Test
+    public void increase_buy_ice_order_quantity_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_buy_ice_order_quantity();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
     @Test
     public void increase_buy_ice_order_quantity_and_check_buyer_credit() {
         scenarioGenerator.increase_buy_ice_order_quantity();
@@ -1186,9 +1233,9 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
 
-
     // TODO
     // add peakSize scenarios after you are sure how they work
+
     @Test
     public void decrease_sell_order_price_no_trading_happens_and_check_match_result() {
         MatchResult res = scenarioGenerator.decrease_sell_order_price_no_trading_happens();
