@@ -204,6 +204,11 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult increase_sell_ice_order_quantity_but_not_enough_position() {
+            IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
+            return security.updateOrder(order, matcher);            
+        }
+
         // TODO
     }
 
@@ -678,56 +683,44 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_sell_order_quantity_but_not_enough_position_and_check_sell_side_in_queue() {
+    public void increase_sell_order_quantity_but_not_enough_position_and_check_order_in_queue() {
         scenarioGenerator.increase_sell_order_quantity_but_not_enough_position();
         assertPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
     }
 
     @Test
-   public void increase_sell_ice_order_quantity_but_not_enough_position() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        MatchingOutcome res = scenarioGenerator.updateOrder(order).outcome();
-
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+   public void increase_sell_ice_order_quantity_but_not_enough_position_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_sell_ice_order_quantity_but_not_enough_position();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
    }
 
    @Test
-   public void increase_sell_ice_order_quantity_but_not_enough_position_buyer_credit() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        scenarioGenerator.updateOrder(order);
-
+   public void increase_sell_ice_order_quantity_but_not_enough_position_and_check_buyer_credit() {
+        scenarioGenerator.increase_sell_ice_order_quantity_but_not_enough_position();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void increase_sell_ice_order_quantity_but_not_enough_position_buyer_position() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_sell_ice_order_quantity_but_not_enough_position_and_check_buyer_position() {
+        scenarioGenerator.increase_sell_ice_order_quantity_but_not_enough_position();
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void increase_sell_ice_order_quantity_but_not_enough_position_seller_credit() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_sell_ice_order_quantity_but_not_enough_position_and_check_seller_credit() {
+        scenarioGenerator.increase_sell_ice_order_quantity_but_not_enough_position();
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void increase_sell_ice_order_quantity_but_not_enough_position_seller_position() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_sell_ice_order_quantity_but_not_enough_position_and_check_seller_position() {
+        scenarioGenerator.increase_sell_ice_order_quantity_but_not_enough_position();
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void increase_sell_ice_order_quantity_but_not_enough_position_order_in_queue() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 60, 1000, sellerBroker, sellerShareholder, 10);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_sell_ice_order_quantity_but_not_enough_position_and_check_order_in_queue() {
+        scenarioGenerator.increase_sell_ice_order_quantity_but_not_enough_position();
         assertPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
     }
 
