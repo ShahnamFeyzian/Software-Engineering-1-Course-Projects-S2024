@@ -341,6 +341,12 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult add_sell_order_no_trades_happens() {
+            Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
+            sellerShareholder.incPosition(security, 15);
+            return security.addNewOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -1830,48 +1836,39 @@ public class SecurityTest {
     //     assertPack.assertOrderInQueue(Side.SELL, 2, 2, 10, 700);
     // }
     @Test
-    public void add_sell_order_no_trades_happens_buyer_credit() {
-        Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 15);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_order_no_trades_happens_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_order_no_trades_happens();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
+    public void add_sell_order_no_trades_happens_and_check_buyer_credit() {
+        scenarioGenerator.add_sell_order_no_trades_happens();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void add_sell_order_no_trades_happens_buyer_position() {
-        Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 15);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_order_no_trades_happens_and_check_buyer_position() {
+        scenarioGenerator.add_sell_order_no_trades_happens();
         assertPack.assertBuyerPosition();
     }
     
     @Test
-    public void add_sell_order_no_trades_happens_seller_credit() {
-        Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 15);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_order_no_trades_happens_and_check_seller_credit() {
+        scenarioGenerator.add_sell_order_no_trades_happens();
         assertPack.assertSellerCredit();
     }
     
     @Test
-    public void add_sell_order_no_trades_happens_seller_position() {
-        Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 15);
-        security.addNewOrder(order, matcher);
-        
+    public void add_sell_order_no_trades_happens_and_check_seller_position() {
+        scenarioGenerator.add_sell_order_no_trades_happens();
         assertPack.exceptedSellerPosition = 100;
         assertPack.assertSellerPosition();
     }
     
     @Test
-    public void add_sell_order_no_trades_happens_order_in_queue() {
-        Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
-        sellerShareholder.incPosition(security, 15);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_order_no_trades_happens_and_check_order_in_queue() {
+        scenarioGenerator.add_sell_order_no_trades_happens();
         assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
         assertPack.assertOrderInQueue(Side.SELL, 1, 6, 15, 650);
         assertPack.assertOrderInQueue(Side.SELL, 2, 2, 10, 700);
