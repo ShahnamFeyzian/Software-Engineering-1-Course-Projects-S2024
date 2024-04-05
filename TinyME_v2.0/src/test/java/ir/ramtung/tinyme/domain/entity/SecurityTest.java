@@ -177,6 +177,11 @@ public class SecurityTest {
             security.updateOrder(order, matcher);   
         }
 
+        public void decrease_buy_order_quantity() {
+            Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
+            security.updateOrder(order, matcher);   
+        }
+
         // TODO
     }
 
@@ -497,43 +502,33 @@ public class SecurityTest {
     }
 
     @Test
-    public void decrease_buy_order_quantity_buyer_credit() {
-        Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        scenarioGenerator.updateOrder(order);
-
+    public void decrease_buy_order_quantity_and_check_buyer_credit() {
+        scenarioGenerator.decrease_buy_order_quantity();
         assertPack.exceptedBuyerCredit = 900;
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void decrease_buy_order_quantity_buyer_position() {
-        Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        scenarioGenerator.updateOrder(order);
-
+    public void decrease_buy_order_quantity_and_check_buyer_position() {
+        scenarioGenerator.decrease_buy_order_quantity();
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void decrease_buy_order_quantity_seller_credit() {
-        Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        scenarioGenerator.updateOrder(order);
-
+    public void decrease_buy_order_quantity_and_check_seller_credit() {
+        scenarioGenerator.decrease_buy_order_quantity();
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void decrease_buy_order_quantity_seller_position() {
-        Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        scenarioGenerator.updateOrder(order);
-
+    public void decrease_buy_order_quantity_and_check_seller_position() {
+        scenarioGenerator.decrease_buy_order_quantity();
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void decrease_buy_order_quantity_order_in_queue() {
-        Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-        scenarioGenerator.updateOrder(order);
-
+    public void decrease_buy_order_quantity_and_check_order_in_queue() {
+        scenarioGenerator.decrease_buy_order_quantity();
         assertPack.assertOrderInQueue(Side.BUY, 2, 3, 7, 300);
     }
 
