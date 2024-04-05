@@ -3159,7 +3159,6 @@ public class SecurityTest {
         MatchingOutcome res = security.addNewOrder(order, matcher).outcome();
 
         assertPack.exceptedBuyerCredit = 78000;
-        assertPack.assertAll();
         assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 6)).isFalse();
         assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
@@ -3170,17 +3169,42 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_buy_order_matches_with_all_seller_queue_and_finished() {
+    public void add_buy_order_matches_with_all_seller_queue_and_finished_buyer_credit() {
+        Order order = new Order(6, security, Side.BUY, 85, 1000, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(75000);
+        security.addNewOrder(order, matcher);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_finished_buyer_position() {
         Order order = new Order(6, security, Side.BUY, 85, 1000, buyerBroker, buyerShareholder);
         buyerBroker.increaseCreditBy(75000);
         security.addNewOrder(order, matcher);
 
         assertPack.exceptedBuyerPosition = 85;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_finished_seller_credit() {
+        Order order = new Order(6, security, Side.BUY, 85, 1000, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(75000);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerCredit = 75000;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_finished_seller_position() {
+        Order order = new Order(6, security, Side.BUY, 85, 1000, buyerBroker, buyerShareholder);
+        buyerBroker.increaseCreditBy(75000);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerPosition = 0;
-        assertPack.assertAll();
-        assertThat(orderBook.getSellQueue().size()).isZero();
-        assertThat(orderBook.isThereOrderWithId(Side.BUY, 6)).isFalse();
+        assertPack.assertSellerPosition();
     }
 
     @Test
