@@ -246,6 +246,11 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult decrease_sell_ice_order_price_and_completely_traded() {
+            IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 450, sellerBroker, sellerShareholder, 10);
+            return security.updateOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -1015,48 +1020,48 @@ public class SecurityTest {
     }
 
     @Test
-    public void decrease_sell_ice_order_price_and_completely_traded_buyer_credit() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 450, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(order, matcher);
+    public void decrease_sell_ice_order_price_and_completely_traded_and_check_match_result() {
+        MatchResult res = scenarioGenerator.decrease_sell_ice_order_price_and_completely_traded();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
 
-        assertPack.exceptedBuyerCredit = 0;
+    @Test
+    public void decrease_sell_ice_order_price_and_completely_traded_and_check_buyer_credit() {
+        scenarioGenerator.decrease_sell_ice_order_price_and_completely_traded();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void decrease_sell_ice_order_price_and_completely_traded_buyer_position() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 450, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(order, matcher);
-
+    public void decrease_sell_ice_order_price_and_completely_traded_and_check_buyer_position() {
+        scenarioGenerator.decrease_sell_ice_order_price_and_completely_traded();
         assertPack.exceptedBuyerPosition = 45;
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void decrease_sell_ice_order_price_and_completely_traded_seller_credit() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 450, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(order, matcher);
-
+    public void decrease_sell_ice_order_price_and_completely_traded_and_check_seller_credit() {
+        scenarioGenerator.decrease_sell_ice_order_price_and_completely_traded();
         assertPack.exceptedSellerCredit = 22500;
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void decrease_sell_ice_order_price_and_completely_traded_seller_position() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 450, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(order, matcher);
-
+    public void decrease_sell_ice_order_price_and_completely_traded_and_check_seller_position() {
+        scenarioGenerator.decrease_sell_ice_order_price_and_completely_traded();
         assertPack.exceptedSellerPosition = 40;
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void decrease_sell_ice_order_price_and_completely_traded_order_in_queue() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 450, sellerBroker, sellerShareholder, 10);
-        security.updateOrder(order, matcher);
-
-        assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
+    public void decrease_sell_ice_order_price_and_completely_traded_and_check_sell_side_in_queue() {
+        scenarioGenerator.decrease_sell_ice_order_price_and_completely_traded();
         assertThat(orderBook.isThereOrderWithId(Side.SELL, 5)).isFalse();
+    }
+
+    @Test
+    public void decrease_sell_ice_order_price_and_completely_traded_and_check_buy_side_in_queue() {
+        scenarioGenerator.decrease_sell_ice_order_price_and_completely_traded();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 5)).isFalse();
     }
 
