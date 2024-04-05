@@ -567,6 +567,12 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
+        public MatchResult add_buy_order_quantity_is_equal_to_min_execution_quantity() {
+            Order order = new Order(6, security, Side.BUY, 40, 40, 1000, buyerBroker, buyerShareholder);
+            buyerBroker.increaseCreditBy(40000);
+            return security.addNewOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -3663,22 +3669,54 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
     }
 
-
-
-    @Test 
-    public void add_buy_order_quantity_is_equal_to_min_execution_quantity() {
-        Order order = new Order(6, security, Side.BUY, 40, 40, 1000, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(40000);
-        security.addNewOrder(order, matcher);
-
-        assertPack.exceptedSellerCredit = 30000;
-        assertPack.exceptedSellerPosition = 45;
+    @Test
+    public void add_buy_order_quantity_is_equal_to_min_execution_quantity_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_buy_order_quantity_is_equal_to_min_execution_quantity();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
+    public void add_buy_order_quantity_is_equal_to_min_execution_quantity_and_check_buyer_credit() {
+        scenarioGenerator.add_buy_order_quantity_is_equal_to_min_execution_quantity();
         assertPack.exceptedBuyerCredit = 10000;
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_buy_order_quantity_is_equal_to_min_execution_quantity_and_check_buyer_position() {
+        scenarioGenerator.add_buy_order_quantity_is_equal_to_min_execution_quantity();
         assertPack.exceptedBuyerPosition = 40;
-        assertPack.assertAll();
-        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_buy_order_quantity_is_equal_to_min_execution_quantity_and_check_seller_credit() {
+        scenarioGenerator.add_buy_order_quantity_is_equal_to_min_execution_quantity();
+        assertPack.exceptedSellerCredit = 30000;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_buy_order_quantity_is_equal_to_min_execution_quantity_and_check_seller_position() {
+        scenarioGenerator.add_buy_order_quantity_is_equal_to_min_execution_quantity();
+        assertPack.exceptedSellerPosition = 45;
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_buy_order_quantity_is_equal_to_min_execution_quantity_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_buy_order_quantity_is_equal_to_min_execution_quantity();
         assertPack.assertOrderInQueue(Side.SELL, 0, 5, 45, 1000, 10, 10);
     }
+
+    @Test
+    public void add_buy_order_quantity_is_equal_to_min_execution_quantity_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_buy_order_quantity_is_equal_to_min_execution_quantity();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+        assertThat(orderBook.isThereOrderWithId(Side.BUY, 6)).isFalse();
+    }
+
+
 
     @Test 
     public void add_buy_ice_order_quantity_is_equal_to_min_execution_quantity_buyer_credit() {
