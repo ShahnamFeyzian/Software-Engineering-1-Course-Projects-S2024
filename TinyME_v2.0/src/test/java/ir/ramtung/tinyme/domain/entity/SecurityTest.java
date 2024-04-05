@@ -555,6 +555,12 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
+        public MatchResult add_buy_order_not_enough_execution_cause_rollback() {
+            Order order = new Order(6, security, Side.BUY, 60, 50, 600, buyerBroker, buyerShareholder);
+            buyerBroker.increaseCreditBy(36000);
+            return security.addNewOrder(order, matcher);   
+        }
+
         // TODO
     }
 
@@ -3564,20 +3570,51 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.BUY, 0, 6, 12, 20, 700, 10, 10);
     }
 
-
-
-    @Test 
-    public void add_buy_order_not_enough_execution_cause_rollback() {
-        Order order = new Order(6, security, Side.BUY, 60, 50, 600, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(36000);
-        MatchingOutcome res = security.addNewOrder(order, matcher).outcome();
-
+    @Test
+    public void add_buy_order_not_enough_execution_cause_rollback_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_buy_order_not_enough_execution_cause_rollback();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
+    }
+    
+    @Test
+    public void add_buy_order_not_enough_execution_cause_rollback_and_check_buyer_credit() {
+        scenarioGenerator.add_buy_order_not_enough_execution_cause_rollback();
         assertPack.exceptedBuyerCredit = 36000;
-        assertPack.assertAll();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
-        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_buy_order_not_enough_execution_cause_rollback_and_check_buyer_position() {
+        scenarioGenerator.add_buy_order_not_enough_execution_cause_rollback();
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_buy_order_not_enough_execution_cause_rollback_and_check_seller_credit() {
+        scenarioGenerator.add_buy_order_not_enough_execution_cause_rollback();
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_buy_order_not_enough_execution_cause_rollback_and_check_seller_position() {
+        scenarioGenerator.add_buy_order_not_enough_execution_cause_rollback();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_buy_order_not_enough_execution_cause_rollback_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_buy_order_not_enough_execution_cause_rollback();
         assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
     }
+
+    @Test
+    public void add_buy_order_not_enough_execution_cause_rollback_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_buy_order_not_enough_execution_cause_rollback();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+    }
+
+
+
 
     @Test 
     public void add_buy_ice_order_not_enough_execution_cause_rollback() {
