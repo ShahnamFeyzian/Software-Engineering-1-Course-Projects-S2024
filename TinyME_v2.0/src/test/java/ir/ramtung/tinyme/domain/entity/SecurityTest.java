@@ -411,6 +411,12 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
+        public MatchResult add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished() {
+            IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
+            sellerShareholder.incPosition(security, 100);
+            return security.addNewOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -2399,52 +2405,48 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_buyer_credit() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 100);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_and_check_match_check() {
+        MatchResult res = scenarioGenerator.add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_and_check_buyer_credit() {
+        scenarioGenerator.add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_buyer_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 100);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_and_check_buyer_position() {
+        scenarioGenerator.add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished();
         assertPack.exceptedBuyerPosition = 85;
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_seller_credit() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 100);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_and_check_seller_credit() {
+        scenarioGenerator.add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished();
         assertPack.exceptedSellerCredit = 32500;
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_seller_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 100);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_and_check_seller_position() {
+        scenarioGenerator.add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished();
         assertPack.exceptedSellerPosition = 100;
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_order_in_queue() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 100);
-        security.addNewOrder(order, matcher);
-
-        assertThat(orderBook.getBuyQueue().size()).isZero();
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished();
         assertPack.assertOrderInQueue(Side.SELL, 0, 6, 15, 100, 10, 10);
+    }
+
+    @Test
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished();
+        assertThat(orderBook.getBuyQueue().size()).isZero();
     }
 
     @Test 
