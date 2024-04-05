@@ -68,21 +68,6 @@ public class SecurityTest {
             assertThat(SecurityTest.this.buyerShareholder.getPositionBySecurity(security)).isEqualTo(exceptedBuyerPosition);
         }
 
-        private void assertCredits() {
-            assertSellerCredit();
-            assertBuyerCredit();
-        }
-
-        private void assertPositions() {
-            assertSellerPosition();
-            assertBuyerPosition();
-        }
-
-        private void assertAll() {
-            assertCredits();
-            assertPositions();
-        }
-
         private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int minexteQuantity, int price) {
             Order order = (side == Side.BUY) ? buyQueue.get(idx) : sellQueue.get(idx);
             long actualId = order.getOrderId();
@@ -118,31 +103,6 @@ public class SecurityTest {
 
     // Helper class to generate scenarios
     private class ScenarioGenerator {
-        public void deleteOrder(Side side, int idx) {
-            SecurityTest.this.security.deleteOrder(side, idx);
-        }
-
-        public MatchResult updateOrder(Order order) {
-            return SecurityTest.this.security.updateOrder(order, matcher);
-        }
-
-        public MatchResult updateOrder(Order order, Matcher matcher) {
-            return SecurityTest.this.security.updateOrder(order, matcher);
-        }
-
-        public MatchResult increaseOrderQuantityWithPosition(Order order, int position) {
-            SecurityTest.this.sellerShareholder.incPosition(SecurityTest.this.security, position);
-            return SecurityTest.this.security.updateOrder(order, matcher);
-        }
-
-        public MatchResult increaseOrderQuantityWithoutPosition(Order order) {
-            return SecurityTest.this.security.updateOrder(order, matcher);
-        }
-
-        public void increaseBuyerCreditBy(long amount) {
-            SecurityTest.this.buyerBroker.increaseCreditBy(amount);
-        }
-
         public void delete_sell_order() {
             security.deleteOrder(Side.SELL, 2);
         }
