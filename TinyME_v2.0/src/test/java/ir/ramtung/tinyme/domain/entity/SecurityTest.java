@@ -142,6 +142,10 @@ public class SecurityTest {
         public void increaseBuyerCreditBy(long amount) {
             SecurityTest.this.buyerBroker.increaseCreditBy(amount);
         }
+
+        public void delete_sell_order() {
+            security.deleteOrder(Side.SELL, 2);
+        }
     }
 
 
@@ -178,42 +182,42 @@ public class SecurityTest {
 
     @Test
     public void delete_sell_order_buyer_credit() {
-        scenarioGenerator.deleteOrder(Side.SELL, 2);
+        scenarioGenerator.delete_sell_order();
 
         assertPack.assertBuyerCredit();
     }
 
     @Test
     public void delete_sell_order_buyer_position() {
-        scenarioGenerator.deleteOrder(Side.SELL, 2);
+        scenarioGenerator.delete_sell_order();
 
         assertPack.assertBuyerPosition();
     }
 
     @Test
     public void delete_sell_order_seller_position() {
-        scenarioGenerator.deleteOrder(Side.SELL, 2);
+        scenarioGenerator.delete_sell_order();
 
         assertPack.assertSellerPosition();
     }
 
     @Test
     public void delete_sell_order_seller_credit() {
-        scenarioGenerator.deleteOrder(Side.SELL, 2);
+        scenarioGenerator.delete_sell_order();
 
         assertPack.assertSellerCredit();
     }
 
     @Test
     public void delete_sell_order_sell_side_in_queue() {
-        scenarioGenerator.deleteOrder(Side.SELL, 2);
+        scenarioGenerator.delete_sell_order();
 
         assertPack.assertOrderInQueue(Side.SELL, 1, 3, 10, 800);
     }
 
     @Test
     public void delete_sell_order_buy_side_in_queue() {
-        scenarioGenerator.deleteOrder(Side.SELL, 2);
+        scenarioGenerator.delete_sell_order();
 
         assertPack.assertOrderInQueue(Side.BUY, 3, 2, 10, 200);
     }
