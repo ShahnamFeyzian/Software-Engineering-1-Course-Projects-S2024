@@ -3321,15 +3321,50 @@ public class SecurityTest {
     }
 
     @Test 
-    public void add_buy_ice_order_quantity_is_equal_to_min_execution_quantity() {
+    public void add_buy_ice_order_quantity_is_equal_to_min_execution_quantity_buyer_credit() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 22, 22, 800, buyerBroker, buyerShareholder, 10);
+        buyerBroker.increaseCreditBy(14600);
+        security.addNewOrder(order, matcher);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_buy_ice_order_quantity_is_equal_to_min_execution_quantity_buyer_position() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 22, 22, 800, buyerBroker, buyerShareholder, 10);
+        buyerBroker.increaseCreditBy(14600);
+        security.addNewOrder(order, matcher);
+
+        assertPack.exceptedBuyerPosition = 22;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_buy_ice_order_quantity_is_equal_to_min_execution_quantity_seller_credit() {
         IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 22, 22, 800, buyerBroker, buyerShareholder, 10);
         buyerBroker.increaseCreditBy(14600);
         security.addNewOrder(order, matcher);
 
         assertPack.exceptedSellerCredit = 14600;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_buy_ice_order_quantity_is_equal_to_min_execution_quantity_seller_position() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 22, 22, 800, buyerBroker, buyerShareholder, 10);
+        buyerBroker.increaseCreditBy(14600);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerPosition = 63;
-        assertPack.exceptedBuyerPosition = 22;
-        assertPack.assertAll();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_buy_ice_order_quantity_is_equal_to_min_execution_quantity_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 22, 22, 800, buyerBroker, buyerShareholder, 10);
+        buyerBroker.increaseCreditBy(14600);
+        security.addNewOrder(order, matcher);
+
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
         assertPack.assertOrderInQueue(Side.SELL, 0, 3, 8, 800);
     }
