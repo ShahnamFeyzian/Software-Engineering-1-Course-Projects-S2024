@@ -531,6 +531,12 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
+        public MatchResult add_buy_order_matches_with_all_seller_queue_and_not_finished() {
+            Order order = new Order(8, security, Side.BUY, 100, 1000, buyerBroker, buyerShareholder);
+            buyerBroker.increaseCreditBy(90000);
+            return security.addNewOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -3360,22 +3366,53 @@ public class SecurityTest {
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 6)).isFalse();
     }
 
-
-
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_not_finished_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_buy_order_matches_with_all_seller_queue_and_not_finished();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_not_finished_and_check_buyer_credit() {
+        scenarioGenerator.add_buy_order_matches_with_all_seller_queue_and_not_finished();
+        assertPack.assertBuyerCredit();
+    }
 
     @Test
-    public void add_buy_order_matches_with_all_seller_queue_and_not_finished() {
-        Order order = new Order(8, security, Side.BUY, 100, 1000, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(90000);
-        security.addNewOrder(order, matcher);
-
+    public void add_buy_order_matches_with_all_seller_queue_and_not_finished_and_check_buyer_position() {
+        scenarioGenerator.add_buy_order_matches_with_all_seller_queue_and_not_finished();
         assertPack.exceptedBuyerPosition = 85;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_not_finished_and_check_seller_credit() {
+        scenarioGenerator.add_buy_order_matches_with_all_seller_queue_and_not_finished();
         assertPack.exceptedSellerCredit = 75000;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_not_finished_and_check_seller_position() {
+        scenarioGenerator.add_buy_order_matches_with_all_seller_queue_and_not_finished();
         assertPack.exceptedSellerPosition = 0;
-        assertPack.assertAll();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_not_finished_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_buy_order_matches_with_all_seller_queue_and_not_finished();
         assertThat(orderBook.getSellQueue().size()).isZero();
+    }
+
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_not_finished_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_buy_order_matches_with_all_seller_queue_and_not_finished();
         assertPack.assertOrderInQueue(Side.BUY, 0, 8, 15, 1000);
     }
+
+
+
 
     @Test
     public void add_buy_ice_order_matches_with_all_seller_queue_and_not_finished() {
