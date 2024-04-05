@@ -464,6 +464,11 @@ public class SecurityTest {
             buyerBroker.increaseCreditBy(2250);
             return security.addNewOrder(order, matcher);
         }
+        public MatchResult add_buy_order_but_not_enough_credit() {
+            Order order = new Order(10, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
+            buyerBroker.increaseCreditBy(6000);
+            return  security.addNewOrder(order, matcher);
+        }
 
         // TODO
     }
@@ -2844,62 +2849,41 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_buy_order_but_not_enough_credit_and_buyer_credit() {
-        Order order = new Order(10, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(6000);
-        MatchingOutcome res =  security.addNewOrder(order, matcher).outcome();
-
+    public void add_buy_order_but_not_enough_credit_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_buy_order_but_not_enough_credit();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+    }
+    
+    @Test
+    public void add_buy_order_but_not_enough_credit_and_check_buyer_credit() {
+        scenarioGenerator.add_buy_order_but_not_enough_credit();
         assertPack.exceptedBuyerCredit = 6000;
         assertPack.assertBuyerCredit();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
-        assertThat(orderBook.isThereOrderWithId(Side.BUY, 10));
     }
 
     @Test
-    public void add_buy_order_but_not_enough_credit_and_buyer_position() {
-        Order order = new Order(10, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(6000);
-        MatchingOutcome res =  security.addNewOrder(order, matcher).outcome();
-
-        assertPack.exceptedBuyerPosition = 0;
+    public void add_buy_order_but_not_enough_credit_and_check_buyer_position() {
+        scenarioGenerator.add_buy_order_but_not_enough_credit();
         assertPack.assertBuyerPosition();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
-        assertThat(orderBook.isThereOrderWithId(Side.BUY, 10));
     }
 
     @Test
-    public void add_buy_order_but_not_enough_credit_and_seller_credit() {
-        Order order = new Order(10, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(6000);
-        MatchingOutcome res =  security.addNewOrder(order, matcher).outcome();
-
+    public void add_buy_order_but_not_enough_credit_and_check_seller_credit() {
+        scenarioGenerator.add_buy_order_but_not_enough_credit();
         assertPack.assertSellerCredit();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
-        assertThat(orderBook.isThereOrderWithId(Side.BUY, 10));
     }
 
     @Test
-    public void add_buy_order_but_not_enough_credit_and_seller_position() {
-        Order order = new Order(10, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(6000);
-        MatchingOutcome res =  security.addNewOrder(order, matcher).outcome();
-
-        assertPack.exceptedSellerPosition = 85;
+    public void add_buy_order_but_not_enough_credit_and_check_seller_position() {
+        scenarioGenerator.add_buy_order_but_not_enough_credit();
         assertPack.assertSellerPosition();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
-        assertThat(orderBook.isThereOrderWithId(Side.BUY, 10));
     }
 
     @Test
-    public void add_buy_order_but_not_enough_credit_and_order_in_queue() {
-        Order order = new Order(10, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(6000);
-        MatchingOutcome res =  security.addNewOrder(order, matcher).outcome();
-
+    public void add_buy_order_but_not_enough_credit_and_check_order_in_queue() {
+        scenarioGenerator.add_buy_order_but_not_enough_credit();
         assertPack.assertOrderInQueue(Side.BUY, 3, 2, 10, 200);
         assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
-        assertThat(orderBook.isThereOrderWithId(Side.BUY, 10));
     }
 
     @Test
