@@ -1768,26 +1768,51 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
-        buyerBroker.increaseCreditBy(57000);
-        MatchingOutcome res = scenarioGenerator.updateOrder(order, matcher).outcome();
+    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+    }
 
+    @Test
+    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback_and_check_bueyr_credit() {
+        scenarioGenerator.increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback();
         assertPack.exceptedBuyerCredit = 57000;
-        assertPack.assertAll();
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback_and_check_buyer_position() {
+        scenarioGenerator.increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback();
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback_and_check_seller_credit() {
+        scenarioGenerator.increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback();
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback_and_check_seller_position() {
+        scenarioGenerator.increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback_and_check_sell_side_in_queue() {
+        scenarioGenerator.increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback();
         assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
         assertPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
         assertPack.assertOrderInQueue(Side.SELL, 2, 3, 10, 800);
         assertPack.assertOrderInQueue(Side.SELL, 3, 4, 10, 900);
         assertPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
-        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500);
     }
 
-    // @Test
-    // public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback_and_check_match_result() {
-    //     Mat
-    // }
+    @Test
+    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback_and_check_buy_side_in_queue() {
+        scenarioGenerator.increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500);
+    }
 
 
     // TODO
