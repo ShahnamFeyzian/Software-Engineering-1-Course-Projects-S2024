@@ -357,6 +357,10 @@ public class SecurityTest {
             Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
             return security.addNewOrder(order, matcher);
         }
+        public MatchResult add_sell_ice_order_and_not_enough_position() {
+            IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 20, 1000, sellerBroker, sellerShareholder, 7);
+            return security.addNewOrder(order, matcher);
+        }
 
         // TODO
     }
@@ -1948,43 +1952,39 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_ice_order_and_not_enough_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 20, 1000, sellerBroker, sellerShareholder, 7);
-        MatchingOutcome res =  security.addNewOrder(order, matcher).outcome();
-
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+    public void add_sell_ice_order_and_not_enough_position_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_ice_order_and_not_enough_position();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
     }
 
     @Test
-    public void add_sell_ice_order_and_not_enough_position_buyer_credit() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 20, 1000, sellerBroker, sellerShareholder, 7);
-        security.addNewOrder(order, matcher).outcome();
-
+    public void add_sell_ice_order_and_not_enough_position_and_check_buyer_credit() {
+        scenarioGenerator.add_sell_ice_order_and_not_enough_position();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void add_sell_ice_order_and_not_enough_position_buyer_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 20, 1000, sellerBroker, sellerShareholder, 7);
-        security.addNewOrder(order, matcher).outcome();
-
+    public void add_sell_ice_order_and_not_enough_position_and_check_buyer_position() {
+        scenarioGenerator.add_sell_ice_order_and_not_enough_position();
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void add_sell_ice_order_and_not_enough_position_seller_credit() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 20, 1000, sellerBroker, sellerShareholder, 7);
-        security.addNewOrder(order, matcher).outcome();
-
+    public void add_sell_ice_order_and_not_enough_position_and_check_seller_credit() {
+        scenarioGenerator.add_sell_ice_order_and_not_enough_position();
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void add_sell_ice_order_and_not_enough_position_seller_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 20, 1000, sellerBroker, sellerShareholder, 7);
-        security.addNewOrder(order, matcher).outcome();
-
+    public void add_sell_ice_order_and_not_enough_position_and_check_seller_position() {
+        scenarioGenerator.add_sell_ice_order_and_not_enough_position();
         assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_sell_ice_order_and_not_enough_position_and_check_order_in_queue() {
+        scenarioGenerator.add_sell_ice_order_and_not_enough_position();
+        assertThat(orderBook.isThereOrderWithId(Side.SELL, 6));
     }
 
     // @Test
