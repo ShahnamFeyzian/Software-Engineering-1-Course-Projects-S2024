@@ -335,6 +335,12 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback() {
+            IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
+            buyerBroker.increaseCreditBy(57000);
+            return security.updateOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -1762,7 +1768,7 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit() {
+    public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback() {
         IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
         buyerBroker.increaseCreditBy(57000);
         MatchingOutcome res = scenarioGenerator.updateOrder(order, matcher).outcome();
@@ -1777,6 +1783,11 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.SELL, 4, 5, 45, 1000, 10, 10);
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500);
     }
+
+    // @Test
+    // public void increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback_and_check_match_result() {
+    //     Mat
+    // }
 
 
     // TODO
