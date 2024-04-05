@@ -83,16 +83,16 @@ public class SecurityTest {
             assertPositions();
         }
 
-        private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int minExeQuantity, int price) {
+        private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int minexteQuantity, int price) {
             Order order = (side == Side.BUY) ? buyQueue.get(idx) : sellQueue.get(idx);
             long actualId = order.getOrderId();
             int actualquantity = order.getTotalQuantity();
             int actualPrice = order.getPrice();
-            int actualMinExeQuantity = order.getMinimumExecutionQuantity();
+            int actualMinexteQuantity = order.getMinimumExecutionQuantity();
 
             assertThat(actualId).isEqualTo(orderId);
             assertThat(actualquantity).isEqualTo(quantity);
-            assertThat(actualMinExeQuantity).isEqualTo(minExeQuantity);
+            assertThat(actualMinexteQuantity).isEqualTo(minexteQuantity);
             assertThat(actualPrice).isEqualTo(price);
         }
 
@@ -100,8 +100,8 @@ public class SecurityTest {
             assertOrderInQueue(side, idx, orderId, quantity, 0, price);
         }
 
-        private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int minExeQuantity, int price, int peakSize, int displayedQuantity) {
-            assertOrderInQueue(side, idx, orderId, quantity, minExeQuantity, price);
+        private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int minexteQuantity, int price, int peakSize, int displayedQuantity) {
+            assertOrderInQueue(side, idx, orderId, quantity, minexteQuantity, price);
             Order order = (side == Side.BUY) ? buyQueue.get(idx) : sellQueue.get(idx);
             IcebergOrder iceOrder = (IcebergOrder) order;
             int actualPeakSize = iceOrder.getPeakSize(); 
@@ -417,8 +417,14 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
-        public MatchResult add_sell_order_with_min_execution_quantity() {
+        public MatchResult add_sell_order_with_min_execution_quantity_and_next_go_to_queue() {
             Order order = new Order(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder);
+            sellerShareholder.incPosition(security, 50);
+            return security.addNewOrder(order, matcher);
+        }
+
+        public MatchResult add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue() {
+            IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder, 10);
             sellerShareholder.incPosition(security, 50);
             return security.addNewOrder(order, matcher);
         }
@@ -2456,97 +2462,93 @@ public class SecurityTest {
     }
 
     @Test 
-    public void add_sell_order_with_min_execution_quantity_and_check_match_result() {
-        MatchResult res = scenarioGenerator.add_sell_order_with_min_execution_quantity();
+    public void add_sell_order_with_min_execution_quantity_and_next_go_to_queue_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_order_with_min_execution_quantity_and_next_go_to_queue();
         assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
     }
     
     @Test 
-    public void add_sell_order_with_min_execution_quantity_and_check_buyer_credit() {
-        scenarioGenerator.add_sell_order_with_min_execution_quantity();
+    public void add_sell_order_with_min_execution_quantity_and_next_go_to_queue_and_check_buyer_credit() {
+        scenarioGenerator.add_sell_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void add_sell_order_with_min_execution_quantity_and_check_buyer_position() {
-        scenarioGenerator.add_sell_order_with_min_execution_quantity();
+    public void add_sell_order_with_min_execution_quantity_and_next_go_to_queue_and_check_buyer_position() {
+        scenarioGenerator.add_sell_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.exceptedBuyerPosition = 45;
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void add_sell_order_with_min_execution_quantity_and_check_seller_credit() {
-        scenarioGenerator.add_sell_order_with_min_execution_quantity();
+    public void add_sell_order_with_min_execution_quantity_and_next_go_to_queue_and_check_seller_credit() {
+        scenarioGenerator.add_sell_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.exceptedSellerCredit = 22500;
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void add_sell_order_with_min_execution_quantity_and_check_seller_position() {
-        scenarioGenerator.add_sell_order_with_min_execution_quantity();
+    public void add_sell_order_with_min_execution_quantity_and_next_go_to_queue_and_check_seller_position() {
+        scenarioGenerator.add_sell_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.exceptedSellerPosition = 90;
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void add_sell_order_with_min_execution_quantity_and_check_sell_side_in_queue() {
-        scenarioGenerator.add_sell_order_with_min_execution_quantity();
+    public void add_sell_order_with_min_execution_quantity_and_next_go_to_queue_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_sell_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.assertOrderInQueue(Side.SELL, 0, 6, 5, 10, 500);
     }
     
     @Test
-    public void add_sell_order_with_min_execution_quantity_and_check_buy_side_in_queue() {
-        scenarioGenerator.add_sell_order_with_min_execution_quantity();
+    public void add_sell_order_with_min_execution_quantity_and_next_go_to_queue_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_sell_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
     }
 
     @Test 
-    public void add_sell_ice_order_and_check_min_execution_quantity_buyer_credit() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 50);
-        security.addNewOrder(order, matcher);
+    public void add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
 
+    @Test 
+    public void add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue_and_check_buyer_credit() {
+        scenarioGenerator.add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void add_sell_ice_order_and_check_min_execution_quantity_buyer_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 50);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue_and_check_buyer_position() {
+        scenarioGenerator.add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.exceptedBuyerPosition = 45;
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void add_sell_ice_order_and_check_min_execution_quantity_seller_credit() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 50);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue_and_check_seller_credit() {
+        scenarioGenerator.add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.exceptedSellerCredit = 22500;
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void add_sell_ice_order_and_check_min_execution_quantity_seller_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 50);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue_and_check_seller_position() {
+        scenarioGenerator.add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.exceptedSellerPosition = 90;
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void add_sell_ice_order_and_check_min_execution_quantity_order_in_queue() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 50);
-        security.addNewOrder(order, matcher);
-
-        assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
+    public void add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue();
         assertPack.assertOrderInQueue(Side.SELL, 0, 6, 5, 10, 500, 10, 5);
+    }
+
+    @Test
+    public void add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
     }
 
     @Test 
