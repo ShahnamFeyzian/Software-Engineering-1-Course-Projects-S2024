@@ -215,6 +215,12 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult increase_buy_ice_order_quantity() {
+            IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
+            buyerBroker.increaseCreditBy(7500);
+            return security.updateOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -761,47 +767,32 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_buy_ice_order_quantity_buyer_credit() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
-        scenarioGenerator.increaseBuyerCreditBy(7500);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_buy_ice_order_quantity_and_check_buyer_credit() {
+        scenarioGenerator.increase_buy_ice_order_quantity();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void increase_buy_ice_order_quantity_buyer_position() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
-        scenarioGenerator.increaseBuyerCreditBy(7500);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_buy_ice_order_quantity_and_check_buyer_position() {
+        scenarioGenerator.increase_buy_ice_order_quantity();
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void increase_buy_ice_order_quantity_seller_credit() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
-        scenarioGenerator.increaseBuyerCreditBy(7500);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_buy_ice_order_quantity_and_check_seller_credit() {
+        scenarioGenerator.increase_buy_ice_order_quantity();
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void increase_buy_ice_order_quantity_seller_position() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
-        scenarioGenerator.increaseBuyerCreditBy(7500);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_buy_ice_order_quantity_and_check_seller_position() {
+        scenarioGenerator.increase_buy_ice_order_quantity();
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void increase_buy_ice_order_quantity_order_in_queue() {
-        IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
-        scenarioGenerator.increaseBuyerCreditBy(7500);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_buy_ice_order_quantity_and_check_order_in_queue() {
+        scenarioGenerator.increase_buy_ice_order_quantity();
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 60, 500, 10, 10);
     }
 
