@@ -447,6 +447,12 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
+        public MatchResult add_sell_ice_order_quantity_is_equal_to_min_execution_quantity() {
+            IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 50, 300, sellerBroker, sellerShareholder, 10);
+            sellerShareholder.incPosition(security, 50);
+            return security.addNewOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -2703,53 +2709,49 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.BUY, 0, 4, 5, 400);
     }
 
-
     @Test 
-    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_buyer_credit() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 50, 300, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 50);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_ice_order_quantity_is_equal_to_min_execution_quantity();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test 
+    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_and_check_buyer_credit() {
+        scenarioGenerator.add_sell_ice_order_quantity_is_equal_to_min_execution_quantity();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_buyer_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 50, 300, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 50);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_and_check_buyer_position() {
+        scenarioGenerator.add_sell_ice_order_quantity_is_equal_to_min_execution_quantity();
         assertPack.exceptedBuyerPosition = 50;
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_seller_credit() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 50, 300, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 50);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_and_check_seller_credit() {
+        scenarioGenerator.add_sell_ice_order_quantity_is_equal_to_min_execution_quantity();
         assertPack.exceptedSellerCredit = 24500;
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_seller_position() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 50, 300, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 50);
-        security.addNewOrder(order, matcher);
-
+    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_and_check_seller_position() {
+        scenarioGenerator.add_sell_ice_order_quantity_is_equal_to_min_execution_quantity();
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_order_in_queue() {
-        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 50, 50, 300, sellerBroker, sellerShareholder, 10);
-        sellerShareholder.incPosition(security, 50);
-        security.addNewOrder(order, matcher);
-
-        assertPack.assertOrderInQueue(Side.BUY, 0, 4, 5, 400);
+    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_sell_ice_order_quantity_is_equal_to_min_execution_quantity();
         assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+        assertThat(orderBook.isThereOrderWithId(Side.SELL, 6)).isFalse();
+    }
+
+    @Test
+    public void add_sell_ice_order_quantity_is_equal_to_min_execution_quantity_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_sell_ice_order_quantity_is_equal_to_min_execution_quantity();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 4, 5, 400);
     }
 
     @Test
