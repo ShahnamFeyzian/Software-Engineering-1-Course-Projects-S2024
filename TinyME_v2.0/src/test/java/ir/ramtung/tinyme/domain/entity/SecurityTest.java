@@ -483,6 +483,12 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
+        public MatchResult add_buy_ice_order_and_completely_traded() {
+            IcebergOrder order = new IcebergOrder(8, security, Side.BUY, 52, 1100, buyerBroker, buyerShareholder, 10);
+            buyerBroker.increaseCreditBy(42000);
+            return security.addNewOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -2979,56 +2985,54 @@ public class SecurityTest {
     @Test
     public void add_buy_order_and_completely_traded_and_check_buy_side_in_queue() {
         scenarioGenerator.add_buy_order_and_completely_traded();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 8)).isFalse();
     }
 
-
     @Test
-    public void add_buy_ice_order_and_completely_traded_buyer_credit() {
-        IcebergOrder order = new IcebergOrder(8, security, Side.BUY, 52, 1100, buyerBroker, buyerShareholder, 10);
-        buyerBroker.increaseCreditBy(42000);
-        security.addNewOrder(order, matcher);
-
+    public void add_buy_ice_order_and_completely_traded_and_check_matc_result() {
+        MatchResult res = scenarioGenerator.add_buy_ice_order_and_completely_traded();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test
+    public void add_buy_ice_order_and_completely_traded_and_check_buyer_credit() {
+        scenarioGenerator.add_buy_ice_order_and_completely_traded();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void add_buy_ice_order_and_completely_traded_buyer_position() {
-        IcebergOrder order = new IcebergOrder(8, security, Side.BUY, 52, 1100, buyerBroker, buyerShareholder, 10);
-        buyerBroker.increaseCreditBy(42000);
-        security.addNewOrder(order, matcher);
-
+    public void add_buy_ice_order_and_completely_traded_and_check_buyer_position() {
+        scenarioGenerator.add_buy_ice_order_and_completely_traded();
         assertPack.exceptedBuyerPosition = 52;
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void add_buy_ice_order_and_completely_traded_seller_credit() {
-        IcebergOrder order = new IcebergOrder(8, security, Side.BUY, 52, 1100, buyerBroker, buyerShareholder, 10);
-        buyerBroker.increaseCreditBy(42000);
-        security.addNewOrder(order, matcher);
-
+    public void add_buy_ice_order_and_completely_traded_and_check_seller_credit() {
+        scenarioGenerator.add_buy_ice_order_and_completely_traded();
         assertPack.exceptedSellerCredit = 42000;
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void add_buy_ice_order_and_completely_traded_seller_position() {
-        IcebergOrder order = new IcebergOrder(8, security, Side.BUY, 52, 1100, buyerBroker, buyerShareholder, 10);
-        buyerBroker.increaseCreditBy(42000);
-        security.addNewOrder(order, matcher);
-
+    public void add_buy_ice_order_and_completely_traded_and_check_seller_position() {
+        scenarioGenerator.add_buy_ice_order_and_completely_traded();
         assertPack.exceptedSellerPosition = 33;
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void add_buy_ice_order_and_completely_traded_order_in_queue() {
-        IcebergOrder order = new IcebergOrder(8, security, Side.BUY, 52, 1100, buyerBroker, buyerShareholder, 10);
-        buyerBroker.increaseCreditBy(42000);
-        security.addNewOrder(order, matcher);
-
+    public void add_buy_ice_order_and_completely_traded_and_check_sell_side_in_queue() {
+        scenarioGenerator.add_buy_ice_order_and_completely_traded();
         assertPack.assertOrderInQueue(Side.SELL, 0, 5, 33, 1000, 10, 8);
+    }
+
+    @Test
+    public void add_buy_ice_order_and_completely_traded_and_check_buy_side_in_queue() {
+        scenarioGenerator.add_buy_ice_order_and_completely_traded();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+        assertThat(orderBook.isThereOrderWithId(Side.BUY, 8)).isFalse();
     }
 
     @Test
