@@ -329,6 +329,12 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);
         }
 
+        public MatchResult increase_buy_order_price_and_trade_happens_but_not_enough_credit() {
+            Order order = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
+            buyerBroker.increaseCreditBy(13500);
+            return security.updateOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -1666,20 +1672,6 @@ public class SecurityTest {
         assertPack.assertOrderInQueue(Side.BUY, 0, 3, 5, 700);
     }
 
-    // @Test
-    // public void increase_buy_ice_order_price_and_partially_traded() {
-    //     IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
-    //     buyerBroker.increaseCreditBy(80000);
-    //     security.updateOrder(order, matcher);
-
-    //     assertPack.exceptedBuyerPosition = 85;
-    //     assertPack.exceptedSellerCredit = 75000;
-    //     assertPack.exceptedSellerPosition = 0;
-    //     assertPack.exceptedBuyerCredit = 22500;
-    //     assertPack.assertAll();
-    //     assertThat(orderBook.getSellQueue().size()).isZero();
-    //     assertPack.assertOrderInQueue(Side.BUY, 0, 5, 5, 1000, 10, 5);
-    // }
     @Test
     public void increase_buy_ice_order_price_and_partially_traded_and_check_match_result() {
         MatchResult res = scenarioGenerator.increase_buy_ice_order_price_and_partially_traded();
@@ -1727,60 +1719,46 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit() {
-        Order order = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(13500);
-        MatchingOutcome res = scenarioGenerator.updateOrder(order, matcher).outcome();
-
-        assertThat(res).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_buy_order_price_and_trade_happens_but_not_enough_credit();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
     }
 
     @Test
-    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_buyer_credit() {
-        Order order = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(13500);
-        scenarioGenerator.updateOrder(order, matcher).outcome();
-
+    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_and_check_buyer_credit() {
+        scenarioGenerator.increase_buy_order_price_and_trade_happens_but_not_enough_credit();
         assertPack.exceptedBuyerCredit = 13500;
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_buyer_position() {
-        Order order = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(13500);
-        scenarioGenerator.updateOrder(order, matcher).outcome();
-
+    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_and_check_buyer_position() {
+        scenarioGenerator.increase_buy_order_price_and_trade_happens_but_not_enough_credit();
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_seller_credit() {
-        Order order = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(13500);
-        scenarioGenerator.updateOrder(order, matcher).outcome();
-
+    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_and_check_seller_credit() {
+        scenarioGenerator.increase_buy_order_price_and_trade_happens_but_not_enough_credit();
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_seller_position() {
-        Order order = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(13500);
-        scenarioGenerator.updateOrder(order, matcher).outcome();
-
-        assertPack.exceptedSellerPosition = 85;
+    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_and_check_seller_position() {
+        scenarioGenerator.increase_buy_order_price_and_trade_happens_but_not_enough_credit();
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_order_in_queue() {
-        Order order = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
-        buyerBroker.increaseCreditBy(13500);
-        scenarioGenerator.updateOrder(order, matcher).outcome();
-
-        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500);
+    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_and_check_sell_side_in_queue() {
+        scenarioGenerator.increase_buy_order_price_and_trade_happens_but_not_enough_credit();
         assertThat(orderBook.isThereOrderWithId(Side.SELL, 1)).isTrue();
+    }
+
+    @Test
+    public void increase_buy_order_price_and_trade_happens_but_not_enough_credit_and_check_buy_side_in_queue() {
+        scenarioGenerator.increase_buy_order_price_and_trade_happens_but_not_enough_credit();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500);
     }
 
     @Test
