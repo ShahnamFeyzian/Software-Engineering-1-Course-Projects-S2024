@@ -209,6 +209,12 @@ public class SecurityTest {
             return security.updateOrder(order, matcher);            
         }
 
+        public MatchResult increase_buy_order_quantity() {
+            Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
+            buyerBroker.increaseCreditBy(6000);
+            return security.updateOrder(order, matcher);
+        }
+
         // TODO
     }
 
@@ -725,47 +731,32 @@ public class SecurityTest {
     }
 
     @Test
-    public void increase_buy_order_quantity_buyer_credit() {
-        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        scenarioGenerator.increaseBuyerCreditBy(6000);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_buy_order_quantity_and_check_buyer_credit() {
+        scenarioGenerator.increase_buy_order_quantity();
         assertPack.assertBuyerCredit();
     }
 
     @Test
-    public void increase_buy_order_quantity_buyer_position() {
-        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        scenarioGenerator.increaseBuyerCreditBy(6000);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_buy_order_quantity_and_check_buyer_position() {
+        scenarioGenerator.increase_buy_order_quantity();
         assertPack.assertBuyerPosition();
     }
 
     @Test
-    public void increase_buy_order_quantity_seller_credit() {
-        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        scenarioGenerator.increaseBuyerCreditBy(6000);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_buy_order_quantity_and_check_seller_credit() {
+        scenarioGenerator.increase_buy_order_quantity();
         assertPack.assertSellerCredit();
     }
 
     @Test
-    public void increase_buy_order_quantity_seller_position() {
-        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        scenarioGenerator.increaseBuyerCreditBy(6000);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_buy_order_quantity_and_check_seller_position() {
+        scenarioGenerator.increase_buy_order_quantity();
         assertPack.assertSellerPosition();
     }
 
     @Test
-    public void increase_buy_order_quantity_order_in_queue() {
-        Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-        scenarioGenerator.increaseBuyerCreditBy(6000);
-        scenarioGenerator.updateOrder(order);
-
+    public void increase_buy_order_quantity_and_check_order_in_queue() {
+        scenarioGenerator.increase_buy_order_quantity();
         assertPack.assertOrderInQueue(Side.BUY, 1, 4, 25, 400);
     }
 
