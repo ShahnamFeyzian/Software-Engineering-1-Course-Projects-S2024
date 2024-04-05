@@ -2185,15 +2185,50 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size() {
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_buyer_credit() {
+        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
+        sellerShareholder.incPosition(security, 60);
+        security.addNewOrder(order, matcher);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_buyer_position() {
         IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
         sellerShareholder.incPosition(security, 60);
         security.addNewOrder(order, matcher);
 
         assertPack.exceptedBuyerPosition = 55;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_seller_credit() {
+        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
+        sellerShareholder.incPosition(security, 60);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerCredit = 26500;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_seller_position() {
+        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
+        sellerShareholder.incPosition(security, 60);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerPosition = 90;
-        assertPack.assertAll();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
+        sellerShareholder.incPosition(security, 60);
+        security.addNewOrder(order, matcher);
+
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 5)).isFalse();
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 4)).isFalse();
         assertPack.assertOrderInQueue(Side.BUY, 0, 3, 10, 300);
@@ -2201,15 +2236,50 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_ice_order_and_partially_traded_and_remainder_is_less_than_peak_size() {
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_less_than_peak_size_buyer_credit() {
+        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 7);
+        sellerShareholder.incPosition(security, 60);
+        security.addNewOrder(order, matcher);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_less_than_peak_size_buyer_position() {
         IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 7);
         sellerShareholder.incPosition(security, 60);
         security.addNewOrder(order, matcher);
 
         assertPack.exceptedBuyerPosition = 55;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_less_than_peak_size_seller_credit() {
+        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 7);
+        sellerShareholder.incPosition(security, 60);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerCredit = 26500;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_less_than_peak_size_seller_position() {
+        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 7);
+        sellerShareholder.incPosition(security, 60);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerPosition = 90;
-        assertPack.assertAll();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_less_than_peak_size_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 7);
+        sellerShareholder.incPosition(security, 60);
+        security.addNewOrder(order, matcher);
+
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 5)).isFalse();
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 4)).isFalse();
         assertPack.assertOrderInQueue(Side.BUY, 0, 3, 10, 300);
@@ -2217,72 +2287,262 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_order_matches_with_all_buyer_queue_and_finished() {
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_buyer_credit() {
+        Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 85);
+        security.addNewOrder(order, matcher);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_buyer_position() {
         Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
         sellerShareholder.incPosition(security, 85);
         security.addNewOrder(order, matcher);
 
         assertPack.exceptedBuyerPosition = 85;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_seller_credit() {
+        Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 85);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerCredit = 32500;
-        assertPack.assertAll();
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_seller_position() {
+        Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 85);
+        security.addNewOrder(order, matcher);
+
+        assertPack.exceptedSellerPosition = 85;
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_sell_order_matches_with_all_buyer_queue_and_finished_order_in_queue() {
+        Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 85);
+        security.addNewOrder(order, matcher);
+
         assertThat(orderBook.getBuyQueue().size()).isZero();
         assertThat(orderBook.isThereOrderWithId(Side.SELL, 6)).isFalse();
     }
 
     @Test
-    public void add_sell_ice_order_matches_with_all_buyer_queue_and_finished() {
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_finished_buyer_credit() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 85);
+        security.addNewOrder(order, matcher);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_finished_buyer_position() {
         IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder, 10);
         sellerShareholder.incPosition(security, 85);
         security.addNewOrder(order, matcher);
 
         assertPack.exceptedBuyerPosition = 85;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_finished_seller_credit() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 85);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerCredit = 32500;
-        assertPack.assertAll();
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_finished_seller_position() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 85);
+        security.addNewOrder(order, matcher);
+
+        assertPack.exceptedSellerPosition = 85;
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_finished_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 85);
+        security.addNewOrder(order, matcher);
+
         assertThat(orderBook.getBuyQueue().size()).isZero();
         assertThat(orderBook.isThereOrderWithId(Side.SELL, 6)).isFalse();
     }
 
     @Test
-    public void add_sell_order_matches_with_all_buyer_queue_and_not_finished() {
+    public void add_sell_order_matches_with_all_buyer_queue_and_not_finished_buyer_credit() {
+        Order order = new Order(6, security, Side.SELL, 120, 100, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 120);
+        security.addNewOrder(order, matcher);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_sell_order_matches_with_all_buyer_queue_and_not_finished_buyer_position() {
         Order order = new Order(6, security, Side.SELL, 120, 100, sellerBroker, sellerShareholder);
         sellerShareholder.incPosition(security, 120);
         security.addNewOrder(order, matcher);
 
         assertPack.exceptedBuyerPosition = 85;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_sell_order_matches_with_all_buyer_queue_and_not_finished_seller_credit() {
+        Order order = new Order(6, security, Side.SELL, 120, 100, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 120);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerCredit = 32500;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_sell_order_matches_with_all_buyer_queue_and_not_finished_seller_position() {
+        Order order = new Order(6, security, Side.SELL, 120, 100, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 120);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerPosition = 120;
-        assertPack.assertAll();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_sell_order_matches_with_all_buyer_queue_and_not_finished_order_in_queue() {
+        Order order = new Order(6, security, Side.SELL, 120, 100, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 120);
+        security.addNewOrder(order, matcher);
+
         assertThat(orderBook.getBuyQueue().size()).isZero();
         assertPack.assertOrderInQueue(Side.SELL, 0, 6, 35, 100);
     }
 
     @Test
-    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished() {
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_buyer_credit() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 100);
+        security.addNewOrder(order, matcher);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_buyer_position() {
         IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
         sellerShareholder.incPosition(security, 100);
         security.addNewOrder(order, matcher);
 
         assertPack.exceptedBuyerPosition = 85;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_seller_credit() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 100);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerCredit = 32500;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_seller_position() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 100);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerPosition = 100;
-        assertPack.assertAll();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished_order_in_queue() {
+        IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 100, 100, sellerBroker, sellerShareholder, 10);
+        sellerShareholder.incPosition(security, 100);
+        security.addNewOrder(order, matcher);
+
         assertThat(orderBook.getBuyQueue().size()).isZero();
         assertPack.assertOrderInQueue(Side.SELL, 0, 6, 15, 100, 10, 10);
     }
 
+    // @Test 
+    // public void add_sell_order_and_check_min_execution_quantity() {
+    //     Order order = new Order(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder);
+    //     sellerShareholder.incPosition(security, 50);
+    //     security.addNewOrder(order, matcher);
+
+    //     assertPack.exceptedSellerCredit = 22500;
+    //     assertPack.exceptedSellerPosition = 90;
+    //     assertPack.exceptedBuyerPosition = 45;
+    //     assertPack.assertAll();
+    //     assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
+    //     assertPack.assertOrderInQueue(Side.SELL, 0, 6, 5, 10, 500);
+    // }
     @Test 
-    public void add_sell_order_and_check_min_execution_quantity() {
+    public void add_sell_order_and_check_min_execution_quantity_buyer_credit() {
+        Order order = new Order(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 50);
+        security.addNewOrder(order, matcher);
+
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_sell_order_and_check_min_execution_quantity_buyer_position() {
+        Order order = new Order(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 50);
+        security.addNewOrder(order, matcher);
+
+        assertPack.exceptedBuyerPosition = 45;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_sell_order_and_check_min_execution_quantity_seller_credit() {
         Order order = new Order(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder);
         sellerShareholder.incPosition(security, 50);
         security.addNewOrder(order, matcher);
 
         assertPack.exceptedSellerCredit = 22500;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_sell_order_and_check_min_execution_quantity_seller_position() {
+        Order order = new Order(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 50);
+        security.addNewOrder(order, matcher);
+
         assertPack.exceptedSellerPosition = 90;
-        assertPack.exceptedBuyerPosition = 45;
-        assertPack.assertAll();
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_sell_order_and_check_min_execution_quantity_order_in_queue() {
+        Order order = new Order(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder);
+        sellerShareholder.incPosition(security, 50);
+        security.addNewOrder(order, matcher);
+
         assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
         assertPack.assertOrderInQueue(Side.SELL, 0, 6, 5, 10, 500);
-    }
+    }    
 
     @Test 
     public void add_sell_ice_order_and_check_min_execution_quantity() {
