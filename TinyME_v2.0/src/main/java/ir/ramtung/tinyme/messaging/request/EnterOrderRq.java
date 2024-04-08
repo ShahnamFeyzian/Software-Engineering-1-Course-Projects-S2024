@@ -59,7 +59,8 @@ public class EnterOrderRq extends BaseOrder{
             errors.add(Message.INVALID_PEAK_SIZE);
         if (!isMinimumExecutionQuantityValid())
             errors.add(Message.INVALID_MINIMUM_EXECUTION_QUANTITY);
-
+        if (this.side == null)
+            errors.add(Message.SIDE_CAN_NOT_BE_NULL);
         return errors;
     }
 

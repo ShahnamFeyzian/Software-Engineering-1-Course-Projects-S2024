@@ -17,4 +17,6 @@ public class Message {
     public static final String INVALID_MINIMUM_EXECUTION_QUANTITY = "Invalid minimum execution quantity";
     public static final String CANNOT_UPDATE_MINIMUM_EXECUTION_QUANTITY = "Cannot update minimum execution quantity";
     public static final String MINIMUM_EXECUTION_QUANTITY_NOT_MET = "The minimum execution quantity was not met";
+    public static final String SIDE_CAN_NOT_BE_NULL = "side can not be null value";
+
 }

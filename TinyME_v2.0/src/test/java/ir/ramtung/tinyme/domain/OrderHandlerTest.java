@@ -51,6 +51,14 @@ public class OrderHandlerTest {
     private Broker broker2;
     private Broker broker3;
 
+    OrderRejectedEvent captureOrderRejectedEvent() {
+        ArgumentCaptor<OrderRejectedEvent> orderRejectedCaptor = ArgumentCaptor.forClass(OrderRejectedEvent.class);
+        verify(eventPublisher).publish(orderRejectedCaptor.capture());
+        OrderRejectedEvent outputEvent = orderRejectedCaptor.getValue();
+
+        return outputEvent;
+    }
+
     @BeforeEach
     void setup() {
         securityRepository.clear();
@@ -60,7 +68,7 @@ public class OrderHandlerTest {
         security = Security.builder().isin("ABC").build();
         securityRepository.addSecurity(security);
 
-        shareholder = Shareholder.builder().build();
+        shareholder = Shareholder.builder().shareholderId(1).build();
         shareholder.incPosition(security, 100_000);
         shareholderRepository.addShareholder(shareholder);
 
@@ -71,6 +79,47 @@ public class OrderHandlerTest {
         brokerRepository.addBroker(broker2);
         brokerRepository.addBroker(broker3);
     }
+
+    @Test
+    void enter_order_invalid_fields() {
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(0, "ABC", -1, null, null, -1, -1, 1, 1, -1, -1));
+        OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
+        
+        assertThat(outputEvent.getErrors()).containsOnly(
+                Message.INVALID_ORDER_ID,
+                Message.ORDER_QUANTITY_NOT_POSITIVE,
+                Message.ORDER_PRICE_NOT_POSITIVE,
+                Message.INVALID_PEAK_SIZE,
+                Message.INVALID_MINIMUM_EXECUTION_QUANTITY,
+                Message.SIDE_CAN_NOT_BE_NULL
+        );
+    }
+
+    @Test
+    void enter_order_invalid_repos() {
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(0, "-1", 1, null, Side.BUY, 1, 1, -1, -1, 0, 1));
+        OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
+        
+        assertThat(outputEvent.getErrors()).containsOnly(
+                Message.UNKNOWN_SECURITY_ISIN,
+                Message.UNKNOWN_BROKER_ID,
+                Message.UNKNOWN_SHAREHOLDER_ID
+        );
+    }
+
+    @Test
+    void enter_order_invalid_lot_and_tick_size() {
+        Security security2 = Security.builder().isin("ABC2").lotSize(3).tickSize(3).build();
+        securityRepository.addSecurity(security2);
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(0, "ABC2", 1, null, Side.BUY, 4, 4, 1, 1, 0, 1));
+        OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
+        
+        assertThat(outputEvent.getErrors()).containsOnly(
+                Message.QUANTITY_NOT_MULTIPLE_OF_LOT_SIZE,
+                Message.PRICE_NOT_MULTIPLE_OF_TICK_SIZE
+        );
+    }
+
     @Test
     void new_order_matched_completely_with_one_trade() {
         Order matchingBuyOrder = new Order(100, security, Side.BUY, 1000, 15500, broker1, shareholder);
@@ -91,6 +140,7 @@ public class OrderHandlerTest {
         orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 2, shareholder.getShareholderId(), 0, 0));
         verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
     }
+
     @Test
     void new_order_matched_partially_with_two_trades() {
         Order matchingBuyOrder1 = new Order(100, security, Side.BUY, 300, 15500, broker1, shareholder);
