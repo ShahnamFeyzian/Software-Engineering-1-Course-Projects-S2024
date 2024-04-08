@@ -153,7 +153,7 @@ public class OrderHandler {
             throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
         }
         catch (InvalidIcebergPeakSizeException exp) {
-            throw new InvalidRequestException(Message.CANNOT_SPECIFY_PEAK_SIZE_FOR_A_NON_ICEBERG_ORDER);
+            throw new InvalidRequestException(Message.CANNOT_SPECIFY_0_PEAK_SIZE_FOR_A_ICEBERG_ORDER);
         }
         catch (InvalidPeakSizeException exp) {
             throw new InvalidRequestException(Message.INVALID_PEAK_SIZE);

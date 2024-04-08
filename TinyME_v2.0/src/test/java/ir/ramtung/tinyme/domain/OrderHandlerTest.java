@@ -121,6 +121,67 @@ public class OrderHandlerTest {
     }
 
     @Test
+    void update_order_id_not_found() {
+        Order inQueueOrder = new Order(1, security, Side.BUY, 100, 100, broker1, shareholder);
+        broker1.increaseCreditBy(100 * 100);
+        security.getOrderBook().enqueue(inQueueOrder);
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(0, "ABC", 2, null, Side.BUY, 1, 1, 1, 1, 0, 0));
+        OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
+        
+        assertThat(outputEvent.getErrors()).containsOnly(
+                Message.ORDER_ID_NOT_FOUND
+        );
+    }
+    
+    @Test
+    void update_order_invalid_peaksize() {
+        Order inQueueOrder = new Order(1, security, Side.BUY, 100, 100, broker1, shareholder);
+        broker1.increaseCreditBy(100 * 100);
+        security.getOrderBook().enqueue(inQueueOrder);
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(0, "ABC", 1, null, Side.BUY, 5, 1, 1, 1, 1, 0));
+        OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
+        
+        assertThat(outputEvent.getErrors()).containsOnly(
+                Message.INVALID_PEAK_SIZE
+        );
+    }
+    
+    @Test
+    void update_iceberg_order_invalid_peaksize() {
+        Order inQueueOrder = new IcebergOrder(1, security, Side.BUY, 100, 100, broker1, shareholder, 10);
+        broker1.increaseCreditBy(100 * 100);
+        security.getOrderBook().enqueue(inQueueOrder);
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(0, "ABC", 1, null, Side.BUY, 5, 1, 1, 1, 0, 0));
+        OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
+        
+        assertThat(outputEvent.getErrors()).containsOnly(
+                Message.CANNOT_SPECIFY_0_PEAK_SIZE_FOR_A_ICEBERG_ORDER
+        );
+    }
+    
+    @Test
+    void update_iceberg_order_invalid_min_exec() {
+        Order inQueueOrder = new Order(1, security, Side.BUY, 100, 100, broker1, shareholder);
+        broker1.increaseCreditBy(100 * 100);
+        security.getOrderBook().enqueue(inQueueOrder);
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(0, "ABC", 1, null, Side.BUY, 5, 1, 1, 1, 0, 1));
+        OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
+        
+        assertThat(outputEvent.getErrors()).containsOnly(
+                Message.CANNOT_UPDATE_MINIMUM_EXECUTION_QUANTITY
+        );
+    }
+
+
+
+
+
+
+    @Test
     void new_order_matched_completely_with_one_trade() {
         Order matchingBuyOrder = new Order(100, security, Side.BUY, 1000, 15500, broker1, shareholder);
         Order incomingSellOrder = new Order(200, security, Side.SELL, 300, 15450, broker2, shareholder);
