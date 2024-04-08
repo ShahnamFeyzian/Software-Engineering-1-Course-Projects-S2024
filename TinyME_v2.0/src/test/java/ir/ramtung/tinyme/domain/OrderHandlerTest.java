@@ -175,8 +175,36 @@ public class OrderHandlerTest {
                 Message.CANNOT_UPDATE_MINIMUM_EXECUTION_QUANTITY
         );
     }
+    
+    @Test
+    void delete_order_invalid_order_id() {
+        Order inQueueOrder = new Order(1, security, Side.BUY, 100, 100, broker1, shareholder);
+        broker1.increaseCreditBy(100 * 100);
+        security.getOrderBook().enqueue(inQueueOrder);
 
+        orderHandler.handleDeleteOrder(new DeleteOrderRq(1, "ABC", Side.BUY, -1));
+        OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
+        
+        assertThat(outputEvent.getErrors()).containsOnly(
+                Message.INVALID_ORDER_ID
+        );
+    }
+    
+    @Test
+    void delete_order_invalid_fields() {
+        Order inQueueOrder = new Order(1, security, Side.BUY, 100, 100, broker1, shareholder);
+        broker1.increaseCreditBy(100 * 100);
+        security.getOrderBook().enqueue(inQueueOrder);
 
+        orderHandler.handleDeleteOrder(new DeleteOrderRq(1, "-1", null, -1));
+        OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
+        
+        assertThat(outputEvent.getErrors()).containsOnly(
+                Message.INVALID_ORDER_ID,
+                Message.SIDE_CAN_NOT_BE_NULL,
+                Message.UNKNOWN_SECURITY_ISIN
+        );
+    }
 
 
 
