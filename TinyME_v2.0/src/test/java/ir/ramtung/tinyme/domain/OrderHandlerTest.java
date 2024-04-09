@@ -8,6 +8,7 @@ import ir.ramtung.tinyme.messaging.EventPublisher;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.TradeDTO;
 import ir.ramtung.tinyme.messaging.event.OrderAcceptedEvent;
+import ir.ramtung.tinyme.messaging.event.OrderDeletedEvent;
 import ir.ramtung.tinyme.messaging.event.OrderExecutedEvent;
 import ir.ramtung.tinyme.messaging.event.OrderRejectedEvent;
 import ir.ramtung.tinyme.messaging.event.OrderUpdatedEvent;
@@ -462,5 +463,23 @@ public class OrderHandlerTest {
         verify(eventPublisher).publish(any(OrderAcceptedEvent.class));
         assertThat(shareholder1.hasEnoughPositionsOn(security, 100_000)).isTrue();
         assertThat(shareholder.hasEnoughPositionsOn(security, 500)).isTrue();
+    }
+
+
+    @Test
+    void delete_orders() {
+        List<Order> orders = Arrays.asList(
+                    new Order(1, security, Side.BUY, 10, 15, broker1, shareholder),
+                    new Order(2, security, Side.SELL, 10, 16, broker2, shareholder)
+        );
+        broker1.increaseCreditBy(150);
+        shareholder.incPosition(security, 10);
+        orders.forEach(order -> security.getOrderBook().enqueue(order));
+
+        orderHandler.handleDeleteOrder(new DeleteOrderRq(1, "ABC", Side.BUY, 1));
+        orderHandler.handleDeleteOrder(new DeleteOrderRq(2, "ABC", Side.SELL, 2));
+
+        verify(eventPublisher).publish(new OrderDeletedEvent(1, 1));
+        verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
     }
 }
