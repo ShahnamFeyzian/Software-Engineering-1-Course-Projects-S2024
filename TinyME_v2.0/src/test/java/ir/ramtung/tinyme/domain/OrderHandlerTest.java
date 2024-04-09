@@ -294,9 +294,10 @@ public class OrderHandlerTest {
         Order matchingBuyOrder = new Order(100, security, Side.BUY, 1000, 15500, broker1, shareholder);
         Order incomingSellOrder = new Order(200, security, Side.SELL, 300, 15450, broker2, shareholder);
         broker1.increaseCreditBy(15_500_000);
+        shareholder.incPosition(security, 300);
         security.getOrderBook().enqueue(matchingBuyOrder);
 
-        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 2, shareholder.getShareholderId(), 0, 0));
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 2, shareholder.getShareholderId(), 0, 50));
 
         Trade trade = new Trade(security, matchingBuyOrder.getPrice(), incomingSellOrder.getQuantity(),
                 matchingBuyOrder, incomingSellOrder);
@@ -306,6 +307,7 @@ public class OrderHandlerTest {
 
     @Test
     void new_order_queued_with_no_trade() {
+        shareholder.incPosition(security, 300);
         orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 2, shareholder.getShareholderId(), 0, 0));
         verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
     }
@@ -315,6 +317,7 @@ public class OrderHandlerTest {
         Order matchingBuyOrder1 = new Order(100, security, Side.BUY, 300, 15500, broker1, shareholder);
         Order matchingBuyOrder2 = new Order(110, security, Side.BUY, 300, 15500, broker1, shareholder);
         Order incomingSellOrder = new Order(200, security, Side.SELL, 1000, 15450, broker2, shareholder);
+        shareholder.incPosition(security, 1000);
         broker1.increaseCreditBy(9_300_000);
         security.getOrderBook().enqueue(matchingBuyOrder1);
         security.getOrderBook().enqueue(matchingBuyOrder2);
@@ -331,7 +334,7 @@ public class OrderHandlerTest {
                 incomingSellOrder.getTotalQuantity(),
                 incomingSellOrder.getPrice(),
                 incomingSellOrder.getBroker().getBrokerId(),
-                incomingSellOrder.getShareholder().getShareholderId(), 0, 0));
+                incomingSellOrder.getShareholder().getShareholderId(), 0, 600));
 
         verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
         verify(eventPublisher).publish(new OrderExecutedEvent(1, 200, List.of(new TradeDTO(trade1), new TradeDTO(trade2))));
@@ -341,6 +344,7 @@ public class OrderHandlerTest {
     void iceberg_order_behaves_normally_before_being_queued() {
         Order matchingBuyOrder = new Order(100, security, Side.BUY, 1000, 15500, broker1, shareholder);
         Order incomingSellOrder = new IcebergOrder(200, security, Side.SELL, 300, 15450, broker2, shareholder, 100);
+        shareholder.incPosition(security, 300);
         broker1.increaseCreditBy(15_500_000);
         security.getOrderBook().enqueue(matchingBuyOrder);
         Trade trade = new Trade(security, matchingBuyOrder.getPrice(), incomingSellOrder.getQuantity(),
@@ -356,7 +360,7 @@ public class OrderHandlerTest {
                 incomingSellOrder.getTotalQuantity(),
                 incomingSellOrder.getPrice(),
                 incomingSellOrder.getBroker().getBrokerId(),
-                incomingSellOrder.getShareholder().getShareholderId(), 100, 0));
+                incomingSellOrder.getShareholder().getShareholderId(), 100, 150));
 
         verify(mockEventPublisher).publish(new OrderAcceptedEvent(1, 200));
         verify(mockEventPublisher).publish(new OrderExecutedEvent(1, 200, List.of(new TradeDTO(trade))));
@@ -365,6 +369,7 @@ public class OrderHandlerTest {
     @Test
     void update_order_causing_no_trades() {
         Order queuedOrder = new Order(200, security, Side.SELL, 500, 15450, broker1, shareholder);
+        shareholder.incPosition(security, 1000);
         security.getOrderBook().enqueue(queuedOrder);
         orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 1000, 15450, 1, shareholder.getShareholderId(), 0, 0));
         verify(eventPublisher).publish(new OrderUpdatedEvent(1, 200));
@@ -375,6 +380,7 @@ public class OrderHandlerTest {
         Order matchingOrder = new Order(1, security, Side.BUY, 500, 15450, broker1, shareholder);
         Order beforeUpdate = new Order(200, security, Side.SELL, 1000, 15455, broker2, shareholder);
         Order afterUpdate = new Order(200, security, Side.SELL, 500, 15450, broker2, shareholder);
+        shareholder.incPosition(security, 1000);
         broker1.increaseCreditBy(7_725_000);
         security.getOrderBook().enqueue(matchingOrder);
         security.getOrderBook().enqueue(beforeUpdate);
@@ -396,22 +402,23 @@ public class OrderHandlerTest {
                 new Order(1, security, Side.BUY, 304, 570, broker1, shareholder1),
                 new Order(2, security, Side.BUY, 430, 550, broker1, shareholder1),
                 new Order(3, security, Side.BUY, 445, 545, broker1, shareholder1),
-                new Order(6, security, Side.SELL, 350, 580, broker1, shareholder),
+                new Order(6, security, Side.SELL, 350, 250, 580, broker1, shareholder),
                 new Order(7, security, Side.SELL, 100, 581, broker2, shareholder)
         );
         broker1.increaseCreditBy(100_652_305);
         orders.forEach(order -> security.getOrderBook().enqueue(order));
-        shareholder.decPosition(security, 99_500);
+        shareholder.incPosition(security, 350);
 
-        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(1, "ABC", 6, LocalDateTime.now(), Side.SELL, 250, 570, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0));
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(1, "ABC", 6, LocalDateTime.now(), Side.SELL, 250, 570, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 250));
 
         verify(eventPublisher).publish(any(OrderExecutedEvent.class));
         assertThat(shareholder1.hasEnoughPositionsOn(security, 100_000 + 250)).isTrue();
-        assertThat(shareholder.hasEnoughPositionsOn(security, 99_500 - 251)).isFalse();
+        assertThat(shareholder.hasEnoughPositionsOn(security, 101)).isFalse();
     }
 
     @Test
     void new_buy_order_does_not_check_for_position() {
+        shareholder.incPosition(security, 100_000);
         Shareholder shareholder1 = Shareholder.builder().build();
         shareholder1.incPosition(security, 100_000);
         shareholderRepository.addShareholder(shareholder1);
@@ -435,6 +442,7 @@ public class OrderHandlerTest {
 
     @Test
     void update_buy_order_does_not_check_for_position() {
+        shareholder.incPosition(security, 100_000);
         Shareholder shareholder1 = Shareholder.builder().build();
         shareholder1.incPosition(security, 100_000);
         shareholderRepository.addShareholder(shareholder1);
