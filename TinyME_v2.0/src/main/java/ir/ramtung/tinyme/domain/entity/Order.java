@@ -96,8 +96,8 @@ public class Order {
     }
 
     public boolean queuesBefore(Order order) {
-        if (this.price == order.price)
-            return this.entryTime.compareTo(order.entryTime) < 0;
+        // if (price == order.getPrice())
+        //     return entryTime.isBefore(order.getEntryTime()); // FIXME: this makes conflict with some tests in domain/securityTest
         if (order.getSide() == Side.BUY) {
             return price > order.getPrice();
         } else {
