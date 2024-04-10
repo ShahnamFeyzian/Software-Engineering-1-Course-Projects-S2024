@@ -5,11 +5,18 @@ import java.util.List;
 
 import ir.ramtung.tinyme.domain.entity.Side;
 import ir.ramtung.tinyme.messaging.Message;
+import lombok.NoArgsConstructor;
 
-public class DeleteOrderRq extends BaseOrder{
+@NoArgsConstructor
+public class DeleteOrderRq extends BaseOrderRq{
 
     public DeleteOrderRq(long requestId, String securityIsin, Side side, long orderId) {
         super(requestId, securityIsin, side, orderId);
+    }
+
+    @Override
+    public String toString() {
+        return "DeleteOrderRq(" + this.getAllPropertiesString() + ")";
     }
 
     @Override

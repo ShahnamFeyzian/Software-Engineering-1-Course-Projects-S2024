@@ -10,24 +10,35 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 
 import ir.ramtung.tinyme.domain.entity.Side;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-public abstract class BaseOrder {
+@NoArgsConstructor
+public abstract class BaseOrderRq {
     protected long requestId;
     protected String securityIsin;
     protected Side side;
     protected long orderId;
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    protected LocalDateTime entryTime;
+    protected LocalDateTime entryTime = LocalDateTime.now();
 
-    protected BaseOrder(long requestId, String securityIsin, Side side, long orderId) {
+    protected BaseOrderRq(long requestId, String securityIsin, Side side, long orderId) {
         this.requestId = requestId;
         this.securityIsin = securityIsin;
         this.side = side;
         this.orderId = orderId;
-        this.entryTime = LocalDateTime.now();
     }
     
+    protected String getAllPropertiesString() {
+        return (
+            "requestId=" + requestId + ", " +
+            "securityIsin=" + securityIsin + ", " +
+            "side=" + side + ", " +
+            "orderId=" + orderId + ", " +
+            "entryTime=" + entryTime
+        );
+    } 
+
     public abstract List<String> validateYourFields();
 }

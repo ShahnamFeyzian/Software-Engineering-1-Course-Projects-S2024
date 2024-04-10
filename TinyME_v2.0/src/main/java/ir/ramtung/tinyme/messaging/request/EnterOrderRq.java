@@ -3,13 +3,15 @@ package ir.ramtung.tinyme.messaging.request;
 import ir.ramtung.tinyme.domain.entity.Side;
 import ir.ramtung.tinyme.messaging.Message;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 
 @Getter
-public class EnterOrderRq extends BaseOrder{
+@NoArgsConstructor
+public class EnterOrderRq extends BaseOrderRq{
     private OrderEntryType requestType;
     private int quantity;
     private int price;
@@ -44,6 +46,25 @@ public class EnterOrderRq extends BaseOrder{
     Side side, int quantity, int price, long brokerId, long shareholderId, int peakSize, int minimumExecutionQuantity) {
         return new EnterOrderRq(OrderEntryType.UPDATE_ORDER, requestId, securityIsin, orderId, entryTime, side, quantity, price, 
                                 brokerId, shareholderId, peakSize, minimumExecutionQuantity);
+    }
+
+    @Override
+    public String toString() {
+        return "EnterOrderRq(" + this.getAllPropertiesString() + ")";
+    }
+
+    @Override
+    protected String getAllPropertiesString() {
+        return (
+            super.getAllPropertiesString() + ", " +
+            "requestType=" + requestType + ", " +
+            "quantity=" + quantity + ", " +
+            "price=" + price + ", " +
+            "brokerId=" + brokerId + ", " +
+            "shareholderId=" + shareholderId + ", " +
+            "peakSize=" + peakSize + ", " +
+            "minimumExecutionQuantity=" + minimumExecutionQuantity
+        );
     }
 
     @Override
