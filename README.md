@@ -6,6 +6,7 @@
   - [Assignment 1](#assignment-1)
   - [Assignment 2](#assignment-2)
   - [Assignment 3](#assignment-3)
+  - [Assignment 4](#assignment-4)
 
 ## Intro
 
@@ -26,3 +27,7 @@ This assignment was about code review and refactoring. We were given a simple Ja
 ## Assignment 3
 
 In this assignment, we were supposed to add complementary unit tests to the `TinyME` application to increase the code coverage. The tests were supposed to be written using JUnit and Mockito. Each individual was supposed to write the tests for the corresponding version of the `TinyME` application, and then we added the tests to the main `TinyME` folder.
+
+## Assignment 4
+
+In this assignment, we were supposed to add a simple feature to the `TinyME` application. The feature was to add a minimum execution quantity to the orders. The feature was supposed to be implemented in a way that the existing tests would not fail. This feature shows that an order will be moved into the order book only if the quantity of the order is greater than or equal to the minimum execution quantity. For more information, please refer to the description file in the `A4` folder.
