@@ -96,6 +96,8 @@ public class Order {
     }
 
     public boolean queuesBefore(Order order) {
+        if (this.price == order.price)
+            return this.entryTime.compareTo(order.entryTime) < 0;
         if (order.getSide() == Side.BUY) {
             return price > order.getPrice();
         } else {

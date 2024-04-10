@@ -3,6 +3,8 @@ package ir.ramtung.tinyme.domain.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -537,6 +539,28 @@ public class SecurityTest {
             IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 22, 22, 800, buyerBroker, buyerShareholder, 10);
             buyerBroker.increaseCreditBy(14600);
             return security.addNewOrder(order, matcher);
+        }
+
+        public void add_two_buy_orders_with_same_price() {
+            Order order1 = new Order(6, security, Side.BUY, 10, 0, 300, buyerBroker, 
+                                     buyerShareholder, LocalDateTime.now().minusHours(1));
+            Order order2 = new Order(7, security, Side.BUY, 10, 0, 300, buyerBroker, 
+                                     buyerShareholder, LocalDateTime.now().minusHours(2));
+
+            buyerBroker.increaseCreditBy(6000);
+            security.addNewOrder(order1, matcher);
+            security.addNewOrder(order2, matcher);
+        }
+
+        public void add_two_buy_ice_orders_with_same_price() {
+            IcebergOrder order1 = new IcebergOrder(6, security, Side.BUY, 10, 0, 300, buyerBroker, 
+                                                   buyerShareholder, LocalDateTime.now().plusHours(1), 10);
+            IcebergOrder order2 = new IcebergOrder(7, security, Side.BUY, 10, 0, 300, buyerBroker, 
+                                                   buyerShareholder, LocalDateTime.now().plusHours(2), 10);
+
+            buyerBroker.increaseCreditBy(6000);
+            security.addNewOrder(order1, matcher);
+            security.addNewOrder(order2, matcher);
         }
     }
 
@@ -3773,5 +3797,21 @@ public class SecurityTest {
         scenarioGenerator.add_buy_ice_order_quantity_is_equal_to_min_execution_quantity();
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 6)).isFalse();
+    }
+
+    @Test
+    public void add_two_buy_orders_with_same_price_and_check_orders_in_queue() {
+        scenarioGenerator.add_two_buy_orders_with_same_price();
+        assertPack.assertOrderInQueue(Side.BUY, 2, 7, 10, 300);
+        assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300);
+        assertPack.assertOrderInQueue(Side.BUY, 4, 3, 10, 300);
+    }
+
+    @Test
+    public void add_two_buy_ice_orders_with_same_price_and_check_orders_in_queue() {
+        scenarioGenerator.add_two_buy_ice_orders_with_same_price();
+        assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
+        assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300);
+        assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300);
     }
 }
