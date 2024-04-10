@@ -24,6 +24,8 @@ public class DeleteOrderRq extends BaseOrderRq{
         List<String> errors = new LinkedList<>();
         if (orderId <= 0)
             errors.add(Message.INVALID_ORDER_ID);
+        if(side == null)
+            errors.add(Message.SIDE_CAN_NOT_BE_NULL);
 
         return errors;
     }

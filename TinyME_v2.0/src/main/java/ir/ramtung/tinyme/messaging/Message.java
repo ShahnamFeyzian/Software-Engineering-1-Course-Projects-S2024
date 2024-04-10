@@ -7,7 +7,7 @@ public class Message {
     public static final String UNKNOWN_SECURITY_ISIN = "Unknown security ISIN";
     public static final String ORDER_ID_NOT_FOUND = "Order ID not found in the order book";
     public static final String INVALID_PEAK_SIZE = "Iceberg order peak size is out of range";
-    public static final String CANNOT_SPECIFY_PEAK_SIZE_FOR_A_NON_ICEBERG_ORDER = "Cannot specify peak size for a non-iceberg order";
+    public static final String CANNOT_SPECIFY_0_PEAK_SIZE_FOR_A_ICEBERG_ORDER = "Cannot specify 0 peak size for a iceberg order";
     public static final String UNKNOWN_BROKER_ID = "Unknown broker ID";
     public static final String UNKNOWN_SHAREHOLDER_ID = "Unknown shareholder ID";
     public static final String BUYER_HAS_NOT_ENOUGH_CREDIT = "Buyer has not enough credit";
@@ -17,4 +17,6 @@ public class Message {
     public static final String INVALID_MINIMUM_EXECUTION_QUANTITY = "Invalid minimum execution quantity";
     public static final String CANNOT_UPDATE_MINIMUM_EXECUTION_QUANTITY = "Cannot update minimum execution quantity";
     public static final String MINIMUM_EXECUTION_QUANTITY_NOT_MET = "The minimum execution quantity was not met";
+    public static final String SIDE_CAN_NOT_BE_NULL = "side can not be null value";
+
 }
