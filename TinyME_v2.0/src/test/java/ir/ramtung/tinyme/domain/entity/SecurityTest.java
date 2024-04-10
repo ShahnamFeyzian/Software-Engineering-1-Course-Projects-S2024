@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -561,6 +560,20 @@ public class SecurityTest {
             buyerBroker.increaseCreditBy(6000);
             security.addNewOrder(order1, matcher);
             security.addNewOrder(order2, matcher);
+        }
+
+        public MatchResult add_sell_order_causes_rollback_for_buy_orders_with_same_price() {
+            this.add_two_buy_orders_with_same_price();
+            Order order = new Order(9, security, Side.SELL, 300, 300, 0, sellerBroker, sellerShareholder);
+            sellerShareholder.incPosition(security, 300);
+            return security.addNewOrder(order, matcher);
+        }
+
+        public MatchResult add_sell_order_causes_rollback_for_buy_ice_orders_with_same_price() {
+            this.add_two_buy_ice_orders_with_same_price();
+            Order order = new Order(9, security, Side.SELL, 300, 300, 0, sellerBroker, sellerShareholder);
+            sellerShareholder.incPosition(security, 300);
+            return security.addNewOrder(order, matcher);
         }
     }
 
@@ -3811,7 +3824,35 @@ public class SecurityTest {
     public void add_two_buy_ice_orders_with_same_price_and_check_orders_in_queue() {
         scenarioGenerator.add_two_buy_ice_orders_with_same_price();
         assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
+        assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300, 10, 10);
+        assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300, 10, 10);
+    }
+
+    @Test
+    public void add_sell_order_causes_rollback_for_buy_orders_with_same_price_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_order_causes_rollback_for_buy_orders_with_same_price();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
+    }
+
+    @Test
+    public void add_sell_order_causes_rollback_for_buy_orders_with_same_price_and_check_orders_in_queue() {
+        scenarioGenerator.add_sell_order_causes_rollback_for_buy_orders_with_same_price();
+        assertPack.assertOrderInQueue(Side.BUY, 2, 7, 10, 300);
         assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300);
-        assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300);
+        assertPack.assertOrderInQueue(Side.BUY, 4, 3, 10, 300);
+    }
+
+    @Test
+    public void add_sell_order_causes_rollback_for_buy_ice_orders_with_same_price_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_order_causes_rollback_for_buy_ice_orders_with_same_price();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
+    }
+
+    @Test
+    public void add_sell_order_causes_rollback_for_buy_ice_orders_with_same_price_and_check_orders_in_queue() {
+        scenarioGenerator.add_sell_order_causes_rollback_for_buy_ice_orders_with_same_price();
+        assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
+        assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300, 10, 10);
+        assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300, 10, 10);
     }
 }
