@@ -5,5 +5,6 @@ public enum OrderStatus {
     UPDATING,
     QUEUED,
     SNAPSHOT,
+    LOADING,
     DONE
 }

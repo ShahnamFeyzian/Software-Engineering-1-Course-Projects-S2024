@@ -134,11 +134,11 @@ public class DataLoader {
                 String[] line;
                 while ((line = csvReader.readNext()) != null) {
                     Security security = securityRepository.findSecurityByIsin(line[1]);
-                    Broker broker = brokerRepository.findBrokerById(Long.parseLong(line[5]));
-                    Shareholder shareholder = shareholderRepository.findShareholderById(Long.parseLong(line[6]));
-//orderId,isin,side,quantity,price,brokerId,shareholderId,entryTime,peakSize,displayedQuantity
-//0       1    2    3        4     5        6             7         8        9
-                    int peakSize = Integer.parseInt(line[8]);
+                    Broker broker = brokerRepository.findBrokerById(Long.parseLong(line[6]));
+                    Shareholder shareholder = shareholderRepository.findShareholderById(Long.parseLong(line[7]));
+//orderId,isin,side,quantity,minimumExecutionQuantity,price,brokerId,shareholderId,entryTime,peakSize,displayedQuantity
+//0       1    2    3        4                        5     6        7             8         9        10
+                    int peakSize = Integer.parseInt(line[9]);
                     Order order;
                     if (peakSize == 0) {
                         order = new Order(
@@ -151,7 +151,7 @@ public class DataLoader {
                                 broker,
                                 shareholder,
                                 LocalDateTime.parse(line[8]),
-                                OrderStatus.QUEUED);
+                                OrderStatus.LOADING);
                     } else {
                         order = new IcebergOrder(
                                 Long.parseLong(line[0]),
@@ -165,7 +165,7 @@ public class DataLoader {
                                 LocalDateTime.parse(line[8]),
                                 Integer.parseInt(line[9]),
                                 Integer.parseInt(line[10]),
-                                OrderStatus.QUEUED);
+                                OrderStatus.LOADING);
                     }
                     orders.addFirst(order);
                 }

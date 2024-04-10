@@ -19,7 +19,7 @@ public class OrderBook {
     }
 
     public void enqueue(Order order) {
-        if(order.getSide() == Side.BUY)
+        if(order.getSide() == Side.BUY && order.getStatus() != OrderStatus.LOADING)
             order.getBroker().decreaseCreditBy(order.getValue());
         
         List<Order> queue = getQueue(order.getSide());
