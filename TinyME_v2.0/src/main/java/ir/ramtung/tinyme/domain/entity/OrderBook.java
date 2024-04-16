@@ -125,4 +125,15 @@ public class OrderBook {
                 .mapToInt(Order::getTotalQuantity)
                 .sum();
     }
+
+    public StopLimitOrder getStopLimitOrder(int lastTradePrice) {
+        StopLimitOrder firsSelltOrder = stopLimitOrderSellQueue.get(0);
+        StopLimitOrder firsBuytOrder = stopLimitOrderBuyQueue.get(0);
+        
+        if (firsBuytOrder.isSatisfied(lastTradePrice))
+            return firsBuytOrder;
+        else if (firsSelltOrder.isSatisfied(lastTradePrice))
+            return firsSelltOrder;
+        else return null;
+    }
 }
