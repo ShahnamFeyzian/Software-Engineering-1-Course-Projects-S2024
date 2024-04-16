@@ -12,10 +12,14 @@ import ir.ramtung.tinyme.domain.exception.NotFoundException;
 public class OrderBook {
     private final LinkedList<Order> buyQueue;
     private final LinkedList<Order> sellQueue;
+    private final LinkedList<StopLimitOrder> stopLimitOrderSellQueue;
+    private final LinkedList<StopLimitOrder> stopLimitOrderBuyQueue;
 
     public OrderBook() {
         buyQueue = new LinkedList<>();
         sellQueue = new LinkedList<>();
+        stopLimitOrderSellQueue = new LinkedList<>();
+        stopLimitOrderBuyQueue = new LinkedList<>();
     }
 
     public void enqueue(Order order) {
