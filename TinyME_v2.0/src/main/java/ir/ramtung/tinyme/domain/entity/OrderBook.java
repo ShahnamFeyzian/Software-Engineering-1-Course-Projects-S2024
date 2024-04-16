@@ -118,6 +118,11 @@ public class OrderBook {
         return sellQueue.stream()
                 .filter(order -> order.getShareholder().equals(shareholder))
                 .mapToInt(Order::getTotalQuantity)
+                .sum() 
+                +
+               stopLimitOrderSellQueue.stream()
+                .filter(order -> order.getShareholder().equals(shareholder))
+                .mapToInt(Order::getTotalQuantity)
                 .sum();
     }
 }
