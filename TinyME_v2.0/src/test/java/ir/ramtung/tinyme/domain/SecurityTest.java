@@ -74,7 +74,7 @@ class SecurityTest {
     void changing_price_causes_trades_to_happen() {
         Order updateOrder = new Order(6, security, Side.SELL, 350, 15700, broker, shareholder);
         assertThatNoException().isThrownBy(() ->
-                assertThat(security.updateOrder(updateOrder, matcher).trades()).isNotEmpty()
+                assertThat(security.updateOrder(updateOrder, matcher).getFirst().trades()).isNotEmpty()
         );
     }
 

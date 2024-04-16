@@ -20,17 +20,26 @@ public class Security {
     private int lotSize = 1;
     @Builder.Default
     private OrderBook orderBook = new OrderBook();
+    private int lastTradePrice;
 
-    public MatchResult addNewOrder(Order newOrder, Matcher matcher) {
+    public List<MatchResult> addNewOrder(Order newOrder, Matcher matcher) {
         try {
             checkPositionForNewOrder(newOrder);
             if (newOrder instanceof StopLimitOrder newStopLimitOrder)
-                return addNewStopLimitOrder(newStopLimitOrder, matcher);
-            return matcher.execute(newOrder);
+                return List.of(addNewStopLimitOrder(newStopLimitOrder, matcher));
+            MatchResult newOrderResult = matcher.execute(newOrder);
+            updateLastTradePrice(newOrderResult.trades());
+            List<MatchResult> results = executeStopLimitOrders(newOrderResult, matcher);
+            return results;
         }
         catch (NotEnoughPositionException exp) {
-            return MatchResult.notEnoughPositions();
+            return List.of(MatchResult.notEnoughPositions());
         }
+    }
+
+    private void updateLastTradePrice(List<Trade> trades) {
+        if (trades.size() > 0) 
+            lastTradePrice = trades.getLast().getPrice();
     }
 
     private MatchResult addNewStopLimitOrder(StopLimitOrder newOrder, Matcher matcher) {
@@ -54,7 +63,7 @@ public class Security {
         orderBook.removeByOrderId(side, orderId);
     }
 
-    public MatchResult updateOrder(Order tempOrder, Matcher matcher) {
+    public List<MatchResult> updateOrder(Order tempOrder, Matcher matcher) {
         try {
             Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
             checkPositionForUpdateOrder(mainOrder, tempOrder);
@@ -67,20 +76,22 @@ public class Security {
             }
             else {
                 mainOrder.updateFromTempOrder(tempOrder);
-                return MatchResult.executed(null, List.of());
+                return List.of(MatchResult.executed(null, List.of()));
             }
         }
         catch (NotEnoughPositionException exp) {
-            return MatchResult.notEnoughPositions();
+            return List.of(MatchResult.notEnoughPositions());
         }
     }
 
-    private MatchResult reAddUpdatedOrder(Order updatOrder, Order originalOrder, Matcher matcher) {
-        MatchResult matchResult = matcher.execute(updatOrder);
-        if (matchResult.outcome() != MatchingOutcome.EXECUTED) {
+    private List<MatchResult> reAddUpdatedOrder(Order updatOrder, Order originalOrder, Matcher matcher) {
+        MatchResult updatedOrderResult = matcher.execute(updatOrder);
+        if (updatedOrderResult.outcome() != MatchingOutcome.EXECUTED) {
             orderBook.enqueue(originalOrder);
         }
-        return matchResult;
+        updateLastTradePrice(updatedOrderResult.trades());
+        List<MatchResult> results = executeStopLimitOrders(updatedOrderResult, matcher);
+        return results;
         // TODO
         // this is just painkiller, it should be treated properly
     }
@@ -106,6 +117,15 @@ public class Security {
             errors.add(Message.PRICE_NOT_MULTIPLE_OF_TICK_SIZE);
     
         return errors;
+    }
+
+    private List<MatchResult> executeStopLimitOrders(MatchResult newOrderMatchResult, Matcher matcher) {
+        List<MatchResult> results = List.of(newOrderMatchResult);
+        StopLimitOrder sloOrder;
+        while((sloOrder = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
+            results.add(matcher.execute(sloOrder));
+        }
+        return results;
     }
 
     public Order findByOrderId(Side side, long orderId) {

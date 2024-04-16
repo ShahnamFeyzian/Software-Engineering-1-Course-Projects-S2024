@@ -127,13 +127,16 @@ public class OrderBook {
     }
 
     public StopLimitOrder getStopLimitOrder(int lastTradePrice) {
-        StopLimitOrder firsSelltOrder = stopLimitOrderSellQueue.get(0);
-        StopLimitOrder firsBuytOrder = stopLimitOrderBuyQueue.get(0);
-        
-        if (firsBuytOrder.isSatisfied(lastTradePrice))
-            return firsBuytOrder;
-        else if (firsSelltOrder.isSatisfied(lastTradePrice))
-            return firsSelltOrder;
-        else return null;
+        if (stopLimitOrderBuyQueue.size() != 0) {
+            StopLimitOrder firsBuytOrder = stopLimitOrderBuyQueue.get(0);
+            if (firsBuytOrder.isSatisfied(lastTradePrice))
+                return firsBuytOrder;           
+        }
+        if (stopLimitOrderSellQueue.size() != 0) {
+            StopLimitOrder firsSelltOrder = stopLimitOrderSellQueue.get(0);
+            if (firsSelltOrder.isSatisfied(lastTradePrice))
+                return firsSelltOrder;           
+        }
+        return null;
     }
 }

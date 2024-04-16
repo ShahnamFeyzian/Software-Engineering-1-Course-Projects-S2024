@@ -52,9 +52,9 @@ public class OrderHandler {
     private MatchResult runEnterOrderRq(EnterOrderRq enterOrderRq) {
         Order tempOrder = createTempOrderByEnterOrderRq(enterOrderRq);
         if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER)
-            return tempOrder.getSecurity().addNewOrder(tempOrder, matcher);
+            return tempOrder.getSecurity().addNewOrder(tempOrder, matcher).getFirst();
         else
-            return tempOrder.getSecurity().updateOrder(tempOrder, matcher);
+            return tempOrder.getSecurity().updateOrder(tempOrder, matcher).getFirst();
     }
 
     private Order createTempOrderByEnterOrderRq(EnterOrderRq enterOrderRq) {
