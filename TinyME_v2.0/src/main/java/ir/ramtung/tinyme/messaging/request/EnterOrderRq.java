@@ -19,12 +19,14 @@ public class EnterOrderRq extends BaseOrderRq{
     private long shareholderId;
     private int peakSize;
     private int minimumExecutionQuantity;
+    private int stopPrice;
     // TODO 
     // why update(amend) order should have brokerId and shareholder ?
     // the orderId isn't enough ?
 
     private EnterOrderRq(OrderEntryType orderEntryType, long requestId, String securityIsin, long orderId,
-    LocalDateTime entryTime, Side side, int quantity, int price, long brokerId, long shareholderId, int peakSize, int minimumExecutionQuantity) {
+    LocalDateTime entryTime, Side side, int quantity, int price, long brokerId, long shareholderId, int peakSize, 
+    int minimumExecutionQuantity, int stopPrice) {
         super(requestId, securityIsin, side, orderId);
         this.requestType = orderEntryType;
         this.entryTime = entryTime;
@@ -34,18 +36,31 @@ public class EnterOrderRq extends BaseOrderRq{
         this.shareholderId = shareholderId;
         this.peakSize = peakSize;
         this.minimumExecutionQuantity = minimumExecutionQuantity;
+        this.stopPrice = stopPrice;
     }
 
     public static EnterOrderRq createNewOrderRq(long requestId, String securityIsin, long orderId, LocalDateTime entryTime, 
     Side side, int quantity, int price, long brokerId, long shareholderId, int peakSize, int minimumExecutionQuantity) {
         return new EnterOrderRq(OrderEntryType.NEW_ORDER, requestId, securityIsin, orderId, entryTime, side, quantity, price, 
-                                brokerId, shareholderId, peakSize, minimumExecutionQuantity);
+                                brokerId, shareholderId, peakSize, minimumExecutionQuantity, 0);
     }
 
     public static EnterOrderRq createUpdateOrderRq(long requestId, String securityIsin, long orderId, LocalDateTime entryTime, 
     Side side, int quantity, int price, long brokerId, long shareholderId, int peakSize, int minimumExecutionQuantity) {
         return new EnterOrderRq(OrderEntryType.UPDATE_ORDER, requestId, securityIsin, orderId, entryTime, side, quantity, price, 
-                                brokerId, shareholderId, peakSize, minimumExecutionQuantity);
+                                brokerId, shareholderId, peakSize, minimumExecutionQuantity, 0);
+    }
+
+    public static EnterOrderRq createNewOrderRq(long requestId, String securityIsin, long orderId, LocalDateTime entryTime, 
+    Side side, int quantity, int price, long brokerId, long shareholderId, int peakSize, int minimumExecutionQuantity, int stopPrice) {
+        return new EnterOrderRq(OrderEntryType.NEW_ORDER, requestId, securityIsin, orderId, entryTime, side, quantity, price, 
+                                brokerId, shareholderId, peakSize, minimumExecutionQuantity, stopPrice);
+    }
+
+    public static EnterOrderRq createUpdateOrderRq(long requestId, String securityIsin, long orderId, LocalDateTime entryTime, 
+    Side side, int quantity, int price, long brokerId, long shareholderId, int peakSize, int minimumExecutionQuantity, int stopPrice) {
+        return new EnterOrderRq(OrderEntryType.UPDATE_ORDER, requestId, securityIsin, orderId, entryTime, side, quantity, price, 
+                                brokerId, shareholderId, peakSize, minimumExecutionQuantity, stopPrice);
     }
 
     @Override
@@ -82,6 +97,21 @@ public class EnterOrderRq extends BaseOrderRq{
             errors.add(Message.INVALID_MINIMUM_EXECUTION_QUANTITY);
         if (this.side == null)
             errors.add(Message.SIDE_CAN_NOT_BE_NULL);
+        errors.addAll(stopPriceValidation());
+        return errors;
+    }
+
+    private List<String> stopPriceValidation() {
+        List<String> errors = new LinkedList<>();
+        if (this.stopPrice == 0)
+            return errors;
+
+        if (this.stopPrice < 0)
+            errors.add(Message.INVALID_STOP_PRICE);
+        if (this.minimumExecutionQuantity != 0)
+            errors.add(Message.STOP_LIMIT_ORDERS_CAN_NOT_HAVE_MINIMUM_EXECUTION_QUANTITY);
+        if (this.peakSize != 0)
+            errors.add(Message.STOP_LIMIT_ORDERS_CAN_NOT_BE_ICEBERG);
         return errors;
     }
 

@@ -17,6 +17,8 @@ public class Message {
     public static final String INVALID_MINIMUM_EXECUTION_QUANTITY = "Invalid minimum execution quantity";
     public static final String CANNOT_UPDATE_MINIMUM_EXECUTION_QUANTITY = "Cannot update minimum execution quantity";
     public static final String MINIMUM_EXECUTION_QUANTITY_NOT_MET = "The minimum execution quantity was not met";
-    public static final String SIDE_CAN_NOT_BE_NULL = "side can not be null value";
-
+    public static final String SIDE_CAN_NOT_BE_NULL = "Side can not be null value";
+    public static final String INVALID_STOP_PRICE = "Invalid stop price";
+    public static final String STOP_LIMIT_ORDERS_CAN_NOT_HAVE_MINIMUM_EXECUTION_QUANTITY = "Stop limit orders can not have minimum execution quantity";
+    public static final String STOP_LIMIT_ORDERS_CAN_NOT_BE_ICEBERG = "Stop limit orders can not be iceberg";
 }
