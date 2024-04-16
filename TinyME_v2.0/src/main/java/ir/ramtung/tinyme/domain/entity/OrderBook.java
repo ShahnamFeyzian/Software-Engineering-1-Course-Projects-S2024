@@ -22,11 +22,26 @@ public class OrderBook {
         stopLimitOrderBuyQueue = new LinkedList<>();
     }
 
+    public void enqueueStopLimitOrder(StopLimitOrder order) {
+        List<StopLimitOrder> queue = getStopLimitOrderQueue(order.getSide());
+        ListIterator<StopLimitOrder> it = queue.listIterator();
+        while (it.hasNext()) {
+            if (order.queuesBefore(it.next())) {
+                it.previous();
+                break;
+            }
+        }
+        order.queue();
+        it.add(order);
+        // TODO 
+        // fucking duplication that sould be fixed
+    }
+
     public void enqueue(Order order) {
         if(order.getSide() == Side.BUY && order.getStatus() != OrderStatus.LOADING)
             order.getBroker().decreaseCreditBy(order.getValue());
         
-        List<Order> queue = getQueue(order.getSide());
+        List<Order> queue =  getQueue(order.getSide());
         ListIterator<Order> it = queue.listIterator();
         while (it.hasNext()) {
             if (order.queuesBefore(it.next())) {
@@ -36,6 +51,10 @@ public class OrderBook {
         }
         order.queue();
         it.add(order);
+    }
+
+    private LinkedList<StopLimitOrder> getStopLimitOrderQueue(Side side) {
+        return (side == Side.BUY) ? stopLimitOrderBuyQueue : stopLimitOrderSellQueue;
     }
 
     private LinkedList<Order> getQueue(Side side) {

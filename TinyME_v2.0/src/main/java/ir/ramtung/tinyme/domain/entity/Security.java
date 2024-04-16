@@ -24,12 +24,18 @@ public class Security {
     public MatchResult addNewOrder(Order newOrder, Matcher matcher) {
         try {
             checkPositionForNewOrder(newOrder);
-            MatchResult result = matcher.execute(newOrder);
-            return result;
+            if (newOrder instanceof StopLimitOrder newStopLimitOrder)
+                return addNewStopLimitOrder(newStopLimitOrder, matcher);
+            return matcher.execute(newOrder);
         }
         catch (NotEnoughPositionException exp) {
             return MatchResult.notEnoughPositions();
         }
+    }
+
+    private MatchResult addNewStopLimitOrder(StopLimitOrder newOrder, Matcher matcher) {
+        orderBook.enqueueStopLimitOrder(newOrder);
+        return MatchResult.executed(null, List.of());
     }
 
     private void checkPositionForNewOrder(Order newOrder) {
