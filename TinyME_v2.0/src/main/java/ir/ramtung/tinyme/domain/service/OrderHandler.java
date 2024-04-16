@@ -62,18 +62,24 @@ public class OrderHandler {
         Shareholder shareholder = shareholderRepository.findShareholderById(enterOrderRq.getShareholderId());
         Security security = securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin());
         
-        if (enterOrderRq.getPeakSize() == 0)
-            return new Order(
-                            enterOrderRq.getOrderId(), security, enterOrderRq.getSide(),
-                            enterOrderRq.getQuantity(), enterOrderRq.getMinimumExecutionQuantity(), 
-                            enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime()
-                        );
-        else
+        if (enterOrderRq.getStopPrice() != 0) 
+            return new StopLimitOrder(
+                enterOrderRq.getOrderId(), security, enterOrderRq.getSide(), 
+                enterOrderRq.getQuantity(), enterOrderRq.getPrice(), broker, 
+                shareholder, enterOrderRq.getStopPrice()
+            );
+        else if (enterOrderRq.getPeakSize() != 0)
             return new IcebergOrder(
-                            enterOrderRq.getOrderId(), security, enterOrderRq.getSide(),
-                            enterOrderRq.getQuantity(), enterOrderRq.getMinimumExecutionQuantity(), 
-                            enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime(), enterOrderRq.getPeakSize()
-                        );
+                enterOrderRq.getOrderId(), security, enterOrderRq.getSide(),
+                enterOrderRq.getQuantity(), enterOrderRq.getMinimumExecutionQuantity(), 
+                enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime(), enterOrderRq.getPeakSize()
+            );
+        else
+            return new Order(
+                enterOrderRq.getOrderId(), security, enterOrderRq.getSide(),
+                enterOrderRq.getQuantity(), enterOrderRq.getMinimumExecutionQuantity(), 
+                enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime()
+            );
     }
 
     private void publishEnterOrderMatchResult(MatchResult matchResult, EnterOrderRq enterOrderRq) {
