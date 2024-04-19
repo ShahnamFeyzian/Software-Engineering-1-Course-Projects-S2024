@@ -90,8 +90,8 @@ public class Security {
         }
     }
 
-    private List<MatchResult> reAddUpdatedOrder(Order updatOrder, Order originalOrder, Matcher matcher) {
-        MatchResult updatedOrderResult = matcher.execute(updatOrder);
+    private List<MatchResult> reAddUpdatedOrder(Order updatedOrder, Order originalOrder, Matcher matcher) {
+        MatchResult updatedOrderResult = matcher.execute(updatedOrder);
         if (updatedOrderResult.outcome() != MatchingOutcome.EXECUTED) {
             orderBook.enqueue(originalOrder);
         }
