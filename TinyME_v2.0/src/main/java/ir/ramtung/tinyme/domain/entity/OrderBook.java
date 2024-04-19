@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 
 @Getter
@@ -23,18 +24,13 @@ public class OrderBook {
     }
 
     public void enqueueStopLimitOrder(StopLimitOrder order) {
+        if (order.getSide() == Side.BUY && !order.getBroker().hasEnoughCredit(order.getValue()))
+            throw new NotEnoughCreditException();
+        
         List<StopLimitOrder> queue = getStopLimitOrderQueue(order.getSide());
-        ListIterator<StopLimitOrder> it = queue.listIterator();
-        while (it.hasNext()) {
-            if (order.queuesBefore(it.next())) {
-                it.previous();
-                break;
-            }
-        }
-        order.queue();
-        it.add(order);
-        // TODO 
-        // fucking duplication that sould be fixed
+        queue.add(order);
+        if (order.getSide() == Side.BUY)
+            order.getBroker().decreaseCreditBy(order.getValue());
     }
 
     public void enqueue(Order order) {
@@ -127,15 +123,22 @@ public class OrderBook {
     }
 
     public StopLimitOrder getStopLimitOrder(int lastTradePrice) {
-        if (stopLimitOrderBuyQueue.size() != 0) {
-            StopLimitOrder firsBuytOrder = stopLimitOrderBuyQueue.get(0);
-            if (firsBuytOrder.isSatisfied(lastTradePrice))
-                return firsBuytOrder;           
-        }
-        if (stopLimitOrderSellQueue.size() != 0) {
-            StopLimitOrder firsSelltOrder = stopLimitOrderSellQueue.get(0);
-            if (firsSelltOrder.isSatisfied(lastTradePrice))
-                return firsSelltOrder;           
+        StopLimitOrder sloOrder = findSatisfiedStopLimitOrder(stopLimitOrderBuyQueue, lastTradePrice);
+        if (sloOrder != null)
+            return sloOrder;
+
+        sloOrder = findSatisfiedStopLimitOrder(stopLimitOrderSellQueue, lastTradePrice);
+        return sloOrder;
+    }
+
+    private StopLimitOrder findSatisfiedStopLimitOrder(List<StopLimitOrder> queue, int lastTradePrice) {
+        for (StopLimitOrder sloOrder: queue) {
+            if (sloOrder.isSatisfied(lastTradePrice)) {
+                if (sloOrder.getSide() == Side.BUY)
+                    sloOrder.getBroker().increaseCreditBy(sloOrder.getValue());
+                queue.remove(sloOrder);
+                return sloOrder;
+            }
         }
         return null;
     }
