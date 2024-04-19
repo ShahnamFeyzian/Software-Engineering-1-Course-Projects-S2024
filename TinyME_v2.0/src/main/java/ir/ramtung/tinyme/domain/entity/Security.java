@@ -125,7 +125,8 @@ public class Security {
         List<MatchResult> results = new LinkedList<>();
         StopLimitOrder sloOrder;
         while((sloOrder = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
-            results.add(matcher.execute(sloOrder));
+            Order activedOrder = new Order(sloOrder);
+            results.add(matcher.execute(activedOrder));
         }
         return results;
     }

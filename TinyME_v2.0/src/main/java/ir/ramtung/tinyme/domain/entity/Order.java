@@ -56,6 +56,10 @@ public class Order {
         this(orderId, security, side, quantity, 0, price, broker, shareholder);
     }
 
+    public Order(Order other) {
+        this(other.orderId, other.security, other.side, other.quantity, other.price, other.broker, other.shareholder);
+    }
+
     public Order snapshot() {
         return new Order(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, OrderStatus.SNAPSHOT);
     }
