@@ -27,9 +27,10 @@ public class Security {
             checkPositionForNewOrder(newOrder);
             if (newOrder instanceof StopLimitOrder newStopLimitOrder)
                 return List.of(addNewStopLimitOrder(newStopLimitOrder, matcher));
-            MatchResult newOrderResult = matcher.execute(newOrder);
-            updateLastTradePrice(newOrderResult.trades());
-            List<MatchResult> results = executeStopLimitOrders(newOrderResult, matcher);
+            MatchResult newOrderMatchResult = matcher.execute(newOrder);
+            updateLastTradePrice(newOrderMatchResult.trades());
+            List<MatchResult> results = executeStopLimitOrders(matcher);
+            results.addFirst(newOrderMatchResult);
             return results;
         }
         catch (NotEnoughPositionException exp) {
@@ -90,7 +91,8 @@ public class Security {
             orderBook.enqueue(originalOrder);
         }
         updateLastTradePrice(updatedOrderResult.trades());
-        List<MatchResult> results = executeStopLimitOrders(updatedOrderResult, matcher);
+        List<MatchResult> results = executeStopLimitOrders(matcher);
+        results.addFirst(updatedOrderResult);
         return results;
         // TODO
         // this is just painkiller, it should be treated properly
@@ -119,8 +121,8 @@ public class Security {
         return errors;
     }
 
-    private List<MatchResult> executeStopLimitOrders(MatchResult newOrderMatchResult, Matcher matcher) {
-        List<MatchResult> results = List.of(newOrderMatchResult);
+    private List<MatchResult> executeStopLimitOrders(Matcher matcher) {
+        List<MatchResult> results = new LinkedList<>();
         StopLimitOrder sloOrder;
         while((sloOrder = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
             results.add(matcher.execute(sloOrder));
