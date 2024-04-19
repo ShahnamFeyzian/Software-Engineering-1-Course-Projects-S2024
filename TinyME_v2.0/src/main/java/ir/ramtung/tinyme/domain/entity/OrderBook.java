@@ -28,9 +28,15 @@ public class OrderBook {
             throw new NotEnoughCreditException();
         
         List<StopLimitOrder> queue = getStopLimitOrderQueue(order.getSide());
-        queue.add(order);
-        if (order.getSide() == Side.BUY)
-            order.getBroker().decreaseCreditBy(order.getValue());
+        ListIterator<StopLimitOrder> it = queue.listIterator();
+        while (it.hasNext()) {
+            if (order.queuesBefore(it.next())) {
+                it.previous();
+                break;
+            }
+        }
+        order.queue();
+        it.add(order);
     }
 
     public void enqueue(Order order) {
@@ -132,13 +138,14 @@ public class OrderBook {
     }
 
     private StopLimitOrder findSatisfiedStopLimitOrder(List<StopLimitOrder> queue, int lastTradePrice) {
-        for (StopLimitOrder sloOrder: queue) {
-            if (sloOrder.isSatisfied(lastTradePrice)) {
-                if (sloOrder.getSide() == Side.BUY)
-                    sloOrder.getBroker().increaseCreditBy(sloOrder.getValue());
-                queue.remove(sloOrder);
-                return sloOrder;
-            }
+        if (queue.size() == 0) 
+            return null;
+
+        StopLimitOrder sloOrder = queue.getFirst();
+        if (sloOrder.isSatisfied(lastTradePrice)) {
+            sloOrder.delete();
+            queue.remove(sloOrder);
+            return sloOrder;
         }
         return null;
     }

@@ -34,4 +34,10 @@ public class StopLimitOrder extends Order {
         
         return false;
     }
+
+    @Override 
+    public void queue() {
+        if (side == Side.BUY)
+            broker.decreaseCreditBy(this.getValue());
+    }
 }
