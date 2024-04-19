@@ -7,6 +7,7 @@ import ir.ramtung.tinyme.messaging.Message;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,13 +25,18 @@ public class Security {
 
     public List<MatchResult> addNewOrder(Order newOrder, Matcher matcher) {
         try {
+            List<MatchResult> results = new ArrayList<>();
             checkPositionForNewOrder(newOrder);
+
             if (newOrder instanceof StopLimitOrder newStopLimitOrder)
-                return List.of(addNewStopLimitOrder(newStopLimitOrder, matcher));
-            MatchResult newOrderMatchResult = matcher.execute(newOrder);
-            updateLastTradePrice(newOrderMatchResult.trades());
-            List<MatchResult> results = executeStopLimitOrders(matcher);
-            results.addFirst(newOrderMatchResult);
+                addNewStopLimitOrder(newStopLimitOrder, matcher);
+            else {
+                MatchResult newOrderMatchResult = matcher.execute(newOrder);
+                updateLastTradePrice(newOrderMatchResult.trades());
+                results.addFirst(newOrderMatchResult);
+            }
+
+            results.addAll(executeStopLimitOrders(matcher));
             return results;
         }
         catch (NotEnoughPositionException exp) {
@@ -39,13 +45,12 @@ public class Security {
     }
 
     private void updateLastTradePrice(List<Trade> trades) {
-        if (trades.size() > 0) 
+        if (!trades.isEmpty())
             lastTradePrice = trades.getLast().getPrice();
     }
 
-    private MatchResult addNewStopLimitOrder(StopLimitOrder newOrder, Matcher matcher) {
+    private void addNewStopLimitOrder(StopLimitOrder newOrder, Matcher matcher) {
         orderBook.enqueueStopLimitOrder(newOrder);
-        return MatchResult.executed(null, List.of());
     }
 
     private void checkPositionForNewOrder(Order newOrder) {
@@ -126,7 +131,9 @@ public class Security {
         StopLimitOrder sloOrder;
         while((sloOrder = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
             Order activedOrder = new Order(sloOrder);
-            results.add(matcher.execute(activedOrder));
+            MatchResult result = matcher.execute(activedOrder);
+            updateLastTradePrice(result.trades());
+            results.add(result);
         }
         return results;
     }
