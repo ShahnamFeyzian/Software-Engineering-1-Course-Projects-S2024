@@ -1,5 +1,6 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.domain.exception.NotEnoughPositionException;
 import ir.ramtung.tinyme.domain.service.Matcher;
@@ -28,8 +29,10 @@ public class Security {
             List<MatchResult> results = new ArrayList<>();
             checkPositionForNewOrder(newOrder);
 
-            if (newOrder instanceof StopLimitOrder newStopLimitOrder)
+            if (newOrder instanceof StopLimitOrder newStopLimitOrder) {
                 addNewStopLimitOrder(newStopLimitOrder, matcher);
+                results.addFirst(MatchResult.executed(newOrder, List.of()));
+            }
             else {
                 MatchResult newOrderMatchResult = matcher.execute(newOrder);
                 updateLastTradePrice(newOrderMatchResult.trades());
@@ -41,6 +44,9 @@ public class Security {
         }
         catch (NotEnoughPositionException exp) {
             return List.of(MatchResult.notEnoughPositions());
+        }
+        catch (NotEnoughCreditException exp) {
+            return List.of(MatchResult.notEnoughCredit());
         }
     }
 
@@ -132,7 +138,7 @@ public class Security {
         while((sloOrder = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
             Order activedOrder = new Order(sloOrder);
             MatchResult result = matcher.execute(activedOrder);
-            updateLastTradePrice(result.trades());
+//            updateLastTradePrice(result.trades());
             results.add(result);
         }
         return results;

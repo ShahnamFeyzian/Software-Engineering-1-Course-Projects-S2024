@@ -21,4 +21,6 @@ public class Message {
     public static final String INVALID_STOP_PRICE = "Invalid stop price";
     public static final String STOP_LIMIT_ORDERS_CAN_NOT_HAVE_MINIMUM_EXECUTION_QUANTITY = "Stop limit orders can not have minimum execution quantity";
     public static final String STOP_LIMIT_ORDERS_CAN_NOT_BE_ICEBERG = "Stop limit orders can not be iceberg";
+    public static final String INVALID_STOP_LIMIT_PRICE = "Given stop limit price is invalid for this order";
+
 }

@@ -1,5 +1,6 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -24,6 +25,12 @@ public class StopLimitOrder extends Order {
             return stopPrice < sloOrder.getStopPrice();
         else
             return stopPrice > sloOrder.getStopPrice();
+    }
+
+    @Override
+    public void checkNewStopLimitPrice(int stopLimitPrice) {
+        if(stopLimitPrice == 0)
+            throw new InvalidStopLimitPriceException();
     }
 
     public boolean isSatisfied(int lastTradePrice) {
