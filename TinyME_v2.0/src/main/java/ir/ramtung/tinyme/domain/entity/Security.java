@@ -1,6 +1,7 @@
 package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
+import ir.ramtung.tinyme.domain.exception.NotFoundException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.domain.exception.NotEnoughPositionException;
 import ir.ramtung.tinyme.domain.service.Matcher;
@@ -138,14 +139,21 @@ public class Security {
         while((sloOrder = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
             Order activedOrder = new Order(sloOrder);
             MatchResult result = matcher.execute(activedOrder);
-//            updateLastTradePrice(result.trades());
+            updateLastTradePrice(result.trades());
             results.add(result);
         }
         return results;
     }
 
+    // DUP
     public Order findByOrderId(Side side, long orderId) {
-        return orderBook.findByOrderId(side, orderId);
+        try {
+            return orderBook.findByOrderId(side, orderId);
+        }
+        catch (NotFoundException exp) {
+            return orderBook.findBySloOrderId(side, orderId);
+        }
+
     }
 
     // DUP
