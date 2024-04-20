@@ -148,7 +148,8 @@ public class Security {
         return orderBook.findByOrderId(side, orderId);
     }
 
+    // DUP
     public boolean isThereOrderWithId(Side side, long orderId) {
-        return orderBook.isThereOrderWithId(side, orderId);
+        return (orderBook.isThereOrderWithId(side, orderId) || orderBook.isThereSloOrderWithId(side, orderId));
     }
 }
