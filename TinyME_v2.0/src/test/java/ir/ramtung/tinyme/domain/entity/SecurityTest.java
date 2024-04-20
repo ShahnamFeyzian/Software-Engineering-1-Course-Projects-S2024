@@ -592,6 +592,20 @@ public class SecurityTest {
             StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 100, buyerBroker, buyerShareholder, 575);
             return security.addNewOrder(order, matcher).getFirst();
         }
+
+        public void add_three_stop_limit_order_both_buy_and_sell() {
+            List<StopLimitOrder> orders = Arrays.asList(
+                new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 500),
+                new StopLimitOrder(7, security, Side.SELL, 15, 300, sellerBroker, sellerShareholder, 400),
+                new StopLimitOrder(8, security, Side.SELL, 15, 200, sellerBroker, sellerShareholder, 300),
+                new StopLimitOrder(6, security, Side.BUY,  15, 600, buyerBroker, buyerShareholder, 500),
+                new StopLimitOrder(7, security, Side.BUY,  15, 700, buyerBroker, buyerShareholder, 600),
+                new StopLimitOrder(8, security, Side.BUY,  15, 800, buyerBroker, buyerShareholder, 700)
+            );
+            sellerShareholder.incPosition(security, 45);
+            buyerBroker.increaseCreditBy(31500);
+            orders.forEach(order -> security.addNewOrder(order, matcher));
+        }
     }
 
 
@@ -3913,5 +3927,36 @@ public class SecurityTest {
     public void add_buy_stop_limit_order_but_not_enough_credit_and_check_result() {
         MatchResult res = scenarioGenerator.add_buy_stop_limit_order_but_not_enough_credit();
         assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+    }
+
+    @Test
+    public void add_three_stop_limit_order_both_buy_and_sell_and_check_buyer_credit() {
+        scenarioGenerator.add_three_stop_limit_order_both_buy_and_sell();
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test
+    public void add_three_stop_limit_order_both_buy_and_sell_and_check_buyer_position() {
+        scenarioGenerator.add_three_stop_limit_order_both_buy_and_sell();
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test
+    public void add_three_stop_limit_order_both_buy_and_sell_and_check_seller_credit() {
+        scenarioGenerator.add_three_stop_limit_order_both_buy_and_sell();
+        assertPack.assertSellerCredit();
+    }
+
+    @Test
+    public void add_three_stop_limit_order_both_buy_and_sell_and_check_seller_position() {
+        scenarioGenerator.add_three_stop_limit_order_both_buy_and_sell();
+        assertPack.exceptedSellerPosition = 130;
+        assertPack.assertSellerPosition();
+    }
+
+    @Test
+    public void add_three_stop_limit_order_both_buy_and_sell_and_check_last_trade_price() {
+        scenarioGenerator.add_three_stop_limit_order_both_buy_and_sell();
+        assertPack.assertLastTradePrice();
     }
 }
