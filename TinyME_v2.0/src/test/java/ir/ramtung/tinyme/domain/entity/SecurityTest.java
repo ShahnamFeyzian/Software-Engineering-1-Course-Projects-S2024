@@ -576,6 +576,16 @@ public class SecurityTest {
             sellerShareholder.incPosition(security, 300);
             return security.addNewOrder(order, matcher).getFirst();
         }
+
+        public MatchResult add_sell_stop_limit_order_but_not_enough_position() {
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 10, 100, sellerBroker, sellerShareholder, 525);
+            return security.addNewOrder(order, matcher).getFirst();
+        }
+
+        public MatchResult add_buy_stop_limit_order_but_not_enough_credit() {
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 100, buyerBroker, buyerShareholder, 575);
+            return security.addNewOrder(order, matcher).getFirst();
+        }
     }
 
 
@@ -585,7 +595,7 @@ public class SecurityTest {
 
     @BeforeEach
     void setup() {
-        security = Security.builder().build();
+        security = Security.builder().lastTradePrice(550).build();
         sellerBroker = Broker.builder().credit(0).build();
         buyerBroker = Broker.builder().credit(32500).build();
         sellerShareholder = Shareholder.builder().build();
@@ -3858,4 +3868,16 @@ public class SecurityTest {
     //     assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300, 10, 10);
     //     assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300, 10, 10);
     // }
+
+    @Test
+    public void add_sell_stop_limit_order_but_not_enough_position_and_check_result() {
+        MatchResult res = scenarioGenerator.add_sell_stop_limit_order_but_not_enough_position();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+    }
+
+    @Test
+    public void add_buy_stop_limit_order_but_not_enough_credit_and_check_result() {
+        MatchResult res = scenarioGenerator.add_buy_stop_limit_order_but_not_enough_credit();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+    }
 }
