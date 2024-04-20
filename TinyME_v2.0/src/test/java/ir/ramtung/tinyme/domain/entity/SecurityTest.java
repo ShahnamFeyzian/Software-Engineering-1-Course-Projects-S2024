@@ -41,6 +41,7 @@ public class SecurityTest {
         private long exceptedBuyerCredit;
         private Integer exceptedSellerPosition;
         private Integer exceptedBuyerPosition;
+        private Integer exceptedLastTradePrice;
         private LinkedList<Order> sellQueue;
         private LinkedList<Order> buyQueue;
 
@@ -49,6 +50,7 @@ public class SecurityTest {
             exceptedBuyerCredit = SecurityTest.this.buyerBroker.getCredit();
             exceptedSellerPosition = SecurityTest.this.sellerShareholder.getPositionBySecurity(security);
             exceptedBuyerPosition = SecurityTest.this.buyerShareholder.getPositionBySecurity(security);
+            exceptedLastTradePrice = SecurityTest.this.security.getLastTradePrice();
             sellQueue = SecurityTest.this.orderBook.getSellQueue();
             buyQueue = SecurityTest.this.orderBook.getBuyQueue();
         }
@@ -67,6 +69,10 @@ public class SecurityTest {
 
         private void assertBuyerPosition() {
             assertThat(SecurityTest.this.buyerShareholder.getPositionBySecurity(security)).isEqualTo(exceptedBuyerPosition);
+        }
+
+        private void assertLastTradePrice() {
+            assertThat(SecurityTest.this.security.getLastTradePrice()).isEqualTo(exceptedLastTradePrice);
         }
 
         private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int minexteQuantity, int price) {
@@ -324,7 +330,7 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher).getFirst();
         }
 
-        public MatchResult add_sell_order_and_completely_traded_and_check() {
+        public MatchResult add_sell_order_and_completely_traded() {
             Order order = new Order(8, security, Side.SELL, 13, 400, sellerBroker, sellerShareholder);
             sellerShareholder.incPosition(security, 13);
             return security.addNewOrder(order, matcher).getFirst();
@@ -2261,46 +2267,46 @@ public class SecurityTest {
 
     @Test
     public void add_sell_order_and_completely_traded_and_check_match_result() {
-        MatchResult res = scenarioGenerator.add_sell_order_and_completely_traded_and_check();
+        MatchResult res = scenarioGenerator.add_sell_order_and_completely_traded();
         assertThat(res.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
     }
     
     @Test
     public void add_sell_order_and_completely_traded_and_check_buyer_credit() {
-        scenarioGenerator.add_sell_order_and_completely_traded_and_check();
+        scenarioGenerator.add_sell_order_and_completely_traded();
         assertPack.assertBuyerCredit();
     }
 
     @Test
     public void add_sell_order_and_completely_traded_and_check_buyer_position() {
-        scenarioGenerator.add_sell_order_and_completely_traded_and_check();
+        scenarioGenerator.add_sell_order_and_completely_traded();
         assertPack.exceptedBuyerPosition = 13;
         assertPack.assertBuyerPosition();
     }
 
     @Test
     public void add_sell_order_and_completely_traded_and_check_seller_credit() {
-        scenarioGenerator.add_sell_order_and_completely_traded_and_check();
+        scenarioGenerator.add_sell_order_and_completely_traded();
         assertPack.exceptedSellerCredit = 6500;
         assertPack.assertSellerCredit();
     }
 
     @Test
     public void add_sell_order_and_completely_traded_and_check_seller_position() {
-        scenarioGenerator.add_sell_order_and_completely_traded_and_check();
+        scenarioGenerator.add_sell_order_and_completely_traded();
         assertPack.exceptedSellerPosition = 85;
         assertPack.assertSellerPosition();
     }
 
     @Test
     public void add_sell_order_and_completely_traded_and_check_sell_side_in_queue() {
-        scenarioGenerator.add_sell_order_and_completely_traded_and_check();
+        scenarioGenerator.add_sell_order_and_completely_traded();
         assertThat(orderBook.isThereOrderWithId(Side.SELL, 8)).isFalse();
     }
 
     @Test
     public void add_sell_order_and_completely_traded_and_check_buy_side_in_queue() {
-        scenarioGenerator.add_sell_order_and_completely_traded_and_check();
+        scenarioGenerator.add_sell_order_and_completely_traded();
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 32, 500, 10, 7);
     }
 
@@ -3868,6 +3874,34 @@ public class SecurityTest {
     //     assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300, 10, 10);
     //     assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300, 10, 10);
     // }
+
+    @Test
+    public void add_buy_order_matches_with_all_seller_queue_and_not_finished_and_check_last_trade_price() {
+        scenarioGenerator.add_buy_order_matches_with_all_seller_queue_and_not_finished();
+        assertPack.exceptedLastTradePrice = 1000;
+        assertPack.assertLastTradePrice();
+    }
+
+    @Test
+    public void add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size_and_check_last_trade_price() {
+        scenarioGenerator.add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size();
+        assertPack.exceptedLastTradePrice = 400;
+        assertPack.assertLastTradePrice();
+    }
+
+    @Test
+    public void decrease_sell_order_price_and_completely_traded_and_check_last_trade_price() {
+        scenarioGenerator.decrease_sell_order_price_and_completely_traded();
+        assertPack.exceptedLastTradePrice = 500;
+        assertPack.assertLastTradePrice();
+    }
+
+    @Test
+    public void increase_buy_order_price_and_partially_traded_and_check_last_trade_price() {
+        scenarioGenerator.increase_buy_order_price_and_partially_traded();
+        assertPack.exceptedLastTradePrice = 700;
+        assertPack.assertLastTradePrice();
+    }
 
     @Test
     public void add_sell_stop_limit_order_but_not_enough_position_and_check_result() {
