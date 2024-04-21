@@ -678,8 +678,14 @@ public class SecurityTest {
         }
 
         public MatchResult decrease_price_stop_limit_sell_order() {
-            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 350, sellerBroker, sellerShareholder, 500);
             this.add_three_stop_limit_order_both_buy_and_sell();
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 350, sellerBroker, sellerShareholder, 500);
+            return security.updateSloOrder(order, matcher).getFirst();
+        }
+
+        public MatchResult increase_price_stop_limit_sell_order() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 450, sellerBroker, sellerShareholder, 500);
             return security.updateSloOrder(order, matcher).getFirst();
         }
     }
@@ -4238,9 +4244,14 @@ public class SecurityTest {
     }
 
     @Test
-    public void decrease_price_stop_limit_sell_order_and_check_order_in_stop_limit_queue() {
+    public void decrease_price_stop_limit_sell_order_and_check_order_in_stop_limit_sell_queue() {
         scenarioGenerator.decrease_price_stop_limit_sell_order();
-        orderBook.getStopLimitOrderSellQueue().forEach(o -> System.out.println(o));
         assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 6, 15, 350, 500);
+    }
+
+    @Test
+    public void increase_price_stop_limit_sell_order_and_check_order_in_stop_limit_sell_queue() {
+        scenarioGenerator.increase_price_stop_limit_sell_order();
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 6, 15, 450, 500);
     }
 }
