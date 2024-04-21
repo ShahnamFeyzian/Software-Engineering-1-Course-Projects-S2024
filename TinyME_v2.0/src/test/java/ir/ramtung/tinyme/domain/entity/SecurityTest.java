@@ -623,6 +623,13 @@ public class SecurityTest {
             buyerBroker.increaseCreditBy(36000);
             orders.forEach(order -> security.addNewOrder(order, matcher));
         }
+
+        public List<MatchResult> new_sell_order_activate_all_sell_stop_limit_orders() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            Order order = new Order(9, security, Side.SELL, 45, 500, sellerBroker, sellerShareholder);
+            sellerShareholder.incPosition(security, 45);
+            return security.addNewOrder(order, matcher);
+        }
     }
 
 
@@ -3991,5 +3998,41 @@ public class SecurityTest {
         assertPack.assertOrderInStopLimitQueue(Side.BUY, 0, 6, 15, 700, 600);
         assertPack.assertOrderInStopLimitQueue(Side.BUY, 1, 7, 15, 800, 700);
         assertPack.assertOrderInStopLimitQueue(Side.BUY, 2, 8, 15, 900, 800);
+    }
+
+    @Test 
+    public void new_sell_order_activate_all_sell_stop_limit_orders_and_check_match_results() {
+        List<MatchResult> results = scenarioGenerator.new_sell_order_activate_all_sell_stop_limit_orders();
+        assertThat(results.get(0).outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+        assertThat(results.get(1).outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+        assertThat(results.get(2).outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+        assertThat(results.get(3).outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+    }
+    
+    @Test 
+    public void new_sell_order_activate_all_sell_stop_limit_orders_and_check_buyer_credit() {
+        scenarioGenerator.new_sell_order_activate_all_sell_stop_limit_orders();
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test 
+    public void new_sell_order_activate_all_sell_stop_limit_orders_and_check_buyer_position() {
+        scenarioGenerator.new_sell_order_activate_all_sell_stop_limit_orders();
+        assertPack.exceptedBuyerPosition = 75;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test 
+    public void new_sell_order_activate_all_sell_stop_limit_orders_and_check_seller_credit() {
+        scenarioGenerator.new_sell_order_activate_all_sell_stop_limit_orders();
+        assertPack.exceptedSellerCredit = 31500;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test 
+    public void new_sell_order_activate_all_sell_stop_limit_orders_and_check_seller_position() {
+        scenarioGenerator.new_sell_order_activate_all_sell_stop_limit_orders();
+        assertPack.exceptedSellerPosition = 100;
+        assertPack.assertSellerPosition();
     }
 }
