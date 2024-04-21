@@ -620,10 +620,8 @@ public class OrderHandlerTest {
         orders.forEach(order -> security.getOrderBook().enqueueStopLimitOrder(order));
         setLastTradePriceByTrade(800);
 
-
         verify(eventPublisher).publish(new OrderActivatedEvent(1));
         verify(eventPublisher).publish(new OrderActivatedEvent(2));
-
     }
 
     @Test
@@ -641,7 +639,8 @@ public class OrderHandlerTest {
         verify(eventPublisher).publish(new OrderAcceptedEvent(1, 3));
     }
 
-    @Test void stop_limit_order_buyer_has_not_enough_credit() {
+    @Test
+    void stop_limit_order_buyer_has_not_enough_credit() {
         EnterOrderRq orderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 3, LocalDateTime.now(), Side.BUY, 500, 250, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 200);
         broker1.increaseCreditBy(500 * 250 - 1);
         orderHandler.handleEnterOrder(orderRq);
@@ -653,6 +652,109 @@ public class OrderHandlerTest {
         broker1.increaseCreditBy(1);
         orderHandler.handleEnterOrder(orderRq);
         verify(eventPublisher).publish(new OrderAcceptedEvent(1, 3));
+    }
+
+    @Test
+    void increase_stop_limit_order_quantity_not_enough_position() {
+        shareholder.incPosition(security, 10);
+        StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 10, 400, broker1, shareholder, 500);
+        security.getOrderBook().enqueueStopLimitOrder(order);
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(3, security.getIsin(), 6, LocalDateTime.now(), Side.SELL, 15, 400, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 500));
+        verify(eventPublisher).publish(new OrderRejectedEvent(3, 6, List.of(
+                Message.SELLER_HAS_NOT_ENOUGH_POSITIONS
+        )));
+    }
+
+    @Test
+    void increase_quantity_stop_limit_order_quantity_not_enough_credit() {
+        broker1.increaseCreditBy(4000);
+        StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 400, broker1, shareholder, 500);
+        security.getOrderBook().enqueueStopLimitOrder(order);
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(3, security.getIsin(), 6, LocalDateTime.now(), Side.BUY, 15, 400, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 500));
+        verify(eventPublisher).publish(new OrderRejectedEvent(3, 6, List.of(
+                Message.BUYER_HAS_NOT_ENOUGH_CREDIT
+        )));
+    }
+
+    @Test
+    void increase_price_stop_limit_order_quantity_not_enough_credit() {
+        broker1.increaseCreditBy(4000);
+        StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 400, broker1, shareholder, 500);
+        security.getOrderBook().enqueueStopLimitOrder(order);
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(3, security.getIsin(), 6, LocalDateTime.now(), Side.BUY, 10, 401, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 500));
+        verify(eventPublisher).publish(new OrderRejectedEvent(3, 6, List.of(
+                Message.BUYER_HAS_NOT_ENOUGH_CREDIT
+        )));
+    }
+
+    @Test
+    void update_stop_limit_order_no_activation() {
+        setLastTradePriceByTrade(400);
+        broker1.increaseCreditBy(4010);
+        StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 400, broker1, shareholder, 500);
+        security.getOrderBook().enqueueStopLimitOrder(order);
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(3, security.getIsin(), 6, LocalDateTime.now(), Side.BUY, 10, 401, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 450));
+        verify(eventPublisher).publish(new OrderUpdatedEvent(3, 6));
+        verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
+    }
+
+    @Test
+    void update_stop_limit_order_and_activate_no_execute() {
+        setLastTradePriceByTrade(500);
+        broker1.increaseCreditBy(4010);
+        StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 400, broker1, shareholder, 550);
+        security.getOrderBook().enqueueStopLimitOrder(order);
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(3, security.getIsin(), 6, LocalDateTime.now(), Side.BUY, 10, 401, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 400));
+        verify(eventPublisher).publish(new OrderUpdatedEvent(3, 6));
+        verify(eventPublisher).publish(new OrderActivatedEvent(6));
+    }
+
+    @Test
+    void update_stop_limit_order_and_activate_and_execute() {
+        shareholder.incPosition(security, 1);
+        Order order = new Order(1, security, Side.SELL, 1, 600, broker2, shareholder);
+        security.getOrderBook().enqueue(order);
+
+        broker1.increaseCreditBy(600);
+        StopLimitOrder stopLimitOrder = new StopLimitOrder(6, security, Side.BUY, 1, 600, broker1, shareholder, 700);
+        security.getOrderBook().enqueueStopLimitOrder(stopLimitOrder);
+
+        Trade trade = new Trade(security, 600, 1, order, stopLimitOrder);
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(3, security.getIsin(), 6, LocalDateTime.now(), Side.BUY, 1, 600, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 400));
+        verify(eventPublisher).publish(new OrderUpdatedEvent(3, 6));
+        verify(eventPublisher).publish(new OrderActivatedEvent(6));
+        verify(eventPublisher).publish(new OrderExecutedEvent(6, List.of(new TradeDTO(trade))));
+
+    }
+
+    @Test
+    void new_stop_limit_order_with_submitted_stop_price_no_trade() {
+        broker1.increaseCreditBy(600);
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(3, security.getIsin(), 6, LocalDateTime.now(), Side.BUY, 1, 600, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 400));
+        verify(eventPublisher).publish(new OrderAcceptedEvent(3, 6));
+        verify(eventPublisher).publish(new OrderActivatedEvent(6));
+    }
+
+    @Test
+    void new_stop_limit_order_with_submitted_stop_price_with_trade() {
+        shareholder.incPosition(security, 1);
+        Order order = new Order(1, security, Side.SELL, 1, 600, broker2, shareholder);
+        security.getOrderBook().enqueue(order);
+
+        broker1.increaseCreditBy(600);
+        StopLimitOrder stopLimitOrder = new StopLimitOrder(6, security, Side.BUY, 1, 600, broker1, shareholder, 700);
+        security.getOrderBook().enqueueStopLimitOrder(stopLimitOrder);
+
+        Trade trade = new Trade(security, 600, 1, order, stopLimitOrder);
+        broker1.increaseCreditBy(600);
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(3, security.getIsin(), 6, LocalDateTime.now(), Side.BUY, 1, 600, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 400));
+        verify(eventPublisher).publish(new OrderAcceptedEvent(3, 6));
+        verify(eventPublisher).publish(new OrderActivatedEvent(6));
     }
 
 }
