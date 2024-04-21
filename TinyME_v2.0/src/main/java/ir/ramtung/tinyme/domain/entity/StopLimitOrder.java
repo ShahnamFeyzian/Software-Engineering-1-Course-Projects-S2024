@@ -18,8 +18,6 @@ public class StopLimitOrder extends Order {
 
     @Override 
     public boolean queuesBefore(Order order) {
-        // TODO
-        // some how it can be deleted
         StopLimitOrder sloOrder = (StopLimitOrder) order;
         if (this.side == Side.BUY)
             return stopPrice < sloOrder.getStopPrice();
