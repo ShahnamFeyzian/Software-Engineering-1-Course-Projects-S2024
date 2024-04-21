@@ -5,6 +5,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.time.LocalDateTime;
+
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
@@ -15,6 +17,17 @@ public class StopLimitOrder extends Order {
         super(orderId, security, side, quantity, price, broker, shareholder);
         this.stopPrice = stopPrice;
     }
+
+    public StopLimitOrder(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, LocalDateTime entryTime, int stopPrice, OrderStatus status) {
+        super(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime, status);
+        this.stopPrice = stopPrice;
+    }
+    @Override
+    public StopLimitOrder snapshot() {
+        return new StopLimitOrder(orderId, security, side, quantity, price, broker, shareholder, entryTime, stopPrice, OrderStatus.SNAPSHOT);
+    }
+
+
 
     @Override 
     public boolean queuesBefore(Order order) {
@@ -44,5 +57,18 @@ public class StopLimitOrder extends Order {
     public void queue() {
         if (side == Side.BUY)
             broker.decreaseCreditBy(this.getValue());
+    }
+
+
+    // DUP
+    public void updateFromSloTempOrder(StopLimitOrder tempOrder) {
+        if (this.side == Side.BUY) {
+            broker.increaseCreditBy(this.getValue());
+            broker.decreaseCreditBy(tempOrder.getValue());
+        }
+        else
+            this.status = OrderStatus.UPDATING;
+        this.quantity = tempOrder.quantity;
+        this.price = tempOrder.price;
     }
 }

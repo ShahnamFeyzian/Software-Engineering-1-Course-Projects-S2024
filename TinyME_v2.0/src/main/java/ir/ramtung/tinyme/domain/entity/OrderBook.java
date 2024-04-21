@@ -82,6 +82,7 @@ public class OrderBook {
         throw new NotFoundException();
     }
 
+    // DUP
     public boolean isThereSloOrderWithId(Side side, long orderId) {
         try {
             findBySloOrderId(side, orderId);

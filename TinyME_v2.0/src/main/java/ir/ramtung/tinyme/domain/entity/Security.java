@@ -76,6 +76,32 @@ public class Security {
         orderBook.removeByOrderId(side, orderId);
     }
 
+    // DUP
+    public List<MatchResult> updateSloOrder(StopLimitOrder tempOrder, Matcher matcher) {
+        try {
+            StopLimitOrder mainOrder = (StopLimitOrder) findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
+            checkPositionForUpdateOrder(mainOrder, tempOrder);
+            StopLimitOrder originalOrder = mainOrder.snapshot();
+            orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
+            mainOrder.updateFromTempOrder(tempOrder);
+            return reAddUpdatedSloOrder(mainOrder, originalOrder, matcher);
+        }
+        catch (NotEnoughPositionException exp) {
+            return List.of(MatchResult.notEnoughPositions());
+        }
+    }
+    // DUP
+    private List<MatchResult> reAddUpdatedSloOrder(StopLimitOrder updatedOrder, StopLimitOrder originalOrder, Matcher matcher) {
+        MatchResult updatedOrderResult = matcher.execute(updatedOrder);
+        if (updatedOrderResult.outcome() != MatchingOutcome.EXECUTED) {
+            orderBook.enqueueStopLimitOrder(originalOrder);
+        }
+        updateLastTradePrice(updatedOrderResult.trades());
+        List<MatchResult> results = executeStopLimitOrders(matcher);
+        results.addFirst(updatedOrderResult);
+        return results;
+    }
+
     public List<MatchResult> updateOrder(Order tempOrder, Matcher matcher) {
         try {
             Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
