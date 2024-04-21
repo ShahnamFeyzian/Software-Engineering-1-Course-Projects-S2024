@@ -2,6 +2,7 @@ package ir.ramtung.tinyme.domain;
 
 import ir.ramtung.tinyme.config.MockedJMSTestConfig;
 import ir.ramtung.tinyme.domain.entity.*;
+import ir.ramtung.tinyme.domain.entity.SecurityTest;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.domain.service.OrderHandler;
 import ir.ramtung.tinyme.messaging.EventPublisher;
@@ -16,6 +17,7 @@ import ir.ramtung.tinyme.repository.ShareholderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.internal.matchers.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -47,6 +49,8 @@ public class OrderHandlerTest {
     private Broker broker1;
     private Broker broker2;
 
+    private List<StopLimitOrder> stopLimitOrders;
+    private List<Order> orders;
     OrderRejectedEvent captureOrderRejectedEvent() {
         ArgumentCaptor<OrderRejectedEvent> orderRejectedCaptor = ArgumentCaptor.forClass(OrderRejectedEvent.class);
         verify(eventPublisher).publish(orderRejectedCaptor.capture());
@@ -61,14 +65,15 @@ public class OrderHandlerTest {
         brokerRepository.clear();
         shareholderRepository.clear();
 
-        security = Security.builder().isin("ABC").build();
+        security = Security.builder().lastTradePrice(550).isin("ABC").build();
         securityRepository.addSecurity(security);
 
         shareholder = Shareholder.builder().shareholderId(1).build();
+        shareholder.incPosition(security, 85);
         shareholderRepository.addShareholder(shareholder);
 
-        broker1 = Broker.builder().brokerId(1).build();
-        broker2 = Broker.builder().brokerId(2).build();
+        broker1 = Broker.builder().brokerId(1).credit(0).build();
+        broker2 = Broker.builder().brokerId(2).credit(32500).build();
         brokerRepository.addBroker(broker1);
         brokerRepository.addBroker(broker2);
     }
@@ -551,14 +556,84 @@ public class OrderHandlerTest {
         broker1.increaseCreditBy(price);
         shareholder.incPosition(security, 1);
         orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1000, security.getIsin(), 2000, LocalDateTime.now(), Side.BUY, 1, price, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 0));
-//        Trade trade = new Trade(security, price, 1, matchingOrder, afterUpdate)
-        verify(eventPublisher).publish(new OrderAcceptedEvent(1000, 2000));
-//        verify(eventPublisher).publish(new OrderExecutedEvent(1000, 2000));
+    }
+
+    void create_stop_limit_scenario() {
+
+        this.stopLimitOrders = Arrays.asList(
+                new StopLimitOrder(6, security, Side.SELL, 15, 400, broker1, shareholder, 500),
+                new StopLimitOrder(7, security, Side.SELL, 15, 300, broker1, shareholder, 400),
+                new StopLimitOrder(8, security, Side.SELL, 15, 200, broker1, shareholder, 300),
+                new StopLimitOrder(6, security, Side.BUY,  15, 700, broker2, shareholder, 600),
+                new StopLimitOrder(7, security, Side.BUY,  15, 800, broker2, shareholder, 700),
+                new StopLimitOrder(8, security, Side.BUY,  15, 900, broker2, shareholder, 800)
+        );
+        shareholder.incPosition(security, 45);
+        broker2.increaseCreditBy(36000);
+
+        stopLimitOrders.forEach(order -> security.getOrderBook().enqueueStopLimitOrder(order));
+        this.orders = Arrays.asList(
+                new Order(1, security, Side.BUY, 10, 100, broker2, shareholder),
+                new Order(2, security, Side.BUY, 10, 200, broker2, shareholder),
+                new Order(3, security, Side.BUY, 10, 300, broker2, shareholder),
+                new Order(4, security, Side.BUY, 10, 400, broker2, shareholder),
+                new IcebergOrder(5, security, Side.BUY, 45, 500, broker2, shareholder, 10),
+                new Order(1, security, Side.SELL, 10, 600, broker1, shareholder),
+                new Order(2, security, Side.SELL, 10, 700, broker1, shareholder),
+                new Order(3, security, Side.SELL, 10, 800, broker1, shareholder),
+                new Order(4, security, Side.SELL, 10, 900, broker1, shareholder),
+                new IcebergOrder(5, security, Side.SELL, 45, 1000, broker1, shareholder, 10)
+        );
+        orders.forEach(order -> security.getOrderBook().enqueue(order));
+    }
+
+
+    @Test
+    void new_sell_order_activate_all_sell_stop_limit_orders() {
+        create_stop_limit_scenario();
+        shareholder.incPosition(security, 45);
+
+        Trade firstTrade = new Trade(security, 400, 10, stopLimitOrders.get(0), orders.get(3));
+        Trade secondTrade = new Trade(security, 300, 10, stopLimitOrders.get(1), orders.get(2));
+        Trade thirdTrade = new Trade(security, 200, 10, stopLimitOrders.get(2), orders.get(1));
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, security.getIsin(), 9, LocalDateTime.now(), Side.SELL, 45, 500, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 0));
+
+        verify(eventPublisher).publish(new OrderActivatedEvent(6));
+        verify(eventPublisher).publish(new OrderExecutedEvent(6, List.of(new TradeDTO(firstTrade))));
+
+        verify(eventPublisher).publish(new OrderActivatedEvent(7));
+        verify(eventPublisher).publish(new OrderExecutedEvent(7, List.of(new TradeDTO(secondTrade))));
+
+        verify(eventPublisher).publish(new OrderActivatedEvent(8));
+        verify(eventPublisher).publish(new OrderExecutedEvent(8, List.of(new TradeDTO(thirdTrade))));
+    }
+    @Test
+    void new_buy_order_activate_all_buy_stop_limit_orders() {
+        create_stop_limit_scenario();
+
+        broker2.increaseCreditBy(6000);
+
+        Trade firstTrade = new Trade(security, 700, 10, stopLimitOrders.get(3), orders.get(6));
+        Trade secondTrade = new Trade(security, 800, 10, stopLimitOrders.get(4), orders.get(7));
+        Trade thirdTrade = new Trade(security, 900, 10, stopLimitOrders.get(5), orders.get(8));
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, security.getIsin(), 9, LocalDateTime.now(), Side.BUY, 10, 600, broker2.getBrokerId(), shareholder.getShareholderId(), 0, 0, 0));
+
+        verify(eventPublisher).publish(new OrderActivatedEvent(6));
+        verify(eventPublisher).publish(new OrderExecutedEvent(6, List.of(new TradeDTO(firstTrade))));
+
+        verify(eventPublisher).publish(new OrderActivatedEvent(7));
+        verify(eventPublisher).publish(new OrderExecutedEvent(7, List.of(new TradeDTO(secondTrade))));
+
+        verify(eventPublisher).publish(new OrderActivatedEvent(8));
+        verify(eventPublisher).publish(new OrderExecutedEvent(8, List.of(new TradeDTO(thirdTrade))));
+
+
     }
     @Test
     void slo_activated() {
         broker1.increaseCreditBy(100_000);
-        security.setLastTradePrice(100);
         List<StopLimitOrder> orders = Arrays.asList(
                 new StopLimitOrder(1, security, Side.BUY, 10, 550, broker1, shareholder, 500),
                 new StopLimitOrder(2, security, Side.BUY, 10, 600, broker1, shareholder, 300)
