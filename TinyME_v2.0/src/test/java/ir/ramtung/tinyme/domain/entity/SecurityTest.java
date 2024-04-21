@@ -44,6 +44,8 @@ public class SecurityTest {
         private Integer exceptedLastTradePrice;
         private LinkedList<Order> sellQueue;
         private LinkedList<Order> buyQueue;
+        private LinkedList<StopLimitOrder> sellStopLimitQueue;
+        private LinkedList<StopLimitOrder> buyStopLimitQueue;
 
         private AssertingPack() {
             exceptedSellerCredit = SecurityTest.this.sellerBroker.getCredit();
@@ -53,6 +55,8 @@ public class SecurityTest {
             exceptedLastTradePrice = SecurityTest.this.security.getLastTradePrice();
             sellQueue = SecurityTest.this.orderBook.getSellQueue();
             buyQueue = SecurityTest.this.orderBook.getBuyQueue();
+            sellStopLimitQueue = SecurityTest.this.orderBook.getStopLimitOrderSellQueue();
+            buyStopLimitQueue = SecurityTest.this.orderBook.getStopLimitOrderBuyQueue();
         }
 
         private void assertSellerCredit() {
@@ -73,6 +77,19 @@ public class SecurityTest {
 
         private void assertLastTradePrice() {
             assertThat(SecurityTest.this.security.getLastTradePrice()).isEqualTo(exceptedLastTradePrice);
+        }
+
+        private void assertOrderInStopLimitQueue(Side side, int idx, long orderId, int quantity, int price, int stopPrice) {
+            StopLimitOrder order = (side == Side.BUY) ? buyStopLimitQueue.get(idx) : sellStopLimitQueue.get(idx);
+            long actualId = order.getOrderId();
+            int actualquantity = order.getTotalQuantity();
+            int actualPrice = order.getPrice();
+            int actualStopPrice = order.getStopPrice();
+
+            assertThat(actualId).isEqualTo(orderId);
+            assertThat(actualquantity).isEqualTo(quantity);
+            assertThat(actualPrice).isEqualTo(price);
+            assertThat(actualStopPrice).isEqualTo(stopPrice);
         }
 
         private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int minexteQuantity, int price) {
@@ -598,12 +615,12 @@ public class SecurityTest {
                 new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 500),
                 new StopLimitOrder(7, security, Side.SELL, 15, 300, sellerBroker, sellerShareholder, 400),
                 new StopLimitOrder(8, security, Side.SELL, 15, 200, sellerBroker, sellerShareholder, 300),
-                new StopLimitOrder(6, security, Side.BUY,  15, 600, buyerBroker, buyerShareholder, 500),
-                new StopLimitOrder(7, security, Side.BUY,  15, 700, buyerBroker, buyerShareholder, 600),
-                new StopLimitOrder(8, security, Side.BUY,  15, 800, buyerBroker, buyerShareholder, 700)
+                new StopLimitOrder(6, security, Side.BUY,  15, 700, buyerBroker, buyerShareholder, 600),
+                new StopLimitOrder(7, security, Side.BUY,  15, 800, buyerBroker, buyerShareholder, 700),
+                new StopLimitOrder(8, security, Side.BUY,  15, 900, buyerBroker, buyerShareholder, 800)
             );
             sellerShareholder.incPosition(security, 45);
-            buyerBroker.increaseCreditBy(31500);
+            buyerBroker.increaseCreditBy(36000);
             orders.forEach(order -> security.addNewOrder(order, matcher));
         }
     }
@@ -3958,5 +3975,21 @@ public class SecurityTest {
     public void add_three_stop_limit_order_both_buy_and_sell_and_check_last_trade_price() {
         scenarioGenerator.add_three_stop_limit_order_both_buy_and_sell();
         assertPack.assertLastTradePrice();
+    }
+
+    @Test
+    public void add_three_stop_limit_order_both_buy_and_sell_and_check_stop_limit_sell_queue() {
+        scenarioGenerator.add_three_stop_limit_order_both_buy_and_sell();
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 6, 15, 400, 500);
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 1, 7, 15, 300, 400);
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 2, 8, 15, 200, 300);
+    }
+
+    @Test
+    public void add_three_stop_limit_order_both_buy_and_sell_and_check_stop_limit_buy_queue() {
+        scenarioGenerator.add_three_stop_limit_order_both_buy_and_sell();
+        assertPack.assertOrderInStopLimitQueue(Side.BUY, 0, 6, 15, 700, 600);
+        assertPack.assertOrderInStopLimitQueue(Side.BUY, 1, 7, 15, 800, 700);
+        assertPack.assertOrderInStopLimitQueue(Side.BUY, 2, 8, 15, 900, 800);
     }
 }
