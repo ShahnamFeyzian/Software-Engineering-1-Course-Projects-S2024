@@ -69,7 +69,7 @@ public class OrderHandlerTest {
         securityRepository.addSecurity(security);
 
         shareholder = Shareholder.builder().shareholderId(1).build();
-        shareholder.incPosition(security, 85);
+        shareholder.incPosition(security, 0);
         shareholderRepository.addShareholder(shareholder);
 
         broker1 = Broker.builder().brokerId(1).credit(0).build();
@@ -485,14 +485,7 @@ public class OrderHandlerTest {
     }
 
 
-
-
-
-
-
-
-
-    // SLO Tests
+    /////////////////// ** SLO Tests ** ///////////////////
 
     @Test
     void invalid_stop_limit_price() {
@@ -537,19 +530,6 @@ public class OrderHandlerTest {
         verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
     }
 
-    @Test void slo_buyer_has_not_enough_credit() {
-        EnterOrderRq orderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 3, LocalDateTime.now(), Side.BUY, 500, 250, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 200);
-        broker1.increaseCreditBy(500 * 250 - 1);
-        orderHandler.handleEnterOrder(orderRq);
-        OrderRejectedEvent output = captureOrderRejectedEvent();
-        assertThat(output.getErrors()).containsOnly(
-                Message.BUYER_HAS_NOT_ENOUGH_CREDIT
-        );
-
-        broker1.increaseCreditBy(1);
-        orderHandler.handleEnterOrder(orderRq);
-        verify(eventPublisher).publish(new OrderAcceptedEvent(1, 3));
-    }
 
     void setLastTradePriceByTrade(int price) {
         security.getOrderBook().enqueue(new Order(1000, security, Side.SELL, 1, price, broker1, shareholder));
@@ -559,7 +539,7 @@ public class OrderHandlerTest {
     }
 
     void create_stop_limit_scenario() {
-
+        shareholder.incPosition(security, 85);
         this.stopLimitOrders = Arrays.asList(
                 new StopLimitOrder(6, security, Side.SELL, 15, 400, broker1, shareholder, 500),
                 new StopLimitOrder(7, security, Side.SELL, 15, 300, broker1, shareholder, 400),
@@ -586,7 +566,6 @@ public class OrderHandlerTest {
         );
         orders.forEach(order -> security.getOrderBook().enqueue(order));
     }
-
 
     @Test
     void new_sell_order_activate_all_sell_stop_limit_orders() {
@@ -632,7 +611,7 @@ public class OrderHandlerTest {
 
     }
     @Test
-    void slo_activated() {
+    void executed_order_activate_multiple_stop_limit_orders() {
         broker1.increaseCreditBy(100_000);
         List<StopLimitOrder> orders = Arrays.asList(
                 new StopLimitOrder(1, security, Side.BUY, 10, 550, broker1, shareholder, 500),
@@ -648,7 +627,7 @@ public class OrderHandlerTest {
     }
 
     @Test
-    void slo_seller_has_not_enough_positions() {
+    void stop_limit_order_seller_has_not_enough_positions() {
         EnterOrderRq orderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 3, LocalDateTime.now(), Side.SELL, 500, 250, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 200);
         shareholder.incPosition(security, 500 - 1);
         orderHandler.handleEnterOrder(orderRq);
@@ -661,4 +640,19 @@ public class OrderHandlerTest {
         orderHandler.handleEnterOrder(orderRq);
         verify(eventPublisher).publish(new OrderAcceptedEvent(1, 3));
     }
+
+    @Test void stop_limit_order_buyer_has_not_enough_credit() {
+        EnterOrderRq orderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 3, LocalDateTime.now(), Side.BUY, 500, 250, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 200);
+        broker1.increaseCreditBy(500 * 250 - 1);
+        orderHandler.handleEnterOrder(orderRq);
+        OrderRejectedEvent output = captureOrderRejectedEvent();
+        assertThat(output.getErrors()).containsOnly(
+                Message.BUYER_HAS_NOT_ENOUGH_CREDIT
+        );
+
+        broker1.increaseCreditBy(1);
+        orderHandler.handleEnterOrder(orderRq);
+        verify(eventPublisher).publish(new OrderAcceptedEvent(1, 3));
+    }
+
 }
