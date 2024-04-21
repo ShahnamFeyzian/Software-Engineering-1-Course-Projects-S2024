@@ -4325,6 +4325,13 @@ public class SecurityTest {
     }
 
     @Test
+    public void increase_stop_price_stop_limit_sell_order_and_activated_and_check_match_results() {
+        List<MatchResult> results = scenarioGenerator.increase_stop_price_stop_limit_sell_order_and_activated();
+        assertPack.assertMatchResult(results.get(0), MatchingOutcome.EXECUTED, 6, 0);
+        assertPack.assertMatchResult(results.get(1), MatchingOutcome.EXECUTED, 6, 2);
+    }
+
+    @Test
     public void increase_stop_price_stop_limit_sell_order_and_activated_and_check_stop_limit_sell_queue() {
         scenarioGenerator.increase_stop_price_stop_limit_sell_order_and_activated();
         assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 7, 15, 300, 400);
