@@ -99,9 +99,9 @@ public class OrderHandler {
             events.addAll(createRejectedEvents(matchResult, enterOrderRq));
 
         for(int i = 1; i < matchResults.size(); i++) {
-            events.add(new OrderActivatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
+            events.add(new OrderActivatedEvent(matchResults.get(i).remainder().getOrderId()));
             if((!matchResults.get(i).trades().isEmpty()))
-                events.add(new OrderExecutedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), matchResults.get(i).trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
+                events.add(new OrderExecutedEvent(matchResults.get(i).remainder().getOrderId(), matchResults.get(i).trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
         }
 
         return events;
@@ -182,7 +182,7 @@ public class OrderHandler {
             throw new InvalidRequestException(Message.CANNOT_UPDATE_MINIMUM_EXECUTION_QUANTITY);
         }
         catch (InvalidStopLimitPriceException exp){
-            throw new InvalidRequestException(Message.INVALID_STOP_LIMIT_PRICE);
+            throw new InvalidRequestException(Message.INVALID_STOP_LIMIT_UPDATE_PRICE);
         }
     }
 

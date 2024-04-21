@@ -7,11 +7,7 @@ import ir.ramtung.tinyme.domain.service.OrderHandler;
 import ir.ramtung.tinyme.messaging.EventPublisher;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.TradeDTO;
-import ir.ramtung.tinyme.messaging.event.OrderAcceptedEvent;
-import ir.ramtung.tinyme.messaging.event.OrderDeletedEvent;
-import ir.ramtung.tinyme.messaging.event.OrderExecutedEvent;
-import ir.ramtung.tinyme.messaging.event.OrderRejectedEvent;
-import ir.ramtung.tinyme.messaging.event.OrderUpdatedEvent;
+import ir.ramtung.tinyme.messaging.event.*;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.repository.BrokerRepository;
@@ -481,5 +477,113 @@ public class OrderHandlerTest {
 
         verify(eventPublisher).publish(new OrderDeletedEvent(1, 1));
         verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
+    }
+
+
+
+
+
+
+
+
+
+    // SLO Tests
+
+    @Test
+    void invalid_stop_limit_price() {
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(2, security.getIsin(), 3, LocalDateTime.now(), Side.BUY, 500, 250, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, -100));
+        verify(eventPublisher).publish(new OrderRejectedEvent(2, 3, List.of(Message.INVALID_STOP_PRICE)));
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(2, security.getIsin(), 3, LocalDateTime.now(), Side.BUY, 500, 250, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 10, 100));
+        verify(eventPublisher).publish(new OrderRejectedEvent(2, 3, List.of(Message.STOP_LIMIT_ORDERS_CAN_NOT_HAVE_MINIMUM_EXECUTION_QUANTITY)));
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(2, security.getIsin(), 3, LocalDateTime.now(), Side.BUY, 500, 250, broker1.getBrokerId(), shareholder.getShareholderId(), 10, 0, 100));
+        verify(eventPublisher).publish(new OrderRejectedEvent(2, 3, List.of(Message.STOP_LIMIT_ORDERS_CAN_NOT_BE_ICEBERG)));
+    }
+
+    @Test
+    void invalid_update_stop_limit_price() {
+        broker1.increaseCreditBy(300);
+
+        StopLimitOrder slo = new StopLimitOrder(20, security, Side.BUY, 10, 15, broker1, shareholder, 100);
+        security.getOrderBook().enqueueStopLimitOrder(slo);
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(2, security.getIsin(), 20, LocalDateTime.now(), Side.BUY, 11, 16, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 0));
+        verify(eventPublisher).publish(new OrderRejectedEvent(2, 20, List.of(Message.INVALID_STOP_LIMIT_UPDATE_PRICE)));
+
+        Order order = new Order(21, security, Side.BUY, 10, 15, broker1, shareholder);
+        security.getOrderBook().enqueue(order);
+        orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(3, security.getIsin(), 21, LocalDateTime.now(), Side.BUY, 11, 16, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 100));
+        verify(eventPublisher).publish(new OrderRejectedEvent(3, 21, List.of(Message.INVALID_STOP_LIMIT_UPDATE_PRICE)));
+    }
+
+    @Test void delete_stop_limit_orders() {
+        List<StopLimitOrder> orders = Arrays.asList(
+                new StopLimitOrder(1, security, Side.BUY, 10, 15, broker1, shareholder, 100),
+                new StopLimitOrder(2, security, Side.SELL, 10, 16, broker2, shareholder, 100)
+        );
+        broker1.increaseCreditBy(150);
+        shareholder.incPosition(security, 10);
+        orders.forEach(order -> security.getOrderBook().enqueueStopLimitOrder(order));
+
+        orderHandler.handleDeleteOrder(new DeleteOrderRq(1, "ABC", Side.BUY, 1));
+        orderHandler.handleDeleteOrder(new DeleteOrderRq(2, "ABC", Side.SELL, 2));
+
+        verify(eventPublisher).publish(new OrderDeletedEvent(1, 1));
+        verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
+    }
+
+    @Test void slo_buyer_has_not_enough_credit() {
+        EnterOrderRq orderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 3, LocalDateTime.now(), Side.BUY, 500, 250, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 200);
+        broker1.increaseCreditBy(500 * 250 - 1);
+        orderHandler.handleEnterOrder(orderRq);
+        OrderRejectedEvent output = captureOrderRejectedEvent();
+        assertThat(output.getErrors()).containsOnly(
+                Message.BUYER_HAS_NOT_ENOUGH_CREDIT
+        );
+
+        broker1.increaseCreditBy(1);
+        orderHandler.handleEnterOrder(orderRq);
+        verify(eventPublisher).publish(new OrderAcceptedEvent(1, 3));
+    }
+
+    void setLastTradePriceByTrade(int price) {
+        security.getOrderBook().enqueue(new Order(1000, security, Side.SELL, 1, price, broker1, shareholder));
+        broker1.increaseCreditBy(price);
+        shareholder.incPosition(security, 1);
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1000, security.getIsin(), 2000, LocalDateTime.now(), Side.BUY, 1, price, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 0));
+//        Trade trade = new Trade(security, price, 1, matchingOrder, afterUpdate)
+        verify(eventPublisher).publish(new OrderAcceptedEvent(1000, 2000));
+//        verify(eventPublisher).publish(new OrderExecutedEvent(1000, 2000));
+    }
+    @Test
+    void slo_activated() {
+        broker1.increaseCreditBy(100_000);
+        security.setLastTradePrice(100);
+        List<StopLimitOrder> orders = Arrays.asList(
+                new StopLimitOrder(1, security, Side.BUY, 10, 550, broker1, shareholder, 500),
+                new StopLimitOrder(2, security, Side.BUY, 10, 600, broker1, shareholder, 300)
+        );
+        orders.forEach(order -> security.getOrderBook().enqueueStopLimitOrder(order));
+        setLastTradePriceByTrade(800);
+
+
+        verify(eventPublisher).publish(new OrderActivatedEvent(1));
+        verify(eventPublisher).publish(new OrderActivatedEvent(2));
+
+    }
+
+    @Test
+    void slo_seller_has_not_enough_positions() {
+        EnterOrderRq orderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 3, LocalDateTime.now(), Side.SELL, 500, 250, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 200);
+        shareholder.incPosition(security, 500 - 1);
+        orderHandler.handleEnterOrder(orderRq);
+        OrderRejectedEvent output = captureOrderRejectedEvent();
+        assertThat(output.getErrors()).containsOnly(
+                Message.SELLER_HAS_NOT_ENOUGH_POSITIONS
+        );
+
+        shareholder.incPosition(security, 1);
+        orderHandler.handleEnterOrder(orderRq);
+        verify(eventPublisher).publish(new OrderAcceptedEvent(1, 3));
     }
 }
