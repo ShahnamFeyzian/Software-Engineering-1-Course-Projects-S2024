@@ -647,6 +647,18 @@ public class SecurityTest {
             buyerBroker.increaseCreditBy(6000);
             return security.addNewOrder(order, matcher);
         }
+
+        public List<MatchResult> new_sell_stop_limit_order_and_active_at_the_first() {
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 10, 500, sellerBroker, sellerShareholder, 600);
+            sellerShareholder.incPosition(security, 10);
+            return security.addNewOrder(order, matcher);
+        }
+
+        public List<MatchResult> new_buy_stop_limit_order_and_active_at_the_first() {
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 3, 700, buyerBroker, buyerShareholder, 500);
+            buyerBroker.increaseCreditBy(2100);
+            return security.addNewOrder(order, matcher);
+        }
     }
 
 
@@ -3956,6 +3968,20 @@ public class SecurityTest {
         scenarioGenerator.increase_buy_order_price_and_partially_traded();
         assertPack.exceptedLastTradePrice = 700;
         assertPack.assertLastTradePrice();
+    }
+
+    @Test
+    public void new_sell_stop_limit_order_and_active_at_the_first_and_check_match_results() {
+        List<MatchResult> results = scenarioGenerator.new_sell_stop_limit_order_and_active_at_the_first();
+        assertPack.assertMatchResult(results.get(0), MatchingOutcome.EXECUTED, 6, 0);
+        assertPack.assertMatchResult(results.get(1), MatchingOutcome.EXECUTED, 6, 1);
+    }
+
+    @Test
+    public void new_buy_stop_limit_order_and_active_at_the_first_and_check_match_results() {
+        List<MatchResult> results = scenarioGenerator.new_buy_stop_limit_order_and_active_at_the_first();
+        assertPack.assertMatchResult(results.get(0), MatchingOutcome.EXECUTED, 6, 0);
+        assertPack.assertMatchResult(results.get(1), MatchingOutcome.EXECUTED, 6, 1);
     }
 
     @Test
