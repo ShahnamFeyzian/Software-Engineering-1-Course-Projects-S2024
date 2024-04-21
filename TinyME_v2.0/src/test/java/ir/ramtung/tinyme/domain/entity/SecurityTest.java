@@ -92,6 +92,16 @@ public class SecurityTest {
             assertThat(actualStopPrice).isEqualTo(stopPrice);
         }
 
+        private void assertMatchResult(MatchResult result, MatchingOutcome outcome, long orderId, int numOfTrades) {
+            MatchingOutcome actualOutcome = result.outcome();
+            long actualOrderId = result.remainder().getOrderId();
+            int actualNumOfTrades = result.trades().size();
+
+            assertThat(actualOutcome).isEqualTo(outcome);
+            assertThat(actualOrderId).isEqualTo(orderId);
+            assertThat(actualNumOfTrades).isEqualTo(numOfTrades);
+        }
+
         private void assertOrderInQueue(Side side, int idx, long orderId, int quantity, int minexteQuantity, int price) {
             Order order = (side == Side.BUY) ? buyQueue.get(idx) : sellQueue.get(idx);
             long actualId = order.getOrderId();
@@ -4003,10 +4013,10 @@ public class SecurityTest {
     @Test 
     public void new_sell_order_activate_all_sell_stop_limit_orders_and_check_match_results() {
         List<MatchResult> results = scenarioGenerator.new_sell_order_activate_all_sell_stop_limit_orders();
-        assertThat(results.get(0).outcome()).isEqualTo(MatchingOutcome.EXECUTED);
-        assertThat(results.get(1).outcome()).isEqualTo(MatchingOutcome.EXECUTED);
-        assertThat(results.get(2).outcome()).isEqualTo(MatchingOutcome.EXECUTED);
-        assertThat(results.get(3).outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+        assertPack.assertMatchResult(results.get(0), MatchingOutcome.EXECUTED, 9, 5);
+        assertPack.assertMatchResult(results.get(1), MatchingOutcome.EXECUTED, 6, 1);
+        assertPack.assertMatchResult(results.get(2), MatchingOutcome.EXECUTED, 7, 1);
+        assertPack.assertMatchResult(results.get(4), MatchingOutcome.EXECUTED, 8, 1);
     }
     
     @Test 
