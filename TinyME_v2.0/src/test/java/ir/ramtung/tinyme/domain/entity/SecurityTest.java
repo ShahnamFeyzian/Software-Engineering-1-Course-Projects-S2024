@@ -3978,6 +3978,13 @@ public class SecurityTest {
     }
 
     @Test
+    public void new_sell_stop_limit_order_and_active_at_the_first_and_check_last_trade_price() {
+        scenarioGenerator.new_sell_stop_limit_order_and_active_at_the_first();
+        assertPack.exceptedLastTradePrice = 500;
+        assertPack.assertLastTradePrice();
+    }
+
+    @Test
     public void new_buy_stop_limit_order_and_active_at_the_first_and_check_match_results() {
         List<MatchResult> results = scenarioGenerator.new_buy_stop_limit_order_and_active_at_the_first();
         assertPack.assertMatchResult(results.get(0), MatchingOutcome.EXECUTED, 6, 0);
@@ -3985,13 +3992,20 @@ public class SecurityTest {
     }
 
     @Test
-    public void add_sell_stop_limit_order_but_not_enough_position_and_check_result() {
+    public void new_buy_stop_limit_order_and_active_at_the_first_and_check_last_trade_price() {
+        scenarioGenerator.new_buy_stop_limit_order_and_active_at_the_first();
+        assertPack.exceptedLastTradePrice = 600;
+        assertPack.assertLastTradePrice();
+    }
+
+    @Test
+    public void add_sell_stop_limit_order_but_not_enough_position_and_check_match_result() {
         MatchResult res = scenarioGenerator.add_sell_stop_limit_order_but_not_enough_position();
         assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
     }
 
     @Test
-    public void add_buy_stop_limit_order_but_not_enough_credit_and_check_result() {
+    public void add_buy_stop_limit_order_but_not_enough_credit_and_check_match_result() {
         MatchResult res = scenarioGenerator.add_buy_stop_limit_order_but_not_enough_credit();
         assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
     }
