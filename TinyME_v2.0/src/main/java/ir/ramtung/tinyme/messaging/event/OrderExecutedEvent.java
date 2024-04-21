@@ -16,4 +16,12 @@ public class OrderExecutedEvent extends Event {
     private long requestId;
     private long orderId;
     private List<TradeDTO> trades;
+
+
+    public OrderExecutedEvent(long orderId, List<TradeDTO> trades) {
+        this.orderId = orderId;
+        this.trades = trades;
+    }
 }
+
+
