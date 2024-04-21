@@ -24,7 +24,6 @@ public class Security {
     private int lotSize = 1;
     @Builder.Default
     private OrderBook orderBook = new OrderBook();
-    @Setter
     private int lastTradePrice;
 
     public List<MatchResult> addNewOrder(Order newOrder, Matcher matcher) {
