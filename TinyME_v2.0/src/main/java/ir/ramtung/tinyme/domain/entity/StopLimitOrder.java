@@ -34,9 +34,9 @@ public class StopLimitOrder extends Order {
     }
 
     public boolean isSatisfied(int lastTradePrice) {
-        if (side == Side.BUY && price <= lastTradePrice)
+        if (side == Side.BUY && stopPrice <= lastTradePrice)
             return true;
-        else if (side == Side.SELL && price >= lastTradePrice)
+        else if (side == Side.SELL && stopPrice >= lastTradePrice)
             return true;
         
         return false;

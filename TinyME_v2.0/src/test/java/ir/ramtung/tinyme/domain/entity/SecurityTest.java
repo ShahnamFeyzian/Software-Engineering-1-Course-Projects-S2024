@@ -4016,7 +4016,7 @@ public class SecurityTest {
         assertPack.assertMatchResult(results.get(0), MatchingOutcome.EXECUTED, 9, 5);
         assertPack.assertMatchResult(results.get(1), MatchingOutcome.EXECUTED, 6, 1);
         assertPack.assertMatchResult(results.get(2), MatchingOutcome.EXECUTED, 7, 1);
-        assertPack.assertMatchResult(results.get(4), MatchingOutcome.EXECUTED, 8, 1);
+        assertPack.assertMatchResult(results.get(3), MatchingOutcome.EXECUTED, 8, 1);
     }
     
     @Test 
