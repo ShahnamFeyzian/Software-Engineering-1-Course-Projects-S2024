@@ -640,6 +640,13 @@ public class SecurityTest {
             sellerShareholder.incPosition(security, 45);
             return security.addNewOrder(order, matcher);
         }
+
+        public List<MatchResult> new_buy_order_activate_all_buy_stop_limit_orders() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            Order order = new Order(9, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
+            buyerBroker.increaseCreditBy(6000);
+            return security.addNewOrder(order, matcher);
+        }
     }
 
 
@@ -4073,5 +4080,71 @@ public class SecurityTest {
         scenarioGenerator.new_sell_order_activate_all_sell_stop_limit_orders();
         assertPack.assertOrderInStopLimitQueue(Side.BUY, 0, 6, 15, 700, 600);
         assertPack.assertOrderInStopLimitQueue(Side.BUY, 1, 7, 15, 800, 700);
-        assertPack.assertOrderInStopLimitQueue(Side.BUY, 2, 8, 15, 900, 800);    }
+        assertPack.assertOrderInStopLimitQueue(Side.BUY, 2, 8, 15, 900, 800);
+    }
+
+    @Test 
+    public void new_buy_order_activate_all_buy_stop_limit_orders_and_check_match_results() {
+        List<MatchResult> results = scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
+        assertPack.assertMatchResult(results.get(0), MatchingOutcome.EXECUTED, 9, 1);
+        assertPack.assertMatchResult(results.get(1), MatchingOutcome.EXECUTED, 6, 1);
+        assertPack.assertMatchResult(results.get(2), MatchingOutcome.EXECUTED, 7, 1);
+        assertPack.assertMatchResult(results.get(3), MatchingOutcome.EXECUTED, 8, 1);
+    }
+    
+    @Test 
+    public void new_buy_order_activate_all_buy_stop_limit_orders_and_check_buyer_credit() {
+        scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
+        assertPack.assertBuyerCredit();
+    }
+
+    @Test 
+    public void new_buy_order_activate_all_buy_stop_limit_orders_and_check_buyer_position() {
+        scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
+        assertPack.exceptedBuyerPosition = 40;
+        assertPack.assertBuyerPosition();
+    }
+
+    @Test 
+    public void new_buy_order_activate_all_buy_stop_limit_orders_and_check_seller_credit() {
+        scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
+        assertPack.exceptedSellerCredit = 30000;
+        assertPack.assertSellerCredit();
+    }
+
+    @Test 
+    public void new_buy_order_activate_all_buy_stop_limit_orders_and_check_seller_position() {
+        scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
+        assertPack.exceptedSellerPosition = 90;
+        assertPack.assertSellerPosition();
+    }
+
+    @Test 
+    public void new_buy_order_activate_all_buy_stop_limit_orders_and_check_sell_queue() {
+        scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
+        assertPack.assertOrderInQueue(Side.SELL, 0, 5, 45, 1000, 10, 10);
+    }
+
+    @Test 
+    public void new_buy_order_activate_all_buy_stop_limit_orders_and_check_buy_queue() {
+        scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 8, 5, 900);
+        assertPack.assertOrderInQueue(Side.BUY, 1, 7, 5, 800);
+        assertPack.assertOrderInQueue(Side.BUY, 2, 6, 5, 700);
+        assertPack.assertOrderInQueue(Side.BUY, 3, 5, 45, 500, 10, 10);        
+    }
+
+    @Test 
+    public void new_buy_order_activate_all_buy_stop_limit_orders_and_check_stop_limit_sell_queue() {
+        scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 6, 15, 400, 500);
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 1, 7, 15, 300, 400);
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 2, 8, 15, 200, 300);
+    }
+
+    @Test 
+    public void new_buy_order_activate_all_buy_stop_limit_orders_and_check_stop_limit_buy_queue() {
+        scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
+        assertThat(orderBook.getStopLimitOrderBuyQueue().isEmpty()).isTrue(); 
+    }
 }
