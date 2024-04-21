@@ -54,6 +54,8 @@ public class OrderHandler {
         Order tempOrder = createTempOrderByEnterOrderRq(enterOrderRq);
         if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER)
             return tempOrder.getSecurity().addNewOrder(tempOrder, matcher);
+        else if (enterOrderRq.getStopPrice() != 0)
+            return tempOrder.getSecurity().updateSloOrder((StopLimitOrder) tempOrder, matcher);
         else
             return tempOrder.getSecurity().updateOrder(tempOrder, matcher);
     }
