@@ -688,6 +688,31 @@ public class SecurityTest {
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 450, sellerBroker, sellerShareholder, 500);
             return security.updateSloOrder(order, matcher).getFirst();
         }
+
+        public MatchResult decrease_quantity_stop_limit_sell_order() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 10, 400, sellerBroker, sellerShareholder, 500);
+            return security.updateSloOrder(order, matcher).getFirst();
+        }
+
+        public MatchResult increase_quantity_stop_limit_sell_order() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 20, 400, sellerBroker, sellerShareholder, 500);
+            sellerShareholder.incPosition(security, 5);
+            return security.updateSloOrder(order, matcher).getFirst();
+        }
+
+        public MatchResult decrease_stop_price_stop_limit_sell_order() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 350);
+            return security.updateSloOrder(order, matcher).getFirst();
+        }
+
+        public MatchResult increase_stop_price_stop_limit_sell_order_and_not_activated() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 525);
+            return security.updateSloOrder(order, matcher).getFirst();
+        }
     }
 
 
@@ -4254,4 +4279,31 @@ public class SecurityTest {
         scenarioGenerator.increase_price_stop_limit_sell_order();
         assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 6, 15, 450, 500);
     }
+
+    @Test
+    public void decrease_quantity_stop_limit_sell_order_and_check_order_in_stop_limit_sell_queue() {
+        scenarioGenerator.decrease_quantity_stop_limit_sell_order();
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 6, 10, 400, 500);
+    }
+
+    @Test
+    public void increase_quantity_stop_limit_sell_order_and_check_order_in_stop_limit_sell_queue() {
+        scenarioGenerator.increase_quantity_stop_limit_sell_order();
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 6, 20, 400, 500);
+    }
+
+    @Test
+    public void decrease_stop_price_stop_limit_sell_order_and_check_order_in_stop_limit_sell_queue() {
+        scenarioGenerator.decrease_stop_price_stop_limit_sell_order();
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 7, 15, 300, 400);
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 1, 6, 15, 400, 350);
+    }
+
+    @Test
+    public void increase_stop_price_stop_limit_sell_order_and_not_activated_and_check_order_in_stop_limit_sell_queue() {
+        scenarioGenerator.increase_stop_price_stop_limit_sell_order_and_not_activated();
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 6, 15, 400, 525);
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 1, 7, 15, 300, 400);
+    }
+
 }
