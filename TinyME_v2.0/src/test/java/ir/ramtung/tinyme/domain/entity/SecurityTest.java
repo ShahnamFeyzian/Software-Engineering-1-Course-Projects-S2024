@@ -702,6 +702,12 @@ public class SecurityTest {
             return security.updateSloOrder(order, matcher).getFirst();
         }
 
+        public MatchResult increase_quantity_stop_limit_sell_order_and_not_enough_position() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 20, 400, sellerBroker, sellerShareholder, 500);
+            return security.updateSloOrder(order, matcher).getFirst();
+        }
+
         public MatchResult decrease_stop_price_stop_limit_sell_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 350);
@@ -712,6 +718,12 @@ public class SecurityTest {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 525);
             return security.updateSloOrder(order, matcher).getFirst();
+        }
+
+        public List<MatchResult> increase_stop_price_stop_limit_sell_order_and_activated() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 555);
+            return security.updateSloOrder(order, matcher);
         }
     }
 
@@ -4293,6 +4305,12 @@ public class SecurityTest {
     }
 
     @Test
+    public void increase_quantity_stop_limit_sell_order_and_not_enough_position_and_check_match_result() {
+        MatchResult res = scenarioGenerator.increase_quantity_stop_limit_sell_order_and_not_enough_position();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_POSITIONS);
+    }
+
+    @Test
     public void decrease_stop_price_stop_limit_sell_order_and_check_order_in_stop_limit_sell_queue() {
         scenarioGenerator.decrease_stop_price_stop_limit_sell_order();
         assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 7, 15, 300, 400);
@@ -4306,4 +4324,15 @@ public class SecurityTest {
         assertPack.assertOrderInStopLimitQueue(Side.SELL, 1, 7, 15, 300, 400);
     }
 
+    @Test
+    public void increase_stop_price_stop_limit_sell_order_and_activated_and_check_stop_limit_sell_queue() {
+        scenarioGenerator.increase_stop_price_stop_limit_sell_order_and_activated();
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 7, 15, 300, 400);
+    }
+
+    @Test
+    public void increase_stop_price_stop_limit_sell_order_and_activated_and_check_buy_queue() {
+        scenarioGenerator.increase_stop_price_stop_limit_sell_order_and_activated();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 5, 30, 500, 10, 5);
+    }
 }
