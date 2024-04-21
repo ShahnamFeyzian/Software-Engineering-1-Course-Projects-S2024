@@ -482,4 +482,20 @@ public class OrderHandlerTest {
         verify(eventPublisher).publish(new OrderDeletedEvent(1, 1));
         verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
     }
+
+    @Test void delete_slo_orders() {
+        List<StopLimitOrder> orders = Arrays.asList(
+                new StopLimitOrder(1, security, Side.BUY, 10, 15, broker1, shareholder, 100),
+                new StopLimitOrder(2, security, Side.SELL, 10, 16, broker2, shareholder, 100)
+        );
+        broker1.increaseCreditBy(150);
+        shareholder.incPosition(security, 10);
+        orders.forEach(order -> security.getOrderBook().enqueueStopLimitOrder(order));
+
+        orderHandler.handleDeleteOrder(new DeleteOrderRq(1, "ABC", Side.BUY, 1));
+        orderHandler.handleDeleteOrder(new DeleteOrderRq(2, "ABC", Side.SELL, 2));
+
+        verify(eventPublisher).publish(new OrderDeletedEvent(1, 1));
+        verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
+    }
 }
