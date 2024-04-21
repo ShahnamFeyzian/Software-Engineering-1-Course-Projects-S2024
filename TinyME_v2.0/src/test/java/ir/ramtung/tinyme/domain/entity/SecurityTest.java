@@ -648,6 +648,23 @@ public class SecurityTest {
             return security.addNewOrder(order, matcher);
         }
 
+        public List<MatchResult> new_sell_order_activate_one_sell_stop_limit_order() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            Order order = new Order(9, security, Side.SELL, 30, 500, sellerBroker, sellerShareholder);
+            sellerShareholder.incPosition(security, 30);
+            return security.addNewOrder(order, matcher);
+        }
+
+        public List<MatchResult> new_buy_order_activate_one_buy_stop_limit_order() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            Order order1 = new Order(10, security, Side.SELL, 10, 600, sellerBroker, sellerShareholder);
+            Order order2 = new Order(9, security, Side.BUY, 5, 600, buyerBroker, buyerShareholder);
+            sellerShareholder.incPosition(security, 10);
+            buyerBroker.increaseCreditBy(3000);
+            security.addNewOrder(order1, matcher);
+            return security.addNewOrder(order2, matcher);
+        }
+
         public List<MatchResult> new_sell_stop_limit_order_and_active_at_the_first() {
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 10, 500, sellerBroker, sellerShareholder, 600);
             sellerShareholder.incPosition(security, 10);
@@ -4186,5 +4203,31 @@ public class SecurityTest {
     public void new_buy_order_activate_all_buy_stop_limit_orders_and_check_stop_limit_buy_queue() {
         scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
         assertThat(orderBook.getStopLimitOrderBuyQueue().isEmpty()).isTrue(); 
+    }
+
+    @Test
+    public void new_sell_order_activate_one_sell_stop_limit_order_and_check_buy_queue() {
+        scenarioGenerator.new_sell_order_activate_one_sell_stop_limit_order();
+        assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
+    }
+
+    @Test
+    public void new_sell_order_activate_one_sell_stop_limit_order_and_check_stop_limit_sell_queue() {
+        scenarioGenerator.new_sell_order_activate_one_sell_stop_limit_order();
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 7, 15, 300, 400);
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 1, 8, 15, 200, 300);
+    }
+
+    @Test
+    public void new_buy_order_activate_one_buy_stop_limit_order_and_check_sell_queue() {
+        scenarioGenerator.new_buy_order_activate_one_buy_stop_limit_order();
+        assertPack.assertOrderInQueue(Side.SELL, 0, 2, 10, 700);
+    }
+
+    @Test
+    public void new_buy_order_activate_one_buy_stop_limit_order_and_check_stop_limit_buy_queue() {
+        scenarioGenerator.new_buy_order_activate_one_buy_stop_limit_order();
+        assertPack.assertOrderInStopLimitQueue(Side.BUY, 0, 7, 15, 800, 700);
+        assertPack.assertOrderInStopLimitQueue(Side.BUY, 1, 8, 15, 900, 800);
     }
 }
