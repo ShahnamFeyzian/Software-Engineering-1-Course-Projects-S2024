@@ -62,12 +62,7 @@ public class StopLimitOrder extends Order {
 
     // DUP
     public void updateFromTempSloOrder(StopLimitOrder tempOrder) {
-        if (this.side == Side.BUY) {
-            broker.increaseCreditBy(this.getValue());
-            broker.decreaseCreditBy(tempOrder.getValue());
-        }
-        else
-            this.status = OrderStatus.UPDATING;
+        this.stopPrice = tempOrder.stopPrice;
         this.quantity = tempOrder.quantity;
         this.price = tempOrder.price;
     }

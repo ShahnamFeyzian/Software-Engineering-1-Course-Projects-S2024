@@ -33,7 +33,7 @@ public class Security {
             checkPositionForNewOrder(newOrder);
 
             if (newOrder instanceof StopLimitOrder newStopLimitOrder) {
-                addNewStopLimitOrder(newStopLimitOrder, matcher);
+                addNewStopLimitOrder(newStopLimitOrder);
                 results.addFirst(MatchResult.executed(newOrder, List.of()));
             }
             else {
@@ -58,7 +58,7 @@ public class Security {
             lastTradePrice = trades.getLast().getPrice();
     }
 
-    private void addNewStopLimitOrder(StopLimitOrder newOrder, Matcher matcher) {
+    private void addNewStopLimitOrder(StopLimitOrder newOrder) {
         orderBook.enqueueStopLimitOrder(newOrder);
     }
 
@@ -87,6 +87,7 @@ public class Security {
             orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
             mainOrder.updateFromTempSloOrder(tempOrder);
             return reAddUpdatedSloOrder(mainOrder, originalOrder, matcher);
+
         }
         catch (NotEnoughPositionException exp) {
             return List.of(MatchResult.notEnoughPositions());
@@ -94,14 +95,17 @@ public class Security {
     }
     // DUP
     private List<MatchResult> reAddUpdatedSloOrder(StopLimitOrder updatedOrder, StopLimitOrder originalOrder, Matcher matcher) {
-        MatchResult updatedOrderResult = matcher.execute(updatedOrder);
-        if (updatedOrderResult.outcome() != MatchingOutcome.EXECUTED) {
-            orderBook.enqueueStopLimitOrder(originalOrder);
+        try {
+            List<MatchResult> results = new LinkedList<>();
+            results.add(MatchResult.executed(updatedOrder, List.of()));
+            addNewStopLimitOrder(updatedOrder);
+            results.addAll(executeStopLimitOrders(matcher));
+            return results;
         }
-        updateLastTradePrice(updatedOrderResult.trades());
-        List<MatchResult> results = executeStopLimitOrders(matcher);
-        results.addFirst(updatedOrderResult);
-        return results;
+        catch (NotEnoughCreditException exp) {
+            addNewStopLimitOrder(originalOrder);
+            return List.of(MatchResult.notEnoughCredit());
+        }
     }
 
     public List<MatchResult> updateOrder(Order tempOrder, Matcher matcher) {

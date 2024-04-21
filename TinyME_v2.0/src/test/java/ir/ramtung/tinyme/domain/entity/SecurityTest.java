@@ -676,6 +676,12 @@ public class SecurityTest {
             buyerBroker.increaseCreditBy(2100);
             return security.addNewOrder(order, matcher);
         }
+
+        public MatchResult decrease_price_stop_limit_sell_order() {
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 350, sellerBroker, sellerShareholder, 500);
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            return security.updateSloOrder(order, matcher).getFirst();
+        }
     }
 
 
@@ -4229,5 +4235,12 @@ public class SecurityTest {
         scenarioGenerator.new_buy_order_activate_one_buy_stop_limit_order();
         assertPack.assertOrderInStopLimitQueue(Side.BUY, 0, 7, 15, 800, 700);
         assertPack.assertOrderInStopLimitQueue(Side.BUY, 1, 8, 15, 900, 800);
+    }
+
+    @Test
+    public void decrease_price_stop_limit_sell_order_and_check_order_in_stop_limit_queue() {
+        scenarioGenerator.decrease_price_stop_limit_sell_order();
+        orderBook.getStopLimitOrderSellQueue().forEach(o -> System.out.println(o));
+        assertPack.assertOrderInStopLimitQueue(Side.SELL, 0, 6, 15, 350, 500);
     }
 }

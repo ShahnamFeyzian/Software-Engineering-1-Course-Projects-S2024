@@ -58,7 +58,7 @@ public class Order {
     }
 
     public Order(Order other) {
-        this(other.orderId, other.security, other.side, other.quantity, other.price, other.broker, other.shareholder);
+        this(other.orderId, other.security, other.side, other.quantity, 0, other.price, other.broker, other.shareholder, LocalDateTime.now(), OrderStatus.NEW);
     }
 
     public Order snapshot() {
