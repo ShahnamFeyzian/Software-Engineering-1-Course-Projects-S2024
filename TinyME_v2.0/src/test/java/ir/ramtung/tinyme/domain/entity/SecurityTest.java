@@ -725,6 +725,54 @@ public class SecurityTest {
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 555);
             return security.updateSloOrder(order, matcher);
         }
+        public MatchResult decrease_price_stop_limit_buy_order() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 15, 600, buyerBroker, buyerShareholder, 600);
+            return security.updateSloOrder(order, matcher).getFirst();
+        }
+
+        // public MatchResult increase_price_stop_limit_sell_order() {
+        //     this.add_three_stop_limit_order_both_buy_and_sell();
+        //     StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 450, buyerBroker, buyerShareholder, 500);
+        //     return security.updateSloOrder(order, matcher).getFirst();
+        // }
+
+        // public MatchResult decrease_quantity_stop_limit_sell_order() {
+        //     this.add_three_stop_limit_order_both_buy_and_sell();
+        //     StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 10, 400, buyerBroker, buyerShareholder, 500);
+        //     return security.updateSloOrder(order, matcher).getFirst();
+        // }
+
+        // public MatchResult increase_quantity_stop_limit_sell_order() {
+        //     this.add_three_stop_limit_order_both_buy_and_sell();
+        //     StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 20, 400, buyerBroker, buyerShareholder, 500);
+        //     sellerShareholder.incPosition(security, 5);
+        //     return security.updateSloOrder(order, matcher).getFirst();
+        // }
+
+        // public MatchResult increase_quantity_stop_limit_sell_order_and_not_enough_position() {
+        //     this.add_three_stop_limit_order_both_buy_and_sell();
+        //     StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 20, 400, buyerBroker, buyerShareholder, 500);
+        //     return security.updateSloOrder(order, matcher).getFirst();
+        // }
+
+        // public MatchResult decrease_stop_price_stop_limit_sell_order() {
+        //     this.add_three_stop_limit_order_both_buy_and_sell();
+        //     StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, buyerBroker, buyerShareholder, 350);
+        //     return security.updateSloOrder(order, matcher).getFirst();
+        // }
+
+        // public MatchResult increase_stop_price_stop_limit_sell_order_and_not_activated() {
+        //     this.add_three_stop_limit_order_both_buy_and_sell();
+        //     StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, buyerBroker, buyerShareholder, 525);
+        //     return security.updateSloOrder(order, matcher).getFirst();
+        // }
+
+        // public List<MatchResult> increase_stop_price_stop_limit_sell_order_and_activated() {
+        //     this.add_three_stop_limit_order_both_buy_and_sell();
+        //     StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, buyerBroker, buyerShareholder, 555);
+        //     return security.updateSloOrder(order, matcher);
+        // }
     }
 
 
@@ -4341,5 +4389,18 @@ public class SecurityTest {
     public void increase_stop_price_stop_limit_sell_order_and_activated_and_check_buy_queue() {
         scenarioGenerator.increase_stop_price_stop_limit_sell_order_and_activated();
         assertPack.assertOrderInQueue(Side.BUY, 0, 5, 30, 500, 10, 5);
+    }
+
+    @Test
+    public void decrease_price_stop_limit_buy_order_and_check_order_in_stop_limit_buy_queue() {
+        scenarioGenerator.decrease_price_stop_limit_buy_order();
+        assertPack.assertOrderInStopLimitQueue(Side.BUY, 0, 6, 15, 600, 600);
+    }
+
+    @Test
+    public void decrease_price_stop_limit_buy_order_and_check_buyer_credit() {
+        scenarioGenerator.decrease_price_stop_limit_buy_order();
+        assertPack.exceptedBuyerCredit = 1500;
+        assertPack.assertBuyerCredit();
     }
 }
