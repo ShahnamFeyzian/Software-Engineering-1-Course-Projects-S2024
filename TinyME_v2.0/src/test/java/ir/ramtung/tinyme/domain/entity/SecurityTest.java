@@ -775,17 +775,11 @@ public class SecurityTest {
             return security.updateSloOrder(order, matcher);
         }
 
-        // public MatchResult increase_stop_price_stop_limit_buy_order_and_not_activated() {
-        //     this.add_three_stop_limit_order_both_buy_and_sell();
-        //     StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, buyerBroker, buyerShareholder, 525);
-        //     return security.updateSloOrder(order, matcher).getFirst();
-        // }
-
-        // public List<MatchResult> increase_stop_price_stop_limit_buy_order_and_activated() {
-        //     this.add_three_stop_limit_order_both_buy_and_sell();
-        //     StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, buyerBroker, buyerShareholder, 555);
-        //     return security.updateSloOrder(order, matcher);
-        // }
+        public MatchResult increase_stop_price_stop_limit_buy_order() {
+            this.add_three_stop_limit_order_both_buy_and_sell();
+            StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 15, 700, buyerBroker, buyerShareholder, 750);
+            return security.updateSloOrder(order, matcher).getFirst();
+        }
     }
 
 
@@ -4480,5 +4474,12 @@ public class SecurityTest {
         assertPack.assertMatchResult(results.get(1), MatchingOutcome.EXECUTED, 6, 2);
         assertPack.assertMatchResult(results.get(2), MatchingOutcome.EXECUTED, 7, 2);
         assertPack.assertMatchResult(results.get(3), MatchingOutcome.EXECUTED, 8, 1);
+    }
+
+    @Test
+    public void increase_stop_price_stop_limit_buy_order_and_check_order_in_stop_order_buy_queue() {
+        scenarioGenerator.increase_stop_price_stop_limit_buy_order();
+        assertPack.assertOrderInStopLimitQueue(Side.BUY, 0, 7, 15, 800, 700);
+        assertPack.assertOrderInStopLimitQueue(Side.BUY, 1, 6, 15, 700, 750);
     }
 }
