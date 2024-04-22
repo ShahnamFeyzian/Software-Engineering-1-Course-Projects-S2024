@@ -2,7 +2,7 @@
 
 For further reference, please consider the following sections:
 
-
+- [Stop Limit Order](https://www.investopedia.com/terms/s/stop-limitorder.asp)
 
 ### Guides
 
