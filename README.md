@@ -8,6 +8,7 @@
   - [Assignment 3: Unit Testing](#assignment-3-unit-testing)
   - [Assignment 4: Minimum Execution Quantity](#assignment-4-minimum-execution-quantity)
   - [Assignment 5: Stop Limit Order](#assignment-5-stop-limit-order)
+  - [Assignment 6: Technical Debt](#assignment-6-technical-debt)
 
 ## Intro
 
@@ -36,3 +37,7 @@ In this assignment, we were supposed to add a simple feature to the `TinyME` app
 ## Assignment 5: Stop Limit Order
 
 In this assignment, we were supposed to add a new type of order to the `TinyME` application. The new order type is called `Stop Limit Order`. For more information, please refer to the description file in the `A5` folder.
+
+## Assignment 6: Technical Debt
+
+In this assignment, we were supposed to refactor the `TinyME` application to remove the technical debt, since the last version of the application was not well-designed. The technical debt was supposed to be removed in a way that the existing tests would not fail. For more information, please refer to the description file in the `A6` folder.
