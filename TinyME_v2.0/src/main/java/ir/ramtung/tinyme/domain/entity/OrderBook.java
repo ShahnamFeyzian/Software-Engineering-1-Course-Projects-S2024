@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 
 @Getter
@@ -23,6 +24,9 @@ public class OrderBook {
     }
 
     public void enqueueStopLimitOrder(StopLimitOrder order) {
+        if (order.getSide() == Side.BUY && !order.getBroker().hasEnoughCredit(order.getValue()))
+            throw new NotEnoughCreditException();
+        
         List<StopLimitOrder> queue = getStopLimitOrderQueue(order.getSide());
         ListIterator<StopLimitOrder> it = queue.listIterator();
         while (it.hasNext()) {
@@ -33,8 +37,6 @@ public class OrderBook {
         }
         order.queue();
         it.add(order);
-        // TODO 
-        // fucking duplication that sould be fixed
     }
 
     public void enqueue(Order order) {
@@ -61,6 +63,16 @@ public class OrderBook {
         return side == Side.BUY ? buyQueue : sellQueue;
     }
 
+    // DUP
+    public StopLimitOrder findBySloOrderId(Side side, long orderId) {
+        var queue = getStopLimitOrderQueue(side);
+        for (StopLimitOrder order : queue) {
+            if (order.getOrderId() == orderId)
+                return order;
+        }
+        throw new NotFoundException();
+    }
+
     public Order findByOrderId(Side side, long orderId) {
         var queue = getQueue(side);
         for (Order order : queue) {
@@ -70,6 +82,16 @@ public class OrderBook {
         throw new NotFoundException();
     }
 
+    // DUP
+    public boolean isThereSloOrderWithId(Side side, long orderId) {
+        try {
+            findBySloOrderId(side, orderId);
+            return true;
+        }
+        catch (NotFoundException exp) {
+            return false;
+        }
+    }
     public boolean isThereOrderWithId(Side side, long orderId) {
         try {
             findByOrderId(side, orderId);
@@ -80,11 +102,24 @@ public class OrderBook {
         }
     }
 
-    public void removeByOrderId(Side side, long orderId) {
-        LinkedList<Order> queue = getQueue(side);
-        Order targetOrder = findByOrderId(side, orderId);
+    // DUP
+    public void removeBySloOrderId(Side side, long orderId) {
+        LinkedList<StopLimitOrder> queue = getStopLimitOrderQueue(side);
+        StopLimitOrder targetOrder = findBySloOrderId(side, orderId);
         targetOrder.delete();
         queue.remove(targetOrder);
+    }
+
+    // DUP
+    public void removeByOrderId(Side side, long orderId) {
+        if(isThereOrderWithId(side, orderId)) {
+            LinkedList<Order> queue = getQueue(side);
+            Order targetOrder = findByOrderId(side, orderId);
+            targetOrder.delete();
+            queue.remove(targetOrder);
+        } else {
+            removeBySloOrderId(side, orderId);
+        }
     }
 
     public Order findOrderToMatchWith(Order newOrder) {
@@ -127,15 +162,23 @@ public class OrderBook {
     }
 
     public StopLimitOrder getStopLimitOrder(int lastTradePrice) {
-        if (stopLimitOrderBuyQueue.size() != 0) {
-            StopLimitOrder firsBuytOrder = stopLimitOrderBuyQueue.get(0);
-            if (firsBuytOrder.isSatisfied(lastTradePrice))
-                return firsBuytOrder;           
-        }
-        if (stopLimitOrderSellQueue.size() != 0) {
-            StopLimitOrder firsSelltOrder = stopLimitOrderSellQueue.get(0);
-            if (firsSelltOrder.isSatisfied(lastTradePrice))
-                return firsSelltOrder;           
+        StopLimitOrder sloOrder = findSatisfiedStopLimitOrder(stopLimitOrderBuyQueue, lastTradePrice);
+        if (sloOrder != null)
+            return sloOrder;
+
+        sloOrder = findSatisfiedStopLimitOrder(stopLimitOrderSellQueue, lastTradePrice);
+        return sloOrder;
+    }
+
+    private StopLimitOrder findSatisfiedStopLimitOrder(List<StopLimitOrder> queue, int lastTradePrice) {
+        if (queue.size() == 0) 
+            return null;
+
+        StopLimitOrder sloOrder = queue.getFirst();
+        if (sloOrder.isSatisfied(lastTradePrice)) {
+            sloOrder.delete();
+            queue.remove(sloOrder);
+            return sloOrder;
         }
         return null;
     }

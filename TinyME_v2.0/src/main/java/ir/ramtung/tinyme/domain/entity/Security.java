@@ -1,5 +1,7 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
+import ir.ramtung.tinyme.domain.exception.NotFoundException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.domain.exception.NotEnoughPositionException;
 import ir.ramtung.tinyme.domain.service.Matcher;
@@ -7,6 +9,7 @@ import ir.ramtung.tinyme.messaging.Message;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,27 +27,37 @@ public class Security {
 
     public List<MatchResult> addNewOrder(Order newOrder, Matcher matcher) {
         try {
+            List<MatchResult> results = new ArrayList<>();
             checkPositionForNewOrder(newOrder);
-            if (newOrder instanceof StopLimitOrder newStopLimitOrder)
-                return List.of(addNewStopLimitOrder(newStopLimitOrder, matcher));
-            MatchResult newOrderResult = matcher.execute(newOrder);
-            updateLastTradePrice(newOrderResult.trades());
-            List<MatchResult> results = executeStopLimitOrders(newOrderResult, matcher);
+
+            if (newOrder instanceof StopLimitOrder newStopLimitOrder) {
+                addNewStopLimitOrder(newStopLimitOrder);
+                results.addFirst(MatchResult.executed(newOrder, List.of()));
+            }
+            else {
+                MatchResult newOrderMatchResult = matcher.execute(newOrder);
+                updateLastTradePrice(newOrderMatchResult.trades());
+                results.addFirst(newOrderMatchResult);
+            }
+
+            results.addAll(executeStopLimitOrders(matcher));
             return results;
         }
         catch (NotEnoughPositionException exp) {
             return List.of(MatchResult.notEnoughPositions());
         }
+        catch (NotEnoughCreditException exp) {
+            return List.of(MatchResult.notEnoughCredit());
+        }
     }
 
     private void updateLastTradePrice(List<Trade> trades) {
-        if (trades.size() > 0) 
+        if (!trades.isEmpty())
             lastTradePrice = trades.getLast().getPrice();
     }
 
-    private MatchResult addNewStopLimitOrder(StopLimitOrder newOrder, Matcher matcher) {
+    private void addNewStopLimitOrder(StopLimitOrder newOrder) {
         orderBook.enqueueStopLimitOrder(newOrder);
-        return MatchResult.executed(null, List.of());
     }
 
     private void checkPositionForNewOrder(Order newOrder) {
@@ -61,6 +74,36 @@ public class Security {
 
     public void deleteOrder(Side side, long orderId) {
         orderBook.removeByOrderId(side, orderId);
+    }
+
+    // DUP
+    public List<MatchResult> updateSloOrder(StopLimitOrder tempOrder, Matcher matcher) {
+        try {
+            StopLimitOrder mainOrder = (StopLimitOrder) findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
+            checkPositionForUpdateOrder(mainOrder, tempOrder);
+            StopLimitOrder originalOrder = mainOrder.snapshot();
+            orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
+            mainOrder.updateFromTempSloOrder(tempOrder);
+            return reAddUpdatedSloOrder(mainOrder, originalOrder, matcher);
+
+        }
+        catch (NotEnoughPositionException exp) {
+            return List.of(MatchResult.notEnoughPositions());
+        }
+    }
+    // DUP
+    private List<MatchResult> reAddUpdatedSloOrder(StopLimitOrder updatedOrder, StopLimitOrder originalOrder, Matcher matcher) {
+        try {
+            List<MatchResult> results = new LinkedList<>();
+            results.add(MatchResult.executed(updatedOrder, List.of()));
+            addNewStopLimitOrder(updatedOrder);
+            results.addAll(executeStopLimitOrders(matcher));
+            return results;
+        }
+        catch (NotEnoughCreditException exp) {
+            addNewStopLimitOrder(originalOrder);
+            return List.of(MatchResult.notEnoughCredit());
+        }
     }
 
     public List<MatchResult> updateOrder(Order tempOrder, Matcher matcher) {
@@ -84,13 +127,14 @@ public class Security {
         }
     }
 
-    private List<MatchResult> reAddUpdatedOrder(Order updatOrder, Order originalOrder, Matcher matcher) {
-        MatchResult updatedOrderResult = matcher.execute(updatOrder);
+    private List<MatchResult> reAddUpdatedOrder(Order updatedOrder, Order originalOrder, Matcher matcher) {
+        MatchResult updatedOrderResult = matcher.execute(updatedOrder);
         if (updatedOrderResult.outcome() != MatchingOutcome.EXECUTED) {
             orderBook.enqueue(originalOrder);
         }
         updateLastTradePrice(updatedOrderResult.trades());
-        List<MatchResult> results = executeStopLimitOrders(updatedOrderResult, matcher);
+        List<MatchResult> results = executeStopLimitOrders(matcher);
+        results.addFirst(updatedOrderResult);
         return results;
         // TODO
         // this is just painkiller, it should be treated properly
@@ -119,20 +163,31 @@ public class Security {
         return errors;
     }
 
-    private List<MatchResult> executeStopLimitOrders(MatchResult newOrderMatchResult, Matcher matcher) {
-        List<MatchResult> results = List.of(newOrderMatchResult);
+    private List<MatchResult> executeStopLimitOrders(Matcher matcher) {
+        List<MatchResult> results = new LinkedList<>();
         StopLimitOrder sloOrder;
         while((sloOrder = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
-            results.add(matcher.execute(sloOrder));
+            Order activedOrder = new Order(sloOrder);
+            MatchResult result = matcher.execute(activedOrder);
+            updateLastTradePrice(result.trades());
+            results.add(result);
         }
         return results;
     }
 
+    // DUP
     public Order findByOrderId(Side side, long orderId) {
-        return orderBook.findByOrderId(side, orderId);
+        try {
+            return orderBook.findByOrderId(side, orderId);
+        }
+        catch (NotFoundException exp) {
+            return orderBook.findBySloOrderId(side, orderId);
+        }
+
     }
 
+    // DUP
     public boolean isThereOrderWithId(Side side, long orderId) {
-        return orderBook.isThereOrderWithId(side, orderId);
+        return (orderBook.isThereOrderWithId(side, orderId) || orderBook.isThereSloOrderWithId(side, orderId));
     }
 }

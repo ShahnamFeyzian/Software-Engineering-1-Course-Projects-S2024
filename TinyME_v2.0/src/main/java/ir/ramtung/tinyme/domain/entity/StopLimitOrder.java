@@ -1,8 +1,11 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+
+import java.time.LocalDateTime;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -15,10 +18,19 @@ public class StopLimitOrder extends Order {
         this.stopPrice = stopPrice;
     }
 
+    public StopLimitOrder(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, LocalDateTime entryTime, int stopPrice, OrderStatus status) {
+        super(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime, status);
+        this.stopPrice = stopPrice;
+    }
+    @Override
+    public StopLimitOrder snapshot() {
+        return new StopLimitOrder(orderId, security, side, quantity, price, broker, shareholder, entryTime, stopPrice, OrderStatus.SNAPSHOT);
+    }
+
+
+
     @Override 
     public boolean queuesBefore(Order order) {
-        // TODO
-        // check its correctness
         StopLimitOrder sloOrder = (StopLimitOrder) order;
         if (this.side == Side.BUY)
             return stopPrice < sloOrder.getStopPrice();
@@ -26,12 +38,32 @@ public class StopLimitOrder extends Order {
             return stopPrice > sloOrder.getStopPrice();
     }
 
+    @Override
+    public void checkNewStopLimitPrice(int stopLimitPrice) {
+        if(stopLimitPrice == 0)
+            throw new InvalidStopLimitPriceException();
+    }
+
     public boolean isSatisfied(int lastTradePrice) {
-        if (side == Side.BUY && price <= lastTradePrice)
+        if (side == Side.BUY && stopPrice <= lastTradePrice)
             return true;
-        else if (side == Side.SELL && price >= lastTradePrice)
+        else if (side == Side.SELL && stopPrice >= lastTradePrice)
             return true;
         
         return false;
+    }
+
+    @Override 
+    public void queue() {
+        if (side == Side.BUY)
+            broker.decreaseCreditBy(this.getValue());
+    }
+
+
+    // DUP
+    public void updateFromTempSloOrder(StopLimitOrder tempOrder) {
+        this.stopPrice = tempOrder.stopPrice;
+        this.quantity = tempOrder.quantity;
+        this.price = tempOrder.price;
     }
 }

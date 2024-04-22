@@ -4,6 +4,7 @@ import ir.ramtung.tinyme.domain.exception.CantQueueOrderException;
 import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
+import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -54,6 +55,10 @@ public class Order {
 
     public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder) {
         this(orderId, security, side, quantity, 0, price, broker, shareholder);
+    }
+
+    public Order(Order other) {
+        this(other.orderId, other.security, other.side, other.quantity, 0, other.price, other.broker, other.shareholder, LocalDateTime.now(), OrderStatus.NEW);
     }
 
     public Order snapshot() {
@@ -140,6 +145,11 @@ public class Order {
     public void checkNewMinimumExecutionQuantity(int minimumExecutionQuantity) {
         if (this.minimumExecutionQuantity != minimumExecutionQuantity)
             throw new UpdateMinimumExecutionQuantityException();
+    }
+
+    public void checkNewStopLimitPrice(int stopLimitPrice) {
+        if(stopLimitPrice != 0)
+            throw new InvalidStopLimitPriceException();
     }
 
     public void checkExecutionQuantity(int quantitySome) {

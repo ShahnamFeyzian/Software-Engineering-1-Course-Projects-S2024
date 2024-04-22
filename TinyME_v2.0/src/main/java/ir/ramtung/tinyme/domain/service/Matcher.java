@@ -46,7 +46,7 @@ public class Matcher {
         List<Trade> trades = new LinkedList<>();
         try {
             trades = match(order);
-            order.checkExecutionQuantity(someOfExecutionQuantity(trades));
+            order.checkExecutionQuantity(sumOfExecutionQuantity(trades));
             order.addYourselfToQueue();
             return MatchResult.executed(order, trades);
         }
@@ -60,10 +60,10 @@ public class Matcher {
         }
     }
 
-    private int someOfExecutionQuantity(List<Trade> trades) {
-        int quantitySome = 0;
+    private int sumOfExecutionQuantity(List<Trade> trades) {
+        int quantitySum = 0;
         for (Trade trade: trades) 
-            quantitySome += trade.getQuantity();
-        return quantitySome;
+            quantitySum += trade.getQuantity();
+        return quantitySum;
     }
 }

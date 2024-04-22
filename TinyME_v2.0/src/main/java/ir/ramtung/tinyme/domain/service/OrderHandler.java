@@ -5,6 +5,7 @@ import ir.ramtung.tinyme.domain.exception.InvalidIcebergPeakSizeException;
 import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
+import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.EventPublisher;
@@ -41,20 +42,22 @@ public class OrderHandler {
     public void handleEnterOrder(EnterOrderRq enterOrderRq) {
         try {
             validateEnterOrderRq(enterOrderRq);
-            MatchResult matchResult = runEnterOrderRq(enterOrderRq);
-            publishEnterOrderMatchResult(matchResult, enterOrderRq);
+            List<MatchResult> matchResults = runEnterOrderRq(enterOrderRq);
+            publishEnterOrderMatchResult(matchResults, enterOrderRq);
         } 
         catch (InvalidRequestException ex) {
             eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), ex.getReasons()));
         }
     }
 
-    private MatchResult runEnterOrderRq(EnterOrderRq enterOrderRq) {
+    private List<MatchResult> runEnterOrderRq(EnterOrderRq enterOrderRq) {
         Order tempOrder = createTempOrderByEnterOrderRq(enterOrderRq);
         if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER)
-            return tempOrder.getSecurity().addNewOrder(tempOrder, matcher).getFirst();
+            return tempOrder.getSecurity().addNewOrder(tempOrder, matcher);
+        else if (enterOrderRq.getStopPrice() != 0)
+            return tempOrder.getSecurity().updateSloOrder((StopLimitOrder) tempOrder, matcher);
         else
-            return tempOrder.getSecurity().updateOrder(tempOrder, matcher).getFirst();
+            return tempOrder.getSecurity().updateOrder(tempOrder, matcher);
     }
 
     private Order createTempOrderByEnterOrderRq(EnterOrderRq enterOrderRq) {
@@ -82,16 +85,26 @@ public class OrderHandler {
             );
     }
 
-    private void publishEnterOrderMatchResult(MatchResult matchResult, EnterOrderRq enterOrderRq) {
-        List<Event> events = createEvents(matchResult, enterOrderRq);
+    private void publishEnterOrderMatchResult(List<MatchResult> matchResults, EnterOrderRq enterOrderRq) {
+        List<Event> events = createEvents(matchResults, enterOrderRq);
         events.forEach(e -> eventPublisher.publish(e));
     }
 
-    private List<Event> createEvents(MatchResult matchResult, EnterOrderRq enterOrderRq) {
+    private List<Event> createEvents(List<MatchResult> matchResults, EnterOrderRq enterOrderRq) {
+        MatchResult matchResult = matchResults.getFirst();
+        List<Event> events = new LinkedList<>();
         if (matchResult.isSuccessful())
-            return createSuccessEvents(matchResult, enterOrderRq);
+            events.addAll(createSuccessEvents(matchResult, enterOrderRq));
         else
-            return createRejectedEvents(matchResult, enterOrderRq);
+            events.addAll(createRejectedEvents(matchResult, enterOrderRq));
+
+        for(int i = 1; i < matchResults.size(); i++) {
+            events.add(new OrderActivatedEvent(matchResults.get(i).remainder().getOrderId()));
+            if((!matchResults.get(i).trades().isEmpty()))
+                events.add(new OrderExecutedEvent(matchResults.get(i).remainder().getOrderId(), matchResults.get(i).trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
+        }
+
+        return events;
     }
 
     private List<Event> createRejectedEvents(MatchResult matchResult, EnterOrderRq enterOrderRq) {
@@ -154,6 +167,7 @@ public class OrderHandler {
             Order order = security.findByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
             order.checkNewPeakSize(updateOrderRq.getPeakSize());
             order.checkNewMinimumExecutionQuantity(updateOrderRq.getMinimumExecutionQuantity());
+            order.checkNewStopLimitPrice(updateOrderRq.getStopPrice());
         }
         catch (NotFoundException exp) {
             throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
@@ -164,8 +178,11 @@ public class OrderHandler {
         catch (InvalidPeakSizeException exp) {
             throw new InvalidRequestException(Message.INVALID_PEAK_SIZE);
         }
-        catch (UpdateMinimumExecutionQuantityException exp){
+        catch (UpdateMinimumExecutionQuantityException exp) {
             throw new InvalidRequestException(Message.CANNOT_UPDATE_MINIMUM_EXECUTION_QUANTITY);
+        }
+        catch (InvalidStopLimitPriceException exp){
+            throw new InvalidRequestException(Message.INVALID_STOP_LIMIT_UPDATE_PRICE);
         }
     }
 
