@@ -113,6 +113,7 @@ public class Order {
     public void queue() {
         if (this.status == OrderStatus.QUEUED)
             throw new CantQueueOrderException();
+
         status = OrderStatus.QUEUED;
     }
 

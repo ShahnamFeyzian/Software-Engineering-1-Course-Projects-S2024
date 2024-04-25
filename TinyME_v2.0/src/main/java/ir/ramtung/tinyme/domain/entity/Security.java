@@ -56,8 +56,9 @@ public class Security {
 		if (!trades.isEmpty()) lastTradePrice = trades.getLast().getPrice();
 	}
 
+	// FIXME: can be called directly, maybe?
 	private void addNewStopLimitOrder(StopLimitOrder newOrder) {
-		orderBook.enqueueStopLimitOrder(newOrder);
+		orderBook.enqueue(newOrder);
 	}
 
 	private void checkPositionForNewOrder(Order newOrder) {
@@ -169,17 +170,12 @@ public class Security {
 		return results;
 	}
 
-	// FIXME: duplication
 	public Order findByOrderId(Side side, long orderId) {
-		try {
-			return orderBook.findByOrderId(side, orderId);
-		} catch (NotFoundException exp) {
-			return orderBook.findBySloOrderId(side, orderId);
-		}
+		return orderBook.findByOrderId(side, orderId);
+
 	}
 
-	// FIXME: duplication
 	public boolean isThereOrderWithId(Side side, long orderId) {
-		return (orderBook.isThereOrderWithId(side, orderId) || orderBook.isThereSloOrderWithId(side, orderId));
+		return (orderBook.isThereOrderWithId(side, orderId));
 	}
 }

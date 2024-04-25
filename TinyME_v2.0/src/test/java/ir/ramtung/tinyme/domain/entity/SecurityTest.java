@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.internal.matchers.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -44,8 +45,8 @@ public class SecurityTest {
         private Integer exceptedLastTradePrice;
         private LinkedList<Order> sellQueue;
         private LinkedList<Order> buyQueue;
-        private LinkedList<StopLimitOrder> sellStopLimitQueue;
-        private LinkedList<StopLimitOrder> buyStopLimitQueue;
+        private LinkedList<Order> sellStopLimitQueue;
+        private LinkedList<Order> buyStopLimitQueue;
 
         private AssertingPack() {
             exceptedSellerCredit = SecurityTest.this.sellerBroker.getCredit();
@@ -80,7 +81,7 @@ public class SecurityTest {
         }
 
         private void assertOrderInStopLimitQueue(Side side, int idx, long orderId, int quantity, int price, int stopPrice) {
-            StopLimitOrder order = (side == Side.BUY) ? buyStopLimitQueue.get(idx) : sellStopLimitQueue.get(idx);
+            StopLimitOrder order = (StopLimitOrder) ((side == Side.BUY) ? buyStopLimitQueue.get(idx) : sellStopLimitQueue.get(idx));
             long actualId = order.getOrderId();
             int actualquantity = order.getTotalQuantity();
             int actualPrice = order.getPrice();

@@ -54,6 +54,7 @@ public class OrderHandler {
         Order tempOrder = createTempOrderByEnterOrderRq(enterOrderRq);
         if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER)
             return tempOrder.getSecurity().addNewOrder(tempOrder, matcher);
+        // FIXME: strange logic
         else if (enterOrderRq.getStopPrice() != 0)
             return tempOrder.getSecurity().updateSloOrder((StopLimitOrder) tempOrder, matcher);
         else
@@ -98,6 +99,7 @@ public class OrderHandler {
         else
             events.addAll(createRejectedEvents(matchResult, enterOrderRq));
 
+        // FIXME: strange logic
         for(int i = 1; i < matchResults.size(); i++) {
             events.add(new OrderActivatedEvent(matchResults.get(i).remainder().getOrderId()));
             if((!matchResults.get(i).trades().isEmpty()))
