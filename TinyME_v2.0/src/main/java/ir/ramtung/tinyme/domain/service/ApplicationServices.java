@@ -8,31 +8,31 @@ import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 
 public class ApplicationServices {
     
-    public List<MatchResult> deleteOrder(DeleteOrderRq req) {
-        return List.of();
+    public ApplicationServiceResponse deleteOrder(DeleteOrderRq req) {
+        return new ApplicationServiceResponse(null, null);
     }
 
-    public List<MatchResult> addLimitOrder(EnterOrderRq req) {
-        return List.of();
+    public ApplicationServiceResponse addLimitOrder(EnterOrderRq req) {
+        return new ApplicationServiceResponse(null, null);
     }
     
-    public List<MatchResult> updateLimitOrder(EnterOrderRq req) {
-        return List.of();
+    public ApplicationServiceResponse updateLimitOrder(EnterOrderRq req) {
+        return new ApplicationServiceResponse(null, null);
     }
     
-    public List<MatchResult> addIcebergOrder(EnterOrderRq req) {
-        return List.of();
+    public ApplicationServiceResponse addIcebergOrder(EnterOrderRq req) {
+        return new ApplicationServiceResponse(null, null);
     }
     
-    public List<MatchResult> updateIcebergOrder(EnterOrderRq req) {
-        return List.of();
+    public ApplicationServiceResponse updateIcebergOrder(EnterOrderRq req) {
+        return new ApplicationServiceResponse(null, null);
     }
 
-    public List<MatchResult> addStopLimitOrder(EnterOrderRq req) {
-        return List.of();
+    public ApplicationServiceResponse addStopLimitOrder(EnterOrderRq req) {
+        return new ApplicationServiceResponse(null, null);
     }
     
-    public List<MatchResult> updateStopLimitOrder(EnterOrderRq req) {
-        return List.of();
+    public ApplicationServiceResponse updateStopLimitOrder(EnterOrderRq req) {
+        return new ApplicationServiceResponse(null, null);
     }
 }
