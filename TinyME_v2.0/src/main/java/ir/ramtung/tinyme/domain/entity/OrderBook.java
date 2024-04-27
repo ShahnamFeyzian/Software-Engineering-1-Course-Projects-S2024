@@ -1,6 +1,5 @@
 package ir.ramtung.tinyme.domain.entity;
 
-import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,10 +22,6 @@ public class OrderBook {
 	}
 
 	public void enqueueStopLimitOrder(StopLimitOrder order) {
-		if (
-			order.getSide() == Side.BUY && !order.getBroker().hasEnoughCredit(order.getValue())
-		) throw new NotEnoughCreditException();
-
 		List<StopLimitOrder> queue = getStopLimitOrderQueue(order.getSide());
 		ListIterator<StopLimitOrder> it = queue.listIterator();
 		while (it.hasNext()) {
@@ -40,10 +35,6 @@ public class OrderBook {
 	}
 
 	public void enqueue(Order order) {
-		if (order.getSide() == Side.BUY && order.getStatus() != OrderStatus.LOADING) order
-			.getBroker()
-			.decreaseCreditBy(order.getValue());
-
 		List<Order> queue = getQueue(order.getSide());
 		ListIterator<Order> it = queue.listIterator();
 		while (it.hasNext()) {

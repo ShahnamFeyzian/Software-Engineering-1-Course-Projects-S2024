@@ -117,8 +117,12 @@ public class Order {
     }
 
     public void queue() {
-        if (this.status == OrderStatus.QUEUED)
+        if (this.status == OrderStatus.QUEUED){
             throw new CantQueueOrderException();
+        }
+        if (side == Side.BUY && status != OrderStatus.LOADING) {
+            broker.decreaseCreditBy(this.getValue());
+        }
         status = OrderStatus.QUEUED;
     }
 

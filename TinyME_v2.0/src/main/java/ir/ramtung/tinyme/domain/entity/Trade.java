@@ -1,6 +1,5 @@
 package ir.ramtung.tinyme.domain.entity;
 
-import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -103,14 +102,9 @@ public class Trade {
         sell.getShareholder().decPosition(security, quantity);
     }
 
-    private boolean buyerHasEnoughCredit() {
-        return buy.getBroker().hasEnoughCredit(getTradedValue());
-    }
 
     public void confirm() {
         if (!isBuyQueued) {
-            if (!buyerHasEnoughCredit()) 
-                throw new NotEnoughCreditException();
             decreaseBuyersCredit();
         }
         increaseSellersCredit();

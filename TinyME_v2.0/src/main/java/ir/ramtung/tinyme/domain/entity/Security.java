@@ -81,7 +81,7 @@ public class Security {
 			checkPositionForUpdateOrder(mainOrder, tempOrder);
 			StopLimitOrder originalOrder = mainOrder.snapshot();
 			orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
-			mainOrder.updateFromTempSloOrder(tempOrder);
+			mainOrder.updateFromTempOrder(tempOrder);
 			return reAddUpdatedSloOrder(mainOrder, originalOrder, matcher);
 		} catch (NotEnoughPositionException exp) {
 			return List.of(MatchResult.notEnoughPositions());

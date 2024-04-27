@@ -66,6 +66,14 @@ public class StopLimitOrder extends Order {
 		);
 	}
 
+	public boolean isSatisfied(int lastTradePrice) {
+		if (side == Side.BUY && stopPrice <= lastTradePrice) return true; else if (
+			side == Side.SELL && stopPrice >= lastTradePrice
+		) return true;
+
+		return false;
+	}
+
 	@Override
 	public boolean queuesBefore(Order order) {
 		StopLimitOrder sloOrder = (StopLimitOrder) order;
@@ -79,23 +87,16 @@ public class StopLimitOrder extends Order {
 		if (stopLimitPrice == 0) throw new InvalidStopLimitPriceException();
 	}
 
-	public boolean isSatisfied(int lastTradePrice) {
-		if (side == Side.BUY && stopPrice <= lastTradePrice) return true; else if (
-			side == Side.SELL && stopPrice >= lastTradePrice
-		) return true;
-
-		return false;
-	}
-
 	@Override
-	public void queue() {
+	public void queue() { //TODO: should be removed, its parent should handle it
 		if (side == Side.BUY) broker.decreaseCreditBy(this.getValue());
 	}
 
-	// FIXME: duplication
-	public void updateFromTempSloOrder(StopLimitOrder tempOrder) {
-		this.stopPrice = tempOrder.stopPrice;
-		this.quantity = tempOrder.quantity;
-		this.price = tempOrder.price;
+	@Override
+	public void updateFromTempOrder(Order tempOrder) {
+		StopLimitOrder tempSlo = (StopLimitOrder) tempOrder;
+		this.stopPrice = tempSlo.stopPrice;
+		this.quantity = tempSlo.quantity;
+		this.price = tempSlo.price;
 	}
 }
