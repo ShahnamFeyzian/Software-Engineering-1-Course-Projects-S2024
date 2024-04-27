@@ -11,6 +11,7 @@ import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.EventPublisher;
 import ir.ramtung.tinyme.messaging.TradeDTO;
 import ir.ramtung.tinyme.messaging.event.*;
+import ir.ramtung.tinyme.messaging.request.BaseOrderRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.messaging.request.OrderEntryType;
@@ -30,23 +31,79 @@ public class OrderHandler {
     ShareholderRepository shareholderRepository;
     EventPublisher eventPublisher;
     Matcher matcher;
+    ApplicationServices services;
 
-    public OrderHandler(SecurityRepository securityRepository, BrokerRepository brokerRepository, ShareholderRepository shareholderRepository, EventPublisher eventPublisher, Matcher matcher) {
+    public OrderHandler(ApplicationServices services, SecurityRepository securityRepository, BrokerRepository brokerRepository, ShareholderRepository shareholderRepository, EventPublisher eventPublisher, Matcher matcher) {
         this.securityRepository = securityRepository;
         this.brokerRepository = brokerRepository;
         this.shareholderRepository = shareholderRepository;
         this.eventPublisher = eventPublisher;
         this.matcher = matcher;
+        this.services = services;
     }
 
     public void handleEnterOrder(EnterOrderRq enterOrderRq) {
         try {
-            validateEnterOrderRq(enterOrderRq);
-            List<MatchResult> matchResults = runEnterOrderRq(enterOrderRq);
-            publishEnterOrderMatchResult(matchResults, enterOrderRq);
+            ApplicationServiceResponse response = callService(enterOrderRq);
+            publishApplicationServiceResponse(response, enterOrderRq);
         } 
         catch (InvalidRequestException ex) {
             eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), ex.getReasons()));
+        }
+    }
+
+    public void handleDeleteOrder(DeleteOrderRq deleteOrderRq) {
+        try {
+            ApplicationServiceResponse response = callService(deleteOrderRq);
+            publishApplicationServiceResponse(response, deleteOrderRq);
+        } 
+        catch (InvalidRequestException ex) {
+            eventPublisher.publish(new OrderRejectedEvent(deleteOrderRq.getRequestId(), deleteOrderRq.getOrderId(), ex.getReasons()));
+        }
+    }
+
+    private ApplicationServiceResponse callService(BaseOrderRq req) {
+        if(req instanceof DeleteOrderRq deleteReq) {
+            return callDeleteServices(deleteReq);
+        }
+        
+        if(req instanceof EnterOrderRq enterReq) {
+            OrderEntryType type = enterReq.getRequestType();
+            if (type == OrderEntryType.NEW_ORDER) {
+                return callAddServices(enterReq);
+            }
+            else if (type == OrderEntryType.UPDATE_ORDER) {
+                return callUpdateServices(enterReq);
+            }
+        }
+        throw new InvalidRequestException(Message.UNKNOWN_REQUEST_TYPE);
+    }
+
+    private ApplicationServiceResponse callDeleteServices(DeleteOrderRq req) {
+        return services.deleteOrder(req);
+    }
+
+    private ApplicationServiceResponse callAddServices(EnterOrderRq req) {
+        if (req.getStopPrice() != 0) {
+            return services.addStopLimitOrder(req);
+        }
+        else if (req.getPeakSize() != 0) {
+            return services.addIcebergOrder(req);
+        }
+        else {
+            return services.addLimitOrder(req);
+        }
+    }
+
+    private ApplicationServiceResponse callUpdateServices(EnterOrderRq req) {
+        if (req.getStopPrice() != 0) {
+            return services.updateStopLimitOrder(req);
+        }
+        else if (req.getPeakSize() != 0) {
+            return services.updateIcebergOrder(req);
+        }
+        else {
+            return services.updateLimitOrder(req);
         }
     }
 
@@ -85,9 +142,8 @@ public class OrderHandler {
             );
     }
 
-    private void publishEnterOrderMatchResult(List<MatchResult> matchResults, EnterOrderRq enterOrderRq) {
-        List<Event> events = createEvents(matchResults, enterOrderRq);
-        events.forEach(e -> eventPublisher.publish(e));
+    private void publishApplicationServiceResponse(ApplicationServiceResponse response, BaseOrderRq enterOrderRq) {
+        
     }
 
     private List<Event> createEvents(List<MatchResult> matchResults, EnterOrderRq enterOrderRq) {
@@ -127,17 +183,6 @@ public class OrderHandler {
         if (!matchResult.trades().isEmpty()) 
             events.add(new OrderExecutedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
         return events;
-    }
-
-    public void handleDeleteOrder(DeleteOrderRq deleteOrderRq) {
-        try {
-            validateDeleteOrderRq(deleteOrderRq);
-            Security security = securityRepository.findSecurityByIsin(deleteOrderRq.getSecurityIsin());
-            security.deleteOrder(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
-            eventPublisher.publish(new OrderDeletedEvent(deleteOrderRq.getRequestId(), deleteOrderRq.getOrderId()));
-        } catch (InvalidRequestException ex) {
-            eventPublisher.publish(new OrderRejectedEvent(deleteOrderRq.getRequestId(), deleteOrderRq.getOrderId(), ex.getReasons()));
-        }
     }
 
     private void validateEnterOrderRq(EnterOrderRq enterOrderRq) {

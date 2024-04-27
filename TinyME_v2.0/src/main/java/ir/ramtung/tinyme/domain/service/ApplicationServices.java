@@ -2,10 +2,13 @@ package ir.ramtung.tinyme.domain.service;
 
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import ir.ramtung.tinyme.domain.entity.MatchResult;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 
+@Service
 public class ApplicationServices {
     
     public ApplicationServiceResponse deleteOrder(DeleteOrderRq req) {
