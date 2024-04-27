@@ -57,7 +57,7 @@ public class Security {
 	}
 
 	private void addNewStopLimitOrder(StopLimitOrder newOrder) {
-		orderBook.enqueueStopLimitOrder(newOrder);
+		orderBook.enqueue(newOrder);
 	}
 
 	private void checkPositionForNewOrder(Order newOrder) {
@@ -174,12 +174,12 @@ public class Security {
 		try {
 			return orderBook.findByOrderId(side, orderId);
 		} catch (NotFoundException exp) {
-			return orderBook.findBySloOrderId(side, orderId);
+			return orderBook.findByOrderId(side, orderId);
 		}
 	}
 
 	// FIXME: duplication
 	public boolean isThereOrderWithId(Side side, long orderId) {
-		return (orderBook.isThereOrderWithId(side, orderId) || orderBook.isThereSloOrderWithId(side, orderId));
+		return orderBook.isThereOrderWithId(side, orderId);
 	}
 }

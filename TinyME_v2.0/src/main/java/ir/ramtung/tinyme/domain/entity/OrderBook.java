@@ -11,8 +11,8 @@ public class OrderBook {
 
 	private final LinkedList<Order> buyQueue;
 	private final LinkedList<Order> sellQueue;
-	private final LinkedList<StopLimitOrder> stopLimitOrderSellQueue;
-	private final LinkedList<StopLimitOrder> stopLimitOrderBuyQueue;
+	private final LinkedList<Order> stopLimitOrderSellQueue;
+	private final LinkedList<Order> stopLimitOrderBuyQueue;
 
 	public OrderBook() {
 		buyQueue = new LinkedList<>();
@@ -21,21 +21,8 @@ public class OrderBook {
 		stopLimitOrderBuyQueue = new LinkedList<>();
 	}
 
-	public void enqueueStopLimitOrder(StopLimitOrder order) {
-		List<StopLimitOrder> queue = getStopLimitOrderQueue(order.getSide());
-		ListIterator<StopLimitOrder> it = queue.listIterator();
-		while (it.hasNext()) {
-			if (order.queuesBefore(it.next())) {
-				it.previous();
-				break;
-			}
-		}
-		order.queue();
-		it.add(order);
-	}
-
 	public void enqueue(Order order) {
-		List<Order> queue = getQueue(order.getSide());
+		List<Order> queue = getQueue(order);
 		ListIterator<Order> it = queue.listIterator();
 		while (it.hasNext()) {
 			if (order.queuesBefore(it.next())) {
@@ -47,39 +34,36 @@ public class OrderBook {
 		it.add(order);
 	}
 
-	private LinkedList<StopLimitOrder> getStopLimitOrderQueue(Side side) {
-		return (side == Side.BUY) ? stopLimitOrderBuyQueue : stopLimitOrderSellQueue;
-	}
-
 	private LinkedList<Order> getQueue(Side side) {
 		return side == Side.BUY ? buyQueue : sellQueue;
 	}
 
-	// FIXME: duplication
-	public StopLimitOrder findBySloOrderId(Side side, long orderId) {
-		var queue = getStopLimitOrderQueue(side);
-		for (StopLimitOrder order : queue) {
-			if (order.getOrderId() == orderId) return order;
+	private List<Order> getQueue(Order order) {
+		if (order instanceof StopLimitOrder) {
+			return (order.getSide() == Side.BUY) ? stopLimitOrderBuyQueue : stopLimitOrderSellQueue;
 		}
-		throw new NotFoundException();
+		else {
+			return (order.getSide() == Side.BUY) ? buyQueue : sellQueue;
+		}
 	}
 
 	public Order findByOrderId(Side side, long orderId) {
-		var queue = getQueue(side);
-		for (Order order : queue) {
-			if (order.getOrderId() == orderId) return order;
-		}
+		List<Order> queue = (side == Side.BUY) ? buyQueue : sellQueue;
+		Order order = searchForOrderInQueue(side, orderId, queue);
+		if (order != null) return order;
+
+		queue = (side == Side.BUY) ? stopLimitOrderBuyQueue : stopLimitOrderSellQueue;
+		order = searchForOrderInQueue(side, orderId, queue);
+		if (order != null) return order;
+
 		throw new NotFoundException();
 	}
 
-	// FIXME: duplication
-	public boolean isThereSloOrderWithId(Side side, long orderId) {
-		try {
-			findBySloOrderId(side, orderId);
-			return true;
-		} catch (NotFoundException exp) {
-			return false;
+	private Order searchForOrderInQueue(Side side, long orderId, List<Order> queue) {
+		for (Order order : queue) {
+			if (order.getOrderId() == orderId) return order;
 		}
+		return null;
 	}
 
 	public boolean isThereOrderWithId(Side side, long orderId) {
@@ -91,24 +75,11 @@ public class OrderBook {
 		}
 	}
 
-	// FIXME: duplication
-	public void removeBySloOrderId(Side side, long orderId) {
-		LinkedList<StopLimitOrder> queue = getStopLimitOrderQueue(side);
-		StopLimitOrder targetOrder = findBySloOrderId(side, orderId);
+	public void removeByOrderId(Side side, long orderId) {
+		Order targetOrder = findByOrderId(side, orderId);
+		List<Order> queue = getQueue(targetOrder);
 		targetOrder.delete();
 		queue.remove(targetOrder);
-	}
-
-	// FIXME: duplication
-	public void removeByOrderId(Side side, long orderId) {
-		if (isThereOrderWithId(side, orderId)) {
-			LinkedList<Order> queue = getQueue(side);
-			Order targetOrder = findByOrderId(side, orderId);
-			targetOrder.delete();
-			queue.remove(targetOrder);
-		} else {
-			removeBySloOrderId(side, orderId);
-		}
 	}
 
 	public Order findOrderToMatchWith(Order newOrder) {
@@ -158,10 +129,10 @@ public class OrderBook {
 		return sloOrder;
 	}
 
-	private StopLimitOrder findSatisfiedStopLimitOrder(List<StopLimitOrder> queue, int lastTradePrice) {
+	private StopLimitOrder findSatisfiedStopLimitOrder(List<Order> queue, int lastTradePrice) {
 		if (queue.size() == 0) return null;
 
-		StopLimitOrder sloOrder = queue.getFirst();
+		StopLimitOrder sloOrder = (StopLimitOrder) queue.getFirst();
 		if (sloOrder.isSatisfied(lastTradePrice)) {
 			sloOrder.delete();
 			queue.remove(sloOrder);
