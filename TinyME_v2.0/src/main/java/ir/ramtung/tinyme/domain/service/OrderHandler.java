@@ -92,18 +92,20 @@ public class OrderHandler {
         }
     }
 
-    private void publishApplicationServiceResponse(ApplicationServiceResponse response, BaseOrderRq enterOrderRq) {
-        
+    private void publishApplicationServiceResponse(ApplicationServiceResponse response, BaseOrderRq orderRq) {
+        List<Event> events = createEvents(response, orderRq);
+        events.forEach(event -> eventPublisher.publish(event));
     }
 
-    private List<Event> createEvents(List<MatchResult> matchResults, EnterOrderRq enterOrderRq) {
-        MatchResult matchResult = matchResults.getFirst();
+    private List<Event> createEvents(ApplicationServiceResponse response, BaseOrderRq orderRq) {
+        MatchResult matchResult = response.getMatchResults().getFirst();
         List<Event> events = new LinkedList<>();
         if (matchResult.isSuccessful())
-            events.addAll(createSuccessEvents(matchResult, enterOrderRq));
+            events.addAll(createSuccessEvents(response, orderRq));
         else
-            events.addAll(createRejectedEvents(matchResult, enterOrderRq));
+            events.addAll(createRejectedEvents(response, orderRq));
 
+        List<MatchResult> matchResults = response.getMatchResults();
         for(int i = 1; i < matchResults.size(); i++) {
             events.add(new OrderActivatedEvent(matchResults.get(i).remainder().getOrderId()));
             if((!matchResults.get(i).trades().isEmpty()))
@@ -113,25 +115,28 @@ public class OrderHandler {
         return events;
     }
 
-    private List<Event> createRejectedEvents(MatchResult matchResult, EnterOrderRq enterOrderRq) {
+    private List<Event> createRejectedEvents(ApplicationServiceResponse response, BaseOrderRq orderRq) {
         List<Event> events = new LinkedList<>();
+        MatchResult matchResult = response.getMatchResults().getFirst();
         if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_CREDIT) 
-            events.add(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.BUYER_HAS_NOT_ENOUGH_CREDIT)));
+            events.add(new OrderRejectedEvent(orderRq.getRequestId(), orderRq.getOrderId(), List.of(Message.BUYER_HAS_NOT_ENOUGH_CREDIT)));
         else if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_POSITIONS) 
-            events.add(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.SELLER_HAS_NOT_ENOUGH_POSITIONS)));
+            events.add(new OrderRejectedEvent(orderRq.getRequestId(), orderRq.getOrderId(), List.of(Message.SELLER_HAS_NOT_ENOUGH_POSITIONS)));
         else if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_EXECUTION)
-            events.add(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.MINIMUM_EXECUTION_QUANTITY_NOT_MET)));
+            events.add(new OrderRejectedEvent(orderRq.getRequestId(), orderRq.getOrderId(), List.of(Message.MINIMUM_EXECUTION_QUANTITY_NOT_MET)));
         return events;
     }
 
-    private List<Event> createSuccessEvents(MatchResult matchResult, EnterOrderRq enterOrderRq) {
+    private List<Event> createSuccessEvents(ApplicationServiceResponse response, BaseOrderRq orderRq) {
         List<Event> events = new LinkedList<>();
-        if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER)
-            events.add(new OrderAcceptedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
+        if (response.isTypeAdd())
+            events.add(new OrderAcceptedEvent(orderRq.getRequestId(), orderRq.getOrderId()));
         else
-            events.add(new OrderUpdatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
+            events.add(new OrderUpdatedEvent(orderRq.getRequestId(), orderRq.getOrderId()));
+        
+        MatchResult matchResult = response.getMatchResults().getFirst(); 
         if (!matchResult.trades().isEmpty()) 
-            events.add(new OrderExecutedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
+            events.add(new OrderExecutedEvent(orderRq.getRequestId(), orderRq.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
         return events;
     }
 }
