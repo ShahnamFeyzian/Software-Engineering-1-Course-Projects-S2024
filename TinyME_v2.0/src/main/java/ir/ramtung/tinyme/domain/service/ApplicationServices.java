@@ -24,13 +24,21 @@ public class ApplicationServices {
     private SecurityRepository securityRepository;
     private BrokerRepository brokerRepository;
     private ShareholderRepository shareholderRepository;
+    private Matcher matcher;
     private Security security;
     private Broker broker;
     private Shareholder shareholder;
-    private Matcher matcher;
+
+    public ApplicationServices(SecurityRepository securityRepository, BrokerRepository brokerRepository, ShareholderRepository shareholderRepository, Matcher matcher) {
+        this.brokerRepository = brokerRepository;
+        this.shareholderRepository = shareholderRepository;
+        this.securityRepository = securityRepository;
+        this.matcher = matcher;
+    }
 
     public ApplicationServiceResponse deleteOrder(DeleteOrderRq req) {
         validateDeleteOrderRq(req);
+        setEntitiesByEnterOrderRq(req); 
         security.deleteOrder(req.getSide(), req.getOrderId());
         return new ApplicationServiceResponse(ApplicationServiceType.DELETE_ORDER, null);
     }
@@ -90,6 +98,10 @@ public class ApplicationServices {
         this.security = securityRepository.findSecurityByIsin(req.getSecurityIsin());
         this.broker = brokerRepository.findBrokerById(req.getBrokerId());
         this.shareholder = shareholderRepository.findShareholderById(req.getShareholderId());
+    }
+
+    private void setEntitiesByEnterOrderRq(DeleteOrderRq req) {
+        this.security = securityRepository.findSecurityByIsin(req.getSecurityIsin());
     }
 
     private void validateDeleteOrderRq(DeleteOrderRq deleteOrderRq) {

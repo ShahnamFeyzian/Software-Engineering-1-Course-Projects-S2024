@@ -93,6 +93,10 @@ public class OrderHandler {
     }
 
     private void publishApplicationServiceResponse(ApplicationServiceResponse response, BaseOrderRq orderRq) {
+        if (response.isTypeDelete()) {
+            eventPublisher.publish(new OrderDeletedEvent(orderRq.getRequestId(), orderRq.getOrderId()));
+            return;
+        }
         List<Event> events = createEvents(response, orderRq);
         events.forEach(event -> eventPublisher.publish(event));
     }
