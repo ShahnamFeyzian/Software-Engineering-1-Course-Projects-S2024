@@ -680,105 +680,105 @@ public class SecurityTest {
         public MatchResult decrease_price_stop_limit_sell_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 350, sellerBroker, sellerShareholder, 500);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult increase_price_stop_limit_sell_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 450, sellerBroker, sellerShareholder, 500);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult decrease_quantity_stop_limit_sell_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 10, 400, sellerBroker, sellerShareholder, 500);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult increase_quantity_stop_limit_sell_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 20, 400, sellerBroker, sellerShareholder, 500);
             sellerShareholder.incPosition(security, 5);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult increase_quantity_stop_limit_sell_order_and_not_enough_position() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 20, 400, sellerBroker, sellerShareholder, 500);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult decrease_stop_price_stop_limit_sell_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 350);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult increase_stop_price_stop_limit_sell_order_and_not_activated() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 525);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public List<MatchResult> increase_stop_price_stop_limit_sell_order_and_activated() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 15, 400, sellerBroker, sellerShareholder, 555);
-            return security.updateSloOrder(order, matcher);
+            return security.updateOrder(order, matcher);
         }
         public MatchResult decrease_price_stop_limit_buy_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 15, 600, buyerBroker, buyerShareholder, 600);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult increase_price_stop_limit_buy_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 15, 750, buyerBroker, buyerShareholder, 600);
             buyerBroker.increaseCreditBy(750);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         
         }
         public MatchResult increase_price_stop_limit_buy_order_and_not_enough_credit() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 15, 750, buyerBroker, buyerShareholder, 600);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult decrease_quantity_stop_limit_buy_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 700, buyerBroker, buyerShareholder, 600);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult increase_quantity_stop_limit_buy_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 20, 700, buyerBroker, buyerShareholder, 600);
             buyerBroker.increaseCreditBy(3500);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult increase_quantity_stop_limit_buy_order_and_not_enough_credit() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 20, 700, buyerBroker, buyerShareholder, 600);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public MatchResult decrease_stop_price_stop_limit_buy_order_and_not_activated() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(7, security, Side.BUY, 15, 800, buyerBroker, buyerShareholder, 575);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
 
         public List<MatchResult> decrease_stop_price_stop_limit_buy_order_and_activated() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 15, 700, buyerBroker, buyerShareholder, 500);
-            return security.updateSloOrder(order, matcher);
+            return security.updateOrder(order, matcher);
         }
 
         public MatchResult increase_stop_price_stop_limit_buy_order() {
             this.add_three_stop_limit_order_both_buy_and_sell();
             StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 15, 700, buyerBroker, buyerShareholder, 750);
-            return security.updateSloOrder(order, matcher).getFirst();
+            return security.updateOrder(order, matcher).getFirst();
         }
         
         public void delete_stop_limit_sell_order() {

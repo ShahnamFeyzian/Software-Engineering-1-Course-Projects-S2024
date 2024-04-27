@@ -90,7 +90,7 @@ public class ApplicationServices {
         validateUpdateOrderRq(req);
         setEntitiesByEnterOrderRq(req);
         StopLimitOrder tempOrder = StopLimitOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
-        List<MatchResult> results = security.updateSloOrder(tempOrder, matcher);
+        List<MatchResult> results = security.updateOrder(tempOrder, matcher);
         return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_STOP_LIMIT_ORDER, results, req);
     }
 

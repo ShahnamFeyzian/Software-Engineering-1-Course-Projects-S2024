@@ -2,7 +2,6 @@ package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughPositionException;
-import ir.ramtung.tinyme.domain.exception.NotFoundException;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
@@ -74,38 +73,6 @@ public class Security {
 		orderBook.removeByOrderId(side, orderId);
 	}
 
-	// FIXME: duplication
-	public List<MatchResult> updateSloOrder(StopLimitOrder tempOrder, Matcher matcher) {
-		try {
-			StopLimitOrder mainOrder = (StopLimitOrder) findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
-			checkPositionForUpdateOrder(mainOrder, tempOrder);
-			StopLimitOrder originalOrder = mainOrder.snapshot();
-			orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
-			mainOrder.updateFromTempOrder(tempOrder);
-			return reAddUpdatedSloOrder(mainOrder, originalOrder, matcher);
-		} catch (NotEnoughPositionException exp) {
-			return List.of(MatchResult.notEnoughPositions());
-		}
-	}
-
-	// FIXME: duplication
-	private List<MatchResult> reAddUpdatedSloOrder(
-		StopLimitOrder updatedOrder,
-		StopLimitOrder originalOrder,
-		Matcher matcher
-	) {
-		try {
-			List<MatchResult> results = new LinkedList<>();
-			results.add(MatchResult.executed(updatedOrder, List.of()));
-			addNewStopLimitOrder(updatedOrder);
-			results.addAll(executeStopLimitOrders(matcher));
-			return results;
-		} catch (NotEnoughCreditException exp) {
-			addNewStopLimitOrder(originalOrder);
-			return List.of(MatchResult.notEnoughCredit());
-		}
-	}
-
 	public List<MatchResult> updateOrder(Order tempOrder, Matcher matcher) {
 		try {
 			Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
@@ -116,16 +83,28 @@ public class Security {
 				orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
 				mainOrder.updateFromTempOrder(tempOrder);
 				return reAddUpdatedOrder(mainOrder, originalOrder, matcher);
-			} else {
+			} 
+			else {
 				mainOrder.updateFromTempOrder(tempOrder);
 				return List.of(MatchResult.executed(null, List.of()));
 			}
-		} catch (NotEnoughPositionException exp) {
+		} 
+		catch (NotEnoughPositionException exp) {
 			return List.of(MatchResult.notEnoughPositions());
 		}
 	}
 
 	private List<MatchResult> reAddUpdatedOrder(Order updatedOrder, Order originalOrder, Matcher matcher) {
+		if (updatedOrder instanceof StopLimitOrder updatedSlo) {
+			StopLimitOrder originalSlo = (StopLimitOrder) originalOrder;
+			return reAddUpdatedSlo(updatedSlo, originalSlo, matcher);
+		}
+		else {
+			return reAddActiveOrder(updatedOrder, originalOrder, matcher);
+		}
+	}
+
+	private List<MatchResult> reAddActiveOrder(Order updatedOrder, Order originalOrder, Matcher matcher) {
 		MatchResult updatedOrderResult = matcher.execute(updatedOrder);
 		if (updatedOrderResult.outcome() != MatchingOutcome.EXECUTED) {
 			orderBook.enqueue(originalOrder);
@@ -134,8 +113,19 @@ public class Security {
 		List<MatchResult> results = executeStopLimitOrders(matcher);
 		results.addFirst(updatedOrderResult);
 		return results;
-		// TODO
-		// this is just painkiller, it should be treated properly
+	}
+
+	private List<MatchResult> reAddUpdatedSlo(StopLimitOrder updatedOrder, StopLimitOrder originalOrder, Matcher matcher) {
+		try {
+			List<MatchResult> results = new LinkedList<>();
+			results.add(MatchResult.executed(updatedOrder, List.of()));
+			addNewStopLimitOrder(updatedOrder);
+			results.addAll(executeStopLimitOrders(matcher));
+			return results;
+		} catch (NotEnoughCreditException exp) {
+			addNewStopLimitOrder(originalOrder);
+			return List.of(MatchResult.notEnoughCredit());
+		}
 	}
 
 	private void checkPositionForUpdateOrder(Order mainOrder, Order tempOrder) {
@@ -169,16 +159,10 @@ public class Security {
 		return results;
 	}
 
-	// FIXME: duplication
 	public Order findByOrderId(Side side, long orderId) {
-		try {
-			return orderBook.findByOrderId(side, orderId);
-		} catch (NotFoundException exp) {
-			return orderBook.findByOrderId(side, orderId);
-		}
+		return orderBook.findByOrderId(side, orderId);
 	}
 
-	// FIXME: duplication
 	public boolean isThereOrderWithId(Side side, long orderId) {
 		return orderBook.isThereOrderWithId(side, orderId);
 	}

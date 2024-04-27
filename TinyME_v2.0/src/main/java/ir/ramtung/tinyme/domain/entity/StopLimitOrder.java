@@ -94,9 +94,17 @@ public class StopLimitOrder extends Order {
 
 	@Override
 	public void updateFromTempOrder(Order tempOrder) {
+		super.updateFromTempOrder(tempOrder);
 		StopLimitOrder tempSlo = (StopLimitOrder) tempOrder;
 		this.stopPrice = tempSlo.stopPrice;
-		this.quantity = tempSlo.quantity;
-		this.price = tempSlo.price;
+	}
+
+	@Override
+	public boolean willPriortyLostInUpdate(Order tempOrder) {
+		if (super.willPriortyLostInUpdate(tempOrder)) {
+			return true;
+		}
+		StopLimitOrder tempSlo = (StopLimitOrder) tempOrder;
+		return this.stopPrice != tempSlo.stopPrice;
 	}
 }
