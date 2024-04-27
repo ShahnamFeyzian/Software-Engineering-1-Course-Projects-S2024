@@ -1,6 +1,7 @@
 package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.exception.InvalidIcebergPeakSizeException;
+import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -41,6 +42,11 @@ public class IcebergOrder extends Order {
     public IcebergOrder(long orderId, Security security, Side side, int quantity, int price, Broker broker, 
     Shareholder shareholder, int peakSize) {
         this(orderId, security, side, quantity, 0, price, broker, shareholder, peakSize);
+    }
+
+    static public IcebergOrder createTempOrderByEnterRq(Security security, Broker broker, Shareholder shareholder, EnterOrderRq req) {
+        return new IcebergOrder(req.getOrderId(), security, req.getSide(), req.getQuantity(), req.getMinimumExecutionQuantity(), 
+                         req.getPrice(), broker, shareholder, req.getEntryTime(), req.getPeakSize(), OrderStatus.NEW);
     }
 
     @Override

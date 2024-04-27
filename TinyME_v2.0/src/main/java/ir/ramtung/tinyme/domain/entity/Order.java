@@ -4,6 +4,7 @@ import ir.ramtung.tinyme.domain.exception.CantQueueOrderException;
 import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
+import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -59,6 +60,11 @@ public class Order {
 
     public Order(Order other) {
         this(other.orderId, other.security, other.side, other.quantity, 0, other.price, other.broker, other.shareholder, LocalDateTime.now(), OrderStatus.NEW);
+    }
+
+    static public Order createTempOrderByEnterRq(Security security, Broker broker, Shareholder shareholder, EnterOrderRq req) {
+        return new Order(req.getOrderId(), security, req.getSide(), req.getQuantity(), req.getMinimumExecutionQuantity(), 
+                         req.getPrice(), broker, shareholder, req.getEntryTime(), OrderStatus.NEW);
     }
 
     public Order snapshot() {

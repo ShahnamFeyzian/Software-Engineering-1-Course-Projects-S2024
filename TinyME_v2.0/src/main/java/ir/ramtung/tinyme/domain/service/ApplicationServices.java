@@ -10,6 +10,7 @@ import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
 import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
+import ir.ramtung.tinyme.domain.service.ApplicationServiceResponse.ApplicationServiceType;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
@@ -23,44 +24,72 @@ public class ApplicationServices {
     private SecurityRepository securityRepository;
     private BrokerRepository brokerRepository;
     private ShareholderRepository shareholderRepository;
+    private Security security;
+    private Broker broker;
+    private Shareholder shareholder;
     private Matcher matcher;
 
     public ApplicationServiceResponse deleteOrder(DeleteOrderRq req) {
         validateDeleteOrderRq(req);
-        return new ApplicationServiceResponse(null, null);
+        security.deleteOrder(req.getSide(), req.getOrderId());
+        return new ApplicationServiceResponse(ApplicationServiceType.DELETE_ORDER, null);
     }
 
     public ApplicationServiceResponse addLimitOrder(EnterOrderRq req) {
         generalEnterOrderValidation(req);
-        return new ApplicationServiceResponse(null, null);
+        setEntitiesByEnterOrderRq(req);
+        Order tempOrder = Order.createTempOrderByEnterRq(security, broker, shareholder, req);
+        List<MatchResult> results = security.addNewOrder(tempOrder, matcher);
+        return new ApplicationServiceResponse(ApplicationServiceType.ADD_LIMIT_ORDER, results);
     }
     
     public ApplicationServiceResponse updateLimitOrder(EnterOrderRq req) {
         generalEnterOrderValidation(req);
         validateUpdateOrderRq(req);
-        return new ApplicationServiceResponse(null, null);
+        setEntitiesByEnterOrderRq(req);
+        Order tempOrder = Order.createTempOrderByEnterRq(security, broker, shareholder, req);
+        List<MatchResult> results = security.updateOrder(tempOrder, matcher);
+        return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_LIMIT_ORDER, results);
     }
     
     public ApplicationServiceResponse addIcebergOrder(EnterOrderRq req) {
         generalEnterOrderValidation(req);
-        return new ApplicationServiceResponse(null, null);
+        setEntitiesByEnterOrderRq(req);
+        IcebergOrder tempOrder = IcebergOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
+        List<MatchResult> results = security.addNewOrder(tempOrder, matcher); 
+        return new ApplicationServiceResponse(ApplicationServiceType.ADD_ICEBERG_ORDER, results);
     }
     
     public ApplicationServiceResponse updateIcebergOrder(EnterOrderRq req) {
         generalEnterOrderValidation(req);
         validateUpdateOrderRq(req);
-        return new ApplicationServiceResponse(null, null);
+        setEntitiesByEnterOrderRq(req);
+        IcebergOrder tempOrder = IcebergOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
+        List<MatchResult> results = security.updateOrder(tempOrder, matcher);
+        return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_ICEBERG_ORDER, results);
     }
 
     public ApplicationServiceResponse addStopLimitOrder(EnterOrderRq req) {
         generalEnterOrderValidation(req);
-        return new ApplicationServiceResponse(null, null);
+        setEntitiesByEnterOrderRq(req);
+        StopLimitOrder tempOrder = StopLimitOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
+        List<MatchResult> results = security.addNewOrder(tempOrder, matcher);
+        return new ApplicationServiceResponse(ApplicationServiceType.ADD_STOP_LIMIT_ORDER, results);
     }
     
     public ApplicationServiceResponse updateStopLimitOrder(EnterOrderRq req) {
         generalEnterOrderValidation(req);
         validateUpdateOrderRq(req);
-        return new ApplicationServiceResponse(null, null);
+        setEntitiesByEnterOrderRq(req);
+        StopLimitOrder tempOrder = StopLimitOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
+        List<MatchResult> results = security.updateSloOrder(tempOrder, matcher);
+        return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_STOP_LIMIT_ORDER, results);
+    }
+
+    private void setEntitiesByEnterOrderRq(EnterOrderRq req) {
+        this.security = securityRepository.findSecurityByIsin(req.getSecurityIsin());
+        this.broker = brokerRepository.findBrokerById(req.getBrokerId());
+        this.shareholder = shareholderRepository.findShareholderById(req.getShareholderId());
     }
 
     private void validateDeleteOrderRq(DeleteOrderRq deleteOrderRq) {

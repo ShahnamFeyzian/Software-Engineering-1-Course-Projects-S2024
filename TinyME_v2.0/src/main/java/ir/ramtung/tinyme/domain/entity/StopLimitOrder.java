@@ -1,6 +1,8 @@
 package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
+import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
+
 import java.time.LocalDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -42,6 +44,11 @@ public class StopLimitOrder extends Order {
 		super(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime, status);
 		this.stopPrice = stopPrice;
 	}
+
+	static public StopLimitOrder createTempOrderByEnterRq(Security security, Broker broker, Shareholder shareholder, EnterOrderRq req) {
+        return new StopLimitOrder(req.getOrderId(), security, req.getSide(), req.getQuantity(), 
+                         req.getPrice(), broker, shareholder, req.getEntryTime(), req.getStopPrice(), OrderStatus.NEW);
+    }
 
 	@Override
 	public StopLimitOrder snapshot() {
