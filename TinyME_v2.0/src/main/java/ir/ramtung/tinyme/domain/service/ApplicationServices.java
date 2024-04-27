@@ -40,7 +40,7 @@ public class ApplicationServices {
         validateDeleteOrderRq(req);
         setEntitiesByEnterOrderRq(req); 
         security.deleteOrder(req.getSide(), req.getOrderId());
-        return new ApplicationServiceResponse(ApplicationServiceType.DELETE_ORDER, null);
+        return new ApplicationServiceResponse(ApplicationServiceType.DELETE_ORDER, null, req);
     }
 
     public ApplicationServiceResponse addLimitOrder(EnterOrderRq req) {
@@ -48,7 +48,7 @@ public class ApplicationServices {
         setEntitiesByEnterOrderRq(req);
         Order tempOrder = Order.createTempOrderByEnterRq(security, broker, shareholder, req);
         List<MatchResult> results = security.addNewOrder(tempOrder, matcher);
-        return new ApplicationServiceResponse(ApplicationServiceType.ADD_LIMIT_ORDER, results);
+        return new ApplicationServiceResponse(ApplicationServiceType.ADD_LIMIT_ORDER, results, req);
     }
     
     public ApplicationServiceResponse updateLimitOrder(EnterOrderRq req) {
@@ -57,7 +57,7 @@ public class ApplicationServices {
         setEntitiesByEnterOrderRq(req);
         Order tempOrder = Order.createTempOrderByEnterRq(security, broker, shareholder, req);
         List<MatchResult> results = security.updateOrder(tempOrder, matcher);
-        return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_LIMIT_ORDER, results);
+        return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_LIMIT_ORDER, results, req);
     }
     
     public ApplicationServiceResponse addIcebergOrder(EnterOrderRq req) {
@@ -65,7 +65,7 @@ public class ApplicationServices {
         setEntitiesByEnterOrderRq(req);
         IcebergOrder tempOrder = IcebergOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
         List<MatchResult> results = security.addNewOrder(tempOrder, matcher); 
-        return new ApplicationServiceResponse(ApplicationServiceType.ADD_ICEBERG_ORDER, results);
+        return new ApplicationServiceResponse(ApplicationServiceType.ADD_ICEBERG_ORDER, results, req);
     }
     
     public ApplicationServiceResponse updateIcebergOrder(EnterOrderRq req) {
@@ -74,7 +74,7 @@ public class ApplicationServices {
         setEntitiesByEnterOrderRq(req);
         IcebergOrder tempOrder = IcebergOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
         List<MatchResult> results = security.updateOrder(tempOrder, matcher);
-        return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_ICEBERG_ORDER, results);
+        return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_ICEBERG_ORDER, results, req);
     }
 
     public ApplicationServiceResponse addStopLimitOrder(EnterOrderRq req) {
@@ -82,7 +82,7 @@ public class ApplicationServices {
         setEntitiesByEnterOrderRq(req);
         StopLimitOrder tempOrder = StopLimitOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
         List<MatchResult> results = security.addNewOrder(tempOrder, matcher);
-        return new ApplicationServiceResponse(ApplicationServiceType.ADD_STOP_LIMIT_ORDER, results);
+        return new ApplicationServiceResponse(ApplicationServiceType.ADD_STOP_LIMIT_ORDER, results, req);
     }
     
     public ApplicationServiceResponse updateStopLimitOrder(EnterOrderRq req) {
@@ -91,7 +91,7 @@ public class ApplicationServices {
         setEntitiesByEnterOrderRq(req);
         StopLimitOrder tempOrder = StopLimitOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
         List<MatchResult> results = security.updateSloOrder(tempOrder, matcher);
-        return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_STOP_LIMIT_ORDER, results);
+        return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_STOP_LIMIT_ORDER, results, req);
     }
 
     private void setEntitiesByEnterOrderRq(EnterOrderRq req) {
