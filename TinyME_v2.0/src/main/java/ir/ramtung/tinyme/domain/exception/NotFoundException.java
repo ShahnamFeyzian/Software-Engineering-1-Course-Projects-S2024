@@ -1,12 +1,12 @@
 package ir.ramtung.tinyme.domain.exception;
 
-public class NotFoundException extends RuntimeException{
+public class NotFoundException extends RuntimeException {
 
-    public NotFoundException(String msg) {
-        super(msg);
-    }
+	public NotFoundException(String msg) {
+		super(msg);
+	}
 
-    public NotFoundException() {
-        super();
-    }
+	public NotFoundException() {
+		super();
+	}
 }
