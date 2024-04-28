@@ -10,31 +10,37 @@ import lombok.ToString;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 public class Broker {
-    @Getter
-    @EqualsAndHashCode.Include
-    private long brokerId;
-    @Getter
-    private String name;
-    @Getter
-    private long credit;
 
-    public void increaseCreditBy(long amount) {
-        if (amount < 0)
-            throw new IllegalArgumentException("negative amount passed to increaseCreditBy method in Broker class");
+	@Getter
+	@EqualsAndHashCode.Include
+	private long brokerId;
 
-        credit += amount;
-    }
+	@Getter
+	private String name;
 
-    public void decreaseCreditBy(long amount) {
-        if (amount < 0)
-            throw new IllegalArgumentException("negative amount passed to decreaseCreditBy method in Broker class");
-        if (!hasEnoughCredit(amount))
-            throw new NotEnoughCreditException();
+	@Getter
+	private long credit;
 
-        credit -= amount;
-    }
+	public void increaseCreditBy(long amount) {
+		if (amount < 0) {
+			throw new IllegalArgumentException("negative amount passed to increaseCreditBy method in Broker class");
+		}
 
-    private boolean hasEnoughCredit(long amount) {
-        return credit >= amount;
-    }
+		credit += amount;
+	}
+
+	public void decreaseCreditBy(long amount) {
+		if (amount < 0) {
+			throw new IllegalArgumentException("negative amount passed to decreaseCreditBy method in Broker class");
+		}
+		if (!hasEnoughCredit(amount)) {
+			throw new NotEnoughCreditException();
+		}
+
+		credit -= amount;
+	}
+
+	private boolean hasEnoughCredit(long amount) {
+		return credit >= amount;
+	}
 }

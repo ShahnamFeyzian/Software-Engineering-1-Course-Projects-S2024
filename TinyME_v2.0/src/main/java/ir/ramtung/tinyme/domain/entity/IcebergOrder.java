@@ -187,14 +187,19 @@ public class IcebergOrder extends Order {
 
 	@Override
 	public int getQuantity() {
-		if (status != OrderStatus.QUEUED) return super.getQuantity();
+		if (status != OrderStatus.QUEUED) {
+			return super.getQuantity();
+		}
+		
 		return displayedQuantity;
 	}
 
 	@Override
 	public void queue() {
 		super.queue();
-		if (displayedQuantity > quantity) displayedQuantity = quantity;
+		if (displayedQuantity > quantity) {
+			displayedQuantity = quantity;
+		}
 		this.replenish();
 	}
 
@@ -204,7 +209,9 @@ public class IcebergOrder extends Order {
 			super.decreaseQuantity(amount);
 			return;
 		}
-		if (amount > displayedQuantity || amount <= 0) throw new IllegalArgumentException();
+		if (amount > displayedQuantity || amount <= 0) {
+			throw new IllegalArgumentException();
+		}
 
 		quantity -= amount;
 		displayedQuantity -= amount;
@@ -236,20 +243,27 @@ public class IcebergOrder extends Order {
 	public void updateFromTempOrder(Order tempOrder) {
 		super.updateFromTempOrder(tempOrder);
 		IcebergOrder tempIcebergOrder = (IcebergOrder) tempOrder;
-		if (peakSize < tempIcebergOrder.peakSize || displayedQuantity > quantity) displayedQuantity =
-			Math.min(quantity, tempIcebergOrder.peakSize);
+
+		if (peakSize < tempIcebergOrder.peakSize || displayedQuantity > quantity) {
+			displayedQuantity = Math.min(quantity, tempIcebergOrder.peakSize);
+		}
+
 		peakSize = tempIcebergOrder.peakSize;
-		// TODO:after getting answer about what should happened to displayedQuantity after update fix this part
 	}
 
 	@Override
 	public void checkNewPeakSize(int peakSize) {
-		if (peakSize == 0) throw new InvalidIcebergPeakSizeException();
+		if (peakSize == 0) {
+			throw new InvalidIcebergPeakSizeException();
+		}
 	}
 
 	@Override
 	public boolean willPriorityLostInUpdate(Order tempOrder) {
-		if (super.willPriorityLostInUpdate(tempOrder)) return true;
+		if (super.willPriorityLostInUpdate(tempOrder)) {
+			return true;
+		}
+
 		IcebergOrder tempIcebergOrder = (IcebergOrder) tempOrder;
 		return this.peakSize < tempIcebergOrder.peakSize;
 	}

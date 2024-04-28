@@ -1,44 +1,49 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 public class Shareholder {
-    @Getter
-    @EqualsAndHashCode.Include
-    private long shareholderId;
-    @Getter
-    private String name;
-    @Getter
-    @Builder.Default
-    private Map<Security, Integer> positions = new HashMap<>();
 
-    public void incPosition(Security security, int amount) {
-        assert amount >= 0;
-        positions.put(security, positions.getOrDefault(security, 0) + amount);
-    }
+	@Getter
+	@EqualsAndHashCode.Include
+	private long shareholderId;
 
-    public void decPosition(Security security, int amount) {
-        assert amount >= 0;
-        int currentPositions = positions.getOrDefault(security, 0);
-        if (currentPositions < amount)
-            throw new IllegalArgumentException("Amount to be decreased is greater than shareholder's current position");
-        positions.put(security, currentPositions - amount);
-    }
+	@Getter
+	private String name;
 
-    public boolean hasEnoughPositionsOn(Security security, int position) {
-        return positions.getOrDefault(security, 0) >= position;
-    }
+	@Getter
+	@Builder.Default
+	private Map<Security, Integer> positions = new HashMap<>();
 
-    public Integer getPositionBySecurity(Security security) {
-        return positions.getOrDefault(security, 0);
-    } 
+	public void incPosition(Security security, int amount) {
+		assert amount >= 0;
+		positions.put(security, positions.getOrDefault(security, 0) + amount);
+	}
+
+	public void decPosition(Security security, int amount) {
+		assert amount >= 0;
+		int currentPositions = positions.getOrDefault(security, 0);
+		
+        if (currentPositions < amount) {
+			throw new IllegalArgumentException("Amount to be decreased is greater than shareholder's current position");
+		}
+
+		positions.put(security, currentPositions - amount);
+	}
+
+	public boolean hasEnoughPositionsOn(Security security, int position) {
+		return positions.getOrDefault(security, 0) >= position;
+	}
+
+	public Integer getPositionBySecurity(Security security) {
+		return positions.getOrDefault(security, 0);
+	}
 }

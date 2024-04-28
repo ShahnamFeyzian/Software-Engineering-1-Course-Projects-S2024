@@ -80,30 +80,28 @@ public class StopLimitOrder extends Order {
 		);
 	}
 
-	public boolean isSatisfied(int lastTradePrice) {
-		if (side == Side.BUY && stopPrice <= lastTradePrice) return true; else if (
-			side == Side.SELL && stopPrice >= lastTradePrice
-		) return true;
-
-		return false;
-	}
-
 	@Override
 	public boolean queuesBefore(Order order) {
 		StopLimitOrder sloOrder = (StopLimitOrder) order;
-		if (this.side == Side.BUY) return stopPrice < sloOrder.getStopPrice(); else return (
-			stopPrice > sloOrder.getStopPrice()
-		);
+		if (this.side == Side.BUY) {
+			return stopPrice < sloOrder.getStopPrice();
+		} else {
+			return (stopPrice > sloOrder.getStopPrice());
+		}
 	}
 
 	@Override
 	public void checkNewStopLimitPrice(int stopLimitPrice) {
-		if (stopLimitPrice == 0) throw new InvalidStopLimitPriceException();
+		if (stopLimitPrice == 0) {
+			throw new InvalidStopLimitPriceException();
+		}
 	}
 
 	@Override
 	public void queue() {
-		if (side == Side.BUY) broker.decreaseCreditBy(this.getValue());
+		if (side == Side.BUY) {
+			broker.decreaseCreditBy(this.getValue());
+		}
 	}
 
 	@Override
@@ -118,7 +116,20 @@ public class StopLimitOrder extends Order {
 		if (super.willPriorityLostInUpdate(tempOrder)) {
 			return true;
 		}
+
 		StopLimitOrder tempSlo = (StopLimitOrder) tempOrder;
 		return this.stopPrice != tempSlo.stopPrice;
+	}
+
+	public boolean isSatisfied(int lastTradePrice) {
+		if (side == Side.BUY && stopPrice <= lastTradePrice) {
+			return true;
+		}
+
+		if (side == Side.SELL && stopPrice >= lastTradePrice) {
+			return true;
+		}
+
+		return false;
 	}
 }

@@ -41,8 +41,7 @@ public class OrderBook {
 	private List<Order> getQueue(Order order) {
 		if (order instanceof StopLimitOrder) {
 			return (order.getSide() == Side.BUY) ? stopLimitOrderBuyQueue : stopLimitOrderSellQueue;
-		}
-		else {
+		} else {
 			return (order.getSide() == Side.BUY) ? buyQueue : sellQueue;
 		}
 	}
@@ -50,18 +49,24 @@ public class OrderBook {
 	public Order findByOrderId(Side side, long orderId) {
 		List<Order> queue = (side == Side.BUY) ? buyQueue : sellQueue;
 		Order order = searchForOrderInQueue(side, orderId, queue);
-		if (order != null) return order;
+		if (order != null) {
+			return order;
+		}
 
 		queue = (side == Side.BUY) ? stopLimitOrderBuyQueue : stopLimitOrderSellQueue;
 		order = searchForOrderInQueue(side, orderId, queue);
-		if (order != null) return order;
 
-		throw new NotFoundException();
+		if (order == null) {
+			throw new NotFoundException();
+		}
+		return order;
 	}
 
 	private Order searchForOrderInQueue(Side side, long orderId, List<Order> queue) {
 		for (Order order : queue) {
-			if (order.getOrderId() == orderId) return order;
+			if (order.getOrderId() == orderId) {
+				return order;
+			}
 		}
 		return null;
 	}
@@ -84,7 +89,12 @@ public class OrderBook {
 
 	public Order findOrderToMatchWith(Order newOrder) {
 		var queue = getQueue(newOrder.getSide().opposite());
-		if (newOrder.matches(queue.getFirst())) return queue.getFirst(); else throw new NotFoundException();
+
+		if (newOrder.matches(queue.getFirst())) {
+			return queue.getFirst();
+		}
+
+		throw new NotFoundException();
 	}
 
 	public void putBack(Order order) {
@@ -121,16 +131,28 @@ public class OrderBook {
 		);
 	}
 
-	public StopLimitOrder getStopLimitOrder(int lastTradePrice) {
-		StopLimitOrder sloOrder = findSatisfiedStopLimitOrder(stopLimitOrderBuyQueue, lastTradePrice);
-		if (sloOrder != null) return sloOrder;
+	private StopLimitOrder findSatisfiedStopLimitOrderBuyQueue(int lastTradePrice) {
+		return findSatisfiedStopLimitOrder(stopLimitOrderBuyQueue, lastTradePrice);
+	}
 
-		sloOrder = findSatisfiedStopLimitOrder(stopLimitOrderSellQueue, lastTradePrice);
+	private StopLimitOrder findSatisfiedStopLimitOrderSellQueue(int lastTradePrice) {
+		return findSatisfiedStopLimitOrder(stopLimitOrderSellQueue, lastTradePrice);
+	}
+
+	public StopLimitOrder getStopLimitOrder(int lastTradePrice) {
+		StopLimitOrder sloOrder = findSatisfiedStopLimitOrderBuyQueue(lastTradePrice);
+
+		if (sloOrder == null) {
+			sloOrder = findSatisfiedStopLimitOrderSellQueue(lastTradePrice);
+		}
+
 		return sloOrder;
 	}
 
 	private StopLimitOrder findSatisfiedStopLimitOrder(List<Order> queue, int lastTradePrice) {
-		if (queue.size() == 0) return null;
+		if (queue.size() == 0) {
+			return null;
+		}
 
 		StopLimitOrder sloOrder = (StopLimitOrder) queue.getFirst();
 		if (sloOrder.isSatisfied(lastTradePrice)) {

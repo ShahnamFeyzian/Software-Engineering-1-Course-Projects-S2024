@@ -82,7 +82,6 @@ public class Order {
 		);
 	}
 
-	// The constructor Order(long, Security, Side, int, int, Broker, Shareholder, LocalDateTime) is undefinedJava(134217858)
 	public Order(
 		long orderId,
 		Security security,
@@ -197,11 +196,17 @@ public class Order {
 	}
 
 	public boolean matches(Order other) {
-		if (side == Side.BUY) return price >= other.price; else return price <= other.price;
+		if (side == Side.BUY) {
+			return price >= other.price;
+		}
+
+		return price <= other.price;
 	}
 
 	public void decreaseQuantity(int amount) {
-		if (amount > quantity || amount <= 0) throw new IllegalArgumentException();
+		if (amount > quantity || amount <= 0) {
+			throw new IllegalArgumentException();
+		}
 
 		quantity -= amount;
 		if (quantity == 0 && status == OrderStatus.QUEUED) {
@@ -222,7 +227,10 @@ public class Order {
 	}
 
 	public boolean queuesBefore(Order order) {
-		if (price == order.getPrice()) return entryTime.isBefore(order.getEntryTime());
+		if (price == order.getPrice()) {
+			return entryTime.isBefore(order.getEntryTime());
+		}
+
 		if (order.getSide() == Side.BUY) {
 			return price > order.getPrice();
 		} else {
@@ -234,6 +242,7 @@ public class Order {
 		if (this.status == OrderStatus.QUEUED) {
 			throw new CantQueueOrderException();
 		}
+
 		if (side == Side.BUY && status != OrderStatus.LOADING) {
 			broker.decreaseCreditBy(this.getValue());
 		}
@@ -248,7 +257,10 @@ public class Order {
 		if (!this.willPriorityLostInUpdate(tempOrder) && this.side == Side.BUY) {
 			broker.increaseCreditBy(this.getValue());
 			broker.decreaseCreditBy(tempOrder.getValue());
-		} else this.status = OrderStatus.UPDATING;
+		} else {
+			this.status = OrderStatus.UPDATING;
+		}
+
 		this.quantity = tempOrder.quantity;
 		this.price = tempOrder.price;
 	}
@@ -262,30 +274,39 @@ public class Order {
 	}
 
 	public void checkNewPeakSize(int peakSize) {
-		if (peakSize != 0) throw new InvalidPeakSizeException();
+		if (peakSize != 0) {
+			throw new InvalidPeakSizeException();
+		}
 	}
 
 	public void checkNewMinimumExecutionQuantity(int minimumExecutionQuantity) {
-		if (
-			this.minimumExecutionQuantity != minimumExecutionQuantity
-		) throw new UpdateMinimumExecutionQuantityException();
+		if (this.minimumExecutionQuantity != minimumExecutionQuantity) {
+			throw new UpdateMinimumExecutionQuantityException();
+		}
 	}
 
 	public void checkNewStopLimitPrice(int stopLimitPrice) {
-		if (stopLimitPrice != 0) throw new InvalidStopLimitPriceException();
+		if (stopLimitPrice != 0) {
+			throw new InvalidStopLimitPriceException();
+		} 
 	}
 
 	public void checkExecutionQuantity(int quantitySome) {
-		if (this.status != OrderStatus.NEW) return;
-		if (quantitySome < this.minimumExecutionQuantity) throw new NotEnoughExecutionException();
+		if (!(this.status != OrderStatus.NEW) && (quantitySome < this.minimumExecutionQuantity)) {
+			throw new NotEnoughExecutionException();
+		}
 	}
 
 	public void addYourselfToQueue() {
-		if (this.quantity != 0) this.security.getOrderBook().enqueue(this);
+		if (this.quantity != 0) {
+			this.security.getOrderBook().enqueue(this);
+		}
 	}
 
 	public void delete() {
-		if (side == Side.BUY) broker.increaseCreditBy(getValue());
+		if (side == Side.BUY) {
+			broker.increaseCreditBy(getValue());
+		}
 	}
 
 	public boolean willPriorityLostInUpdate(Order tempOrder) {
