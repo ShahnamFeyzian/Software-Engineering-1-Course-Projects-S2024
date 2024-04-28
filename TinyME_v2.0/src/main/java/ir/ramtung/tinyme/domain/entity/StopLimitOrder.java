@@ -1,6 +1,7 @@
 package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
+import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.time.LocalDateTime;
 
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
@@ -45,6 +46,26 @@ public class StopLimitOrder extends Order {
 		this.stopPrice = stopPrice;
 	}
 
+	public static StopLimitOrder createTempOrderByEnterRq(
+		Security security,
+		Broker broker,
+		Shareholder shareholder,
+		EnterOrderRq req
+	) {
+		return new StopLimitOrder(
+			req.getOrderId(),
+			security,
+			req.getSide(),
+			req.getQuantity(),
+			req.getPrice(),
+			broker,
+			shareholder,
+			req.getEntryTime(),
+			req.getStopPrice(),
+			OrderStatus.NEW
+		);
+	}
+
 	@Override
 	public StopLimitOrder snapshot() {
 		return new StopLimitOrder(
@@ -61,6 +82,14 @@ public class StopLimitOrder extends Order {
 		);
 	}
 
+	public boolean isSatisfied(int lastTradePrice) {
+		if (side == Side.BUY && stopPrice <= lastTradePrice) return true; else if (
+			side == Side.SELL && stopPrice >= lastTradePrice
+		) return true;
+
+		return false;
+	}
+
 	@Override
 	public boolean queuesBefore(Order order) {
 		StopLimitOrder sloOrder = (StopLimitOrder) order;
@@ -74,25 +103,25 @@ public class StopLimitOrder extends Order {
 		if (stopLimitPrice == 0) throw new InvalidStopLimitPriceException();
 	}
 
-	public boolean isSatisfied(int lastTradePrice) {
-		if (side == Side.BUY && stopPrice <= lastTradePrice) return true; else if (
-			side == Side.SELL && stopPrice >= lastTradePrice
-		) return true;
-
-		return false;
-	}
-
-	// FIXME: ??????
 	@Override
 	public void queue() {
 		if(side == Side.BUY)
 			broker.decreaseCreditBy(getValue());
 	}
 
-	// FIXME: duplication
-	public void updateFromTempSloOrder(StopLimitOrder tempOrder) {
-		this.stopPrice = tempOrder.stopPrice;
-		this.quantity = tempOrder.quantity;
-		this.price = tempOrder.price;
+	@Override
+	public void updateFromTempOrder(Order tempOrder) {
+		super.updateFromTempOrder(tempOrder);
+		StopLimitOrder tempSlo = (StopLimitOrder) tempOrder;
+		this.stopPrice = tempSlo.stopPrice;
+	}
+
+	@Override
+	public boolean willPriorityLostInUpdate(Order tempOrder) {
+		if (super.willPriorityLostInUpdate(tempOrder)) {
+			return true;
+		}
+		StopLimitOrder tempSlo = (StopLimitOrder) tempOrder;
+		return this.stopPrice != tempSlo.stopPrice;
 	}
 }

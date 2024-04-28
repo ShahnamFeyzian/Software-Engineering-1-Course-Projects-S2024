@@ -34,7 +34,7 @@ public class Broker {
         credit -= amount;
     }
 
-    public boolean hasEnoughCredit(long amount) { //TODO should be private in future update
+    private boolean hasEnoughCredit(long amount) {
         return credit >= amount;
     }
 }

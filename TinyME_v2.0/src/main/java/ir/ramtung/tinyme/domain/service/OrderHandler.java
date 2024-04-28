@@ -1,22 +1,16 @@
 package ir.ramtung.tinyme.domain.service;
 
-import ir.ramtung.tinyme.domain.entity.*;
-import ir.ramtung.tinyme.domain.exception.InvalidIcebergPeakSizeException;
-import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
-import ir.ramtung.tinyme.domain.exception.NotFoundException;
-import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
-import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
+import ir.ramtung.tinyme.domain.entity.MatchingOutcome;
+import ir.ramtung.tinyme.domain.entity.Trade;
 import ir.ramtung.tinyme.messaging.EventPublisher;
 import ir.ramtung.tinyme.messaging.TradeDTO;
 import ir.ramtung.tinyme.messaging.event.*;
+import ir.ramtung.tinyme.messaging.request.BaseOrderRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.messaging.request.OrderEntryType;
-import ir.ramtung.tinyme.repository.BrokerRepository;
-import ir.ramtung.tinyme.repository.SecurityRepository;
-import ir.ramtung.tinyme.repository.ShareholderRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
@@ -25,177 +19,145 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderHandler {
-    SecurityRepository securityRepository;
-    BrokerRepository brokerRepository;
-    ShareholderRepository shareholderRepository;
     EventPublisher eventPublisher;
-    Matcher matcher;
+    ApplicationServices services;
 
-    public OrderHandler(SecurityRepository securityRepository, BrokerRepository brokerRepository, ShareholderRepository shareholderRepository, EventPublisher eventPublisher, Matcher matcher) {
-        this.securityRepository = securityRepository;
-        this.brokerRepository = brokerRepository;
-        this.shareholderRepository = shareholderRepository;
+    public OrderHandler(ApplicationServices services, EventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
-        this.matcher = matcher;
+        this.services = services;
     }
 
     public void handleEnterOrder(EnterOrderRq enterOrderRq) {
         try {
-            validateEnterOrderRq(enterOrderRq);
-            List<MatchResult> matchResults = runEnterOrderRq(enterOrderRq);
-            publishEnterOrderMatchResult(matchResults, enterOrderRq);
+            ApplicationServiceResponse response = callService(enterOrderRq);
+            publishApplicationServiceResponse(response);
         } 
         catch (InvalidRequestException ex) {
             eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), ex.getReasons()));
         }
     }
 
-    private List<MatchResult> runEnterOrderRq(EnterOrderRq enterOrderRq) {
-        Order tempOrder = createTempOrderByEnterOrderRq(enterOrderRq);
-        if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER)
-            return tempOrder.getSecurity().addNewOrder(tempOrder, matcher);
-        // FIXME: strange logic
-        else if (enterOrderRq.getStopPrice() != 0)
-            return tempOrder.getSecurity().updateSloOrder((StopLimitOrder) tempOrder, matcher);
-        else
-            return tempOrder.getSecurity().updateOrder(tempOrder, matcher);
-    }
-
-    private Order createTempOrderByEnterOrderRq(EnterOrderRq enterOrderRq) {
-        Broker broker = brokerRepository.findBrokerById(enterOrderRq.getBrokerId());
-        Shareholder shareholder = shareholderRepository.findShareholderById(enterOrderRq.getShareholderId());
-        Security security = securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin());
-        
-        if (enterOrderRq.getStopPrice() != 0) 
-            return new StopLimitOrder(
-                enterOrderRq.getOrderId(), security, enterOrderRq.getSide(), 
-                enterOrderRq.getQuantity(), enterOrderRq.getPrice(), broker, 
-                shareholder, enterOrderRq.getStopPrice()
-            );
-        else if (enterOrderRq.getPeakSize() != 0)
-            return new IcebergOrder(
-                enterOrderRq.getOrderId(), security, enterOrderRq.getSide(),
-                enterOrderRq.getQuantity(), enterOrderRq.getMinimumExecutionQuantity(), 
-                enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime(), enterOrderRq.getPeakSize()
-            );
-        else
-            return new Order(
-                enterOrderRq.getOrderId(), security, enterOrderRq.getSide(),
-                enterOrderRq.getQuantity(), enterOrderRq.getMinimumExecutionQuantity(), 
-                enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime()
-            );
-    }
-
-    private void publishEnterOrderMatchResult(List<MatchResult> matchResults, EnterOrderRq enterOrderRq) {
-        List<Event> events = createEvents(matchResults, enterOrderRq);
-        events.forEach(e -> eventPublisher.publish(e));
-    }
-
-    private List<Event> createEvents(List<MatchResult> matchResults, EnterOrderRq enterOrderRq) {
-        MatchResult matchResult = matchResults.getFirst();
-        List<Event> events = new LinkedList<>();
-        if (matchResult.isSuccessful())
-            events.addAll(createSuccessEvents(matchResult, enterOrderRq));
-        else
-            events.addAll(createRejectedEvents(matchResult, enterOrderRq));
-
-        // FIXME: strange logic
-        for(int i = 1; i < matchResults.size(); i++) {
-            events.add(new OrderActivatedEvent(matchResults.get(i).remainder().getOrderId()));
-            if((!matchResults.get(i).trades().isEmpty()))
-                events.add(new OrderExecutedEvent(matchResults.get(i).remainder().getOrderId(), matchResults.get(i).trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
-        }
-
-        return events;
-    }
-
-    private List<Event> createRejectedEvents(MatchResult matchResult, EnterOrderRq enterOrderRq) {
-        List<Event> events = new LinkedList<>();
-        if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_CREDIT) 
-            events.add(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.BUYER_HAS_NOT_ENOUGH_CREDIT)));
-        else if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_POSITIONS) 
-            events.add(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.SELLER_HAS_NOT_ENOUGH_POSITIONS)));
-        else if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_EXECUTION)
-            events.add(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.MINIMUM_EXECUTION_QUANTITY_NOT_MET)));
-        return events;
-    }
-
-    private List<Event> createSuccessEvents(MatchResult matchResult, EnterOrderRq enterOrderRq) {
-        List<Event> events = new LinkedList<>();
-        if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER)
-            events.add(new OrderAcceptedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
-        else
-            events.add(new OrderUpdatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
-        if (!matchResult.trades().isEmpty()) 
-            events.add(new OrderExecutedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
-        return events;
-    }
-
     public void handleDeleteOrder(DeleteOrderRq deleteOrderRq) {
         try {
-            validateDeleteOrderRq(deleteOrderRq);
-            Security security = securityRepository.findSecurityByIsin(deleteOrderRq.getSecurityIsin());
-            security.deleteOrder(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
-            eventPublisher.publish(new OrderDeletedEvent(deleteOrderRq.getRequestId(), deleteOrderRq.getOrderId()));
-        } catch (InvalidRequestException ex) {
+            ApplicationServiceResponse response = callService(deleteOrderRq);
+            publishApplicationServiceResponse(response);
+        } 
+        catch (InvalidRequestException ex) {
             eventPublisher.publish(new OrderRejectedEvent(deleteOrderRq.getRequestId(), deleteOrderRq.getOrderId(), ex.getReasons()));
         }
     }
 
-    private void validateEnterOrderRq(EnterOrderRq enterOrderRq) {
-        generalEnterOrderValidation(enterOrderRq);
-        if (enterOrderRq.getRequestType() == OrderEntryType.UPDATE_ORDER)
-            validateUpdateOrderRq(enterOrderRq, securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin()));
+    private ApplicationServiceResponse callService(BaseOrderRq req) {
+        if(req instanceof DeleteOrderRq deleteReq) {
+            return callDeleteServices(deleteReq);
+        }
+
+        if(req instanceof EnterOrderRq enterReq) {
+            OrderEntryType type = enterReq.getRequestType();
+            if (type == OrderEntryType.NEW_ORDER) {
+                return callAddServices(enterReq);
+            }
+            else if (type == OrderEntryType.UPDATE_ORDER) {
+                return callUpdateServices(enterReq);
+            }
+        }
+        throw new InvalidRequestException(Message.UNKNOWN_REQUEST_TYPE);
     }
 
-    private void generalEnterOrderValidation(EnterOrderRq enterOrderRq) {
-        List<String> errors = enterOrderRq.validateYourFields();
-        if (!securityRepository.isThereSecurityWithIsin(enterOrderRq.getSecurityIsin()))
-            errors.add(Message.UNKNOWN_SECURITY_ISIN);
+    private ApplicationServiceResponse callDeleteServices(DeleteOrderRq req) {
+        return services.deleteOrder(req);
+    }
+
+    private ApplicationServiceResponse callAddServices(EnterOrderRq req) {
+        if (req.getStopPrice() != 0) {
+            return services.addStopLimitOrder(req);
+        }
+        else if (req.getPeakSize() != 0) {
+            return services.addIcebergOrder(req);
+        }
         else {
-            Security security = securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin());
-            errors.addAll(security.checkLotAndTickSize(enterOrderRq));
-        }
-        if (!brokerRepository.isThereBrokerWithId(enterOrderRq.getBrokerId()))
-            errors.add(Message.UNKNOWN_BROKER_ID);
-        if (!shareholderRepository.isThereShareholderWithId(enterOrderRq.getShareholderId())) 
-            errors.add(Message.UNKNOWN_SHAREHOLDER_ID);
-        if (!errors.isEmpty())
-            throw new InvalidRequestException(errors);
-    }
-
-    private void validateUpdateOrderRq(EnterOrderRq updateOrderRq, Security security) {
-        try {
-            Order order = security.findByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
-            order.checkNewPeakSize(updateOrderRq.getPeakSize());
-            order.checkNewMinimumExecutionQuantity(updateOrderRq.getMinimumExecutionQuantity());
-            order.checkNewStopLimitPrice(updateOrderRq.getStopPrice());
-        }
-        catch (NotFoundException exp) {
-            throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
-        }
-        catch (InvalidIcebergPeakSizeException exp) {
-            throw new InvalidRequestException(Message.CANNOT_SPECIFY_0_PEAK_SIZE_FOR_A_ICEBERG_ORDER);
-        }
-        catch (InvalidPeakSizeException exp) {
-            throw new InvalidRequestException(Message.INVALID_PEAK_SIZE);
-        }
-        catch (UpdateMinimumExecutionQuantityException exp) {
-            throw new InvalidRequestException(Message.CANNOT_UPDATE_MINIMUM_EXECUTION_QUANTITY);
-        }
-        catch (InvalidStopLimitPriceException exp){
-            throw new InvalidRequestException(Message.INVALID_STOP_LIMIT_UPDATE_PRICE);
+            return services.addLimitOrder(req);
         }
     }
 
-    private void validateDeleteOrderRq(DeleteOrderRq deleteOrderRq) {
-        List<String> errors = deleteOrderRq.validateYourFields();
-        if (!securityRepository.isThereSecurityWithIsin(deleteOrderRq.getSecurityIsin()))
-            errors.add(Message.UNKNOWN_SECURITY_ISIN);
-        if (!errors.isEmpty())
-            throw new InvalidRequestException(errors);
-        Security security = securityRepository.findSecurityByIsin(deleteOrderRq.getSecurityIsin());
-        if (!security.isThereOrderWithId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId()))
-            throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
+    private ApplicationServiceResponse callUpdateServices(EnterOrderRq req) {
+        if (req.getStopPrice() != 0) {
+            return services.updateStopLimitOrder(req);
+        }
+        else if (req.getPeakSize() != 0) {
+            return services.updateIcebergOrder(req);
+        }
+        else {
+            return services.updateLimitOrder(req);
+        }
+    }
+
+    private void publishApplicationServiceResponse(ApplicationServiceResponse response) {
+        List<Event> events = createEvents(response);
+        events.forEach(event -> eventPublisher.publish(event));
+    }
+
+    private List<Event> createEvents(ApplicationServiceResponse response) {
+        if (response.isTypeDelete()) {
+            return List.of(new OrderDeletedEvent(response.getRequestId(), response.getOrderId()));
+        }
+        List<Event> events = createFirstMatchResultEvents(response);
+        events.addAll(createActivatedEvents(response));
+        return events;
+    }
+
+    private List<Event> createFirstMatchResultEvents(ApplicationServiceResponse response) {
+        if (response.isSuccessful(0)) {
+            return createSuccessEvents(response);
+        }
+        else {
+            return createRejectedEvents(response);
+        }
+    }
+
+    private List<Event> createActivatedEvents(ApplicationServiceResponse response) {
+        List<Event> events = new LinkedList<>();
+        int numOfMatchResults = response.getMatchResults().size();
+        for(int i = 1; i < numOfMatchResults; i++) {
+            events.add(new OrderActivatedEvent(response.getOrderId(i)));
+            if((response.hasTrades(i))) {
+                events.add(createExecutedEvent(response.getOrderId(i), response.getTrades(i)));
+            }
+        }
+        return events;
+    }
+
+    private List<Event> createSuccessEvents(ApplicationServiceResponse response) {
+        List<Event> events = new LinkedList<>();
+        if (response.isTypeAdd()) {
+            events.add(new OrderAcceptedEvent(response.getRequestId(), response.getOrderId()));
+        }
+        else {
+            events.add(new OrderUpdatedEvent(response.getRequestId(), response.getOrderId()));
+        }
+        if (response.hasTrades(0)) {
+            events.add(createExecutedEvent(response.getRequestId(), response.getOrderId(), response.getTrades(0)));
+        }
+        return events;
+    }
+
+    private List<Event> createRejectedEvents(ApplicationServiceResponse response) {
+        List<Event> events = new LinkedList<>();
+        MatchingOutcome outcome = response.getOutcome(0);
+        if (outcome == MatchingOutcome.NOT_ENOUGH_CREDIT) 
+            events.add(new OrderRejectedEvent(response.getRequestId(), response.getOrderId(), List.of(Message.BUYER_HAS_NOT_ENOUGH_CREDIT)));
+        else if (outcome == MatchingOutcome.NOT_ENOUGH_POSITIONS) 
+            events.add(new OrderRejectedEvent(response.getRequestId(), response.getOrderId(), List.of(Message.SELLER_HAS_NOT_ENOUGH_POSITIONS)));
+        else if (outcome == MatchingOutcome.NOT_ENOUGH_EXECUTION)
+            events.add(new OrderRejectedEvent(response.getRequestId(), response.getOrderId(), List.of(Message.MINIMUM_EXECUTION_QUANTITY_NOT_MET)));
+        return events;
+    }
+
+    private Event createExecutedEvent(long reqId, long orderId, List<Trade> trades) {
+        return new OrderExecutedEvent(reqId, orderId, trades.stream().map(TradeDTO::new).collect(Collectors.toList()));
+    }
+
+    private Event createExecutedEvent(long orderId, List<Trade> trades) {
+        return new OrderExecutedEvent(orderId, trades.stream().map(TradeDTO::new).collect(Collectors.toList()));
     }
 }

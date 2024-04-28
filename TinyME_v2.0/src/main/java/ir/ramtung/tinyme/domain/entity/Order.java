@@ -2,175 +2,291 @@ package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.exception.CantQueueOrderException;
 import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
+import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
-import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
+import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.time.LocalDateTime;
 
 @Builder
 @EqualsAndHashCode
 @ToString
 @Getter
 public class Order {
-    protected long orderId;
-    protected Security security;
-    protected Side side;
-    protected int quantity;
-    protected int minimumExecutionQuantity;
-    protected int price;
-    protected Broker broker;
-    protected Shareholder shareholder;
-    @Builder.Default
-    protected LocalDateTime entryTime = LocalDateTime.now();
-    @Builder.Default
-    protected OrderStatus status = OrderStatus.NEW;
+	protected long orderId;
+	protected Security security;
+	protected Side side;
+	protected int quantity;
+	protected int minimumExecutionQuantity;
+	protected int price;
+	protected Broker broker;
+	protected Shareholder shareholder;
 
-    public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder, 
-    LocalDateTime entryTime, OrderStatus status) {
-        this.orderId = orderId;
-        this.security = security;
-        this.side = side;
-        this.quantity = quantity;
-        this.minimumExecutionQuantity = minimumExecutionQuantity;
-        this.price = price;
-        this.entryTime = entryTime;
-        this.broker = broker;
-        this.shareholder = shareholder;
-        this.status = status;
-    }
+	@Builder.Default
+	protected LocalDateTime entryTime = LocalDateTime.now();
 
-    public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder, 
-    LocalDateTime entryTime) {
-        this(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, OrderStatus.NEW);
-    }
+	@Builder.Default
+	protected OrderStatus status = OrderStatus.NEW;
 
-    public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder) {
-        this(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, LocalDateTime.now());
-    }
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		LocalDateTime entryTime,
+		OrderStatus status
+	) {
+		this.orderId = orderId;
+		this.security = security;
+		this.side = side;
+		this.quantity = quantity;
+		this.minimumExecutionQuantity = minimumExecutionQuantity;
+		this.price = price;
+		this.entryTime = entryTime;
+		this.broker = broker;
+		this.shareholder = shareholder;
+		this.status = status;
+	}
 
-    public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder) {
-        this(orderId, security, side, quantity, 0, price, broker, shareholder);
-    }
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		LocalDateTime entryTime
+	) {
+		this(
+			orderId,
+			security,
+			side,
+			quantity,
+			minimumExecutionQuantity,
+			price,
+			broker,
+			shareholder,
+			entryTime,
+			OrderStatus.NEW
+		);
+	}
 
-    public Order(Order other) {
-        this(other.orderId, other.security, other.side, other.quantity, 0, other.price, other.broker, other.shareholder, LocalDateTime.now(), OrderStatus.NEW);
-    }
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder
+	) {
+		this(
+			orderId,
+			security,
+			side,
+			quantity,
+			minimumExecutionQuantity,
+			price,
+			broker,
+			shareholder,
+			LocalDateTime.now()
+		);
+	}
 
-    public Order snapshot() {
-        return new Order(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, OrderStatus.SNAPSHOT);
-    }
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder
+	) {
+		this(orderId, security, side, quantity, 0, price, broker, shareholder);
+	}
 
-    public Order snapshotWithQuantity(int newQuantity) {
-        return new Order(orderId, security, side, newQuantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, this.status);
-        // TODO
-        // this exists just for unit tests and should remove
-    }
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		LocalDateTime entryTime
+	) {
+		this(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime);
+	}
 
-    public boolean matches(Order other) {
-        if (side == Side.BUY)
-            return price >= other.price;
-        else
-            return price <= other.price;
-    }
+	public Order(Order other) {
+		this(
+			other.orderId,
+			other.security,
+			other.side,
+			other.quantity,
+			0,
+			other.price,
+			other.broker,
+			other.shareholder,
+			LocalDateTime.now(),
+			OrderStatus.NEW
+		);
+	}
 
-    public void decreaseQuantity(int amount) {
-        if (amount > quantity || amount <= 0)
-            throw new IllegalArgumentException();
-        
-        quantity -= amount;
-        if(quantity == 0 && status == OrderStatus.QUEUED) {
-            status = OrderStatus.DONE;
-            security.deleteOrder(side, orderId);
-        }
-    }
+	public static Order createTempOrderByEnterRq(
+		Security security,
+		Broker broker,
+		Shareholder shareholder,
+		EnterOrderRq req
+	) {
+		return new Order(
+			req.getOrderId(),
+			security,
+			req.getSide(),
+			req.getQuantity(),
+			req.getMinimumExecutionQuantity(),
+			req.getPrice(),
+			broker,
+			shareholder,
+			req.getEntryTime(),
+			OrderStatus.NEW
+		);
+	}
 
-    public void rollback(Order firstVersion) {
-        this.quantity = firstVersion.quantity;
-        if (status == OrderStatus.DONE) {
-            security.getOrderBook().enqueue(this);
-        }   
-    }
+	public Order snapshot() {
+		return new Order(
+			orderId,
+			security,
+			side,
+			quantity,
+			minimumExecutionQuantity,
+			price,
+			broker,
+			shareholder,
+			entryTime,
+			OrderStatus.SNAPSHOT
+		);
+	}
 
-    public void makeQuantityZero() {
-        quantity = 0;
-    }
+	public Order snapshotWithQuantity(int newQuantity) {
+		return new Order(
+			orderId,
+			security,
+			side,
+			newQuantity,
+			minimumExecutionQuantity,
+			price,
+			broker,
+			shareholder,
+			entryTime,
+			this.status
+		);
+	}
 
-    public boolean queuesBefore(Order order) {
-        // if (price == order.getPrice())
-        //     return entryTime.isBefore(order.getEntryTime()); // FIXME: this makes conflict with some tests in domain/securityTest
-        if (order.getSide() == Side.BUY) {
-            return price > order.getPrice();
-        } else {
-            return price < order.getPrice();
-        }
-    }
+	public boolean matches(Order other) {
+		if (side == Side.BUY) return price >= other.price; else return price <= other.price;
+	}
 
-    public void queue() {
-        if (this.status == OrderStatus.QUEUED)
-            throw new CantQueueOrderException();
+	public void decreaseQuantity(int amount) {
+		if (amount > quantity || amount <= 0) throw new IllegalArgumentException();
 
-        status = OrderStatus.QUEUED;
-    }
+		quantity -= amount;
+		if (quantity == 0 && status == OrderStatus.QUEUED) {
+			status = OrderStatus.DONE;
+			security.deleteOrder(side, orderId);
+		}
+	}
 
-    public boolean isQuantityIncreased(int newQuantity) {
-        return newQuantity > quantity;
-    }
+	public void rollback(Order firstVersion) {
+		this.quantity = firstVersion.quantity;
+		if (status == OrderStatus.DONE) {
+			security.getOrderBook().enqueue(this);
+		}
+	}
 
-    public void updateFromTempOrder(Order tempOrder) {
-        if (!this.willPriortyLostInUpdate(tempOrder) && this.side == Side.BUY) {
-            broker.increaseCreditBy(this.getValue());
-            broker.decreaseCreditBy(tempOrder.getValue());
-        }
-        else
-            this.status = OrderStatus.UPDATING;
-        this.quantity = tempOrder.quantity;
-        this.price = tempOrder.price;
-    }
+	public void makeQuantityZero() {
+		quantity = 0;
+	}
 
-    public long getValue() {
-        return (long)price * quantity;
-    }
+	public boolean queuesBefore(Order order) {
+		if (price == order.getPrice()) return entryTime.isBefore(order.getEntryTime());
+		if (order.getSide() == Side.BUY) {
+			return price > order.getPrice();
+		} else {
+			return price < order.getPrice();
+		}
+	}
 
-    public int getTotalQuantity() { return quantity; }
+	public void queue() {
+		if (this.status == OrderStatus.QUEUED) {
+			throw new CantQueueOrderException();
+		}
+		if (side == Side.BUY && status != OrderStatus.LOADING) {
+			broker.decreaseCreditBy(this.getValue());
+		}
+		status = OrderStatus.QUEUED;
+	}
 
-    public void checkNewPeakSize(int peakSize) {
-        if (peakSize != 0)
-            throw new InvalidPeakSizeException();
-    }
+	public boolean isQuantityIncreased(int newQuantity) {
+		return newQuantity > quantity;
+	}
 
-    public void checkNewMinimumExecutionQuantity(int minimumExecutionQuantity) {
-        if (this.minimumExecutionQuantity != minimumExecutionQuantity)
-            throw new UpdateMinimumExecutionQuantityException();
-    }
+	public void updateFromTempOrder(Order tempOrder) {
+		if (!this.willPriorityLostInUpdate(tempOrder) && this.side == Side.BUY) {
+			broker.increaseCreditBy(this.getValue());
+			broker.decreaseCreditBy(tempOrder.getValue());
+		} else this.status = OrderStatus.UPDATING;
+		this.quantity = tempOrder.quantity;
+		this.price = tempOrder.price;
+	}
 
-    public void checkNewStopLimitPrice(int stopLimitPrice) {
-        if(stopLimitPrice != 0)
-            throw new InvalidStopLimitPriceException();
-    }
+	public long getValue() {
+		return (long) price * quantity;
+	}
 
-    public void checkExecutionQuantity(int quantitySome) {
-        if (this.status != OrderStatus.NEW)
-            return;
-        if (quantitySome < this.minimumExecutionQuantity)
-            throw new NotEnoughExecutionException();
-    }
+	public int getTotalQuantity() {
+		return quantity;
+	}
 
-    public void addYourselfToQueue() {
-        if (this.quantity != 0)
-            this.security.getOrderBook().enqueue(this);
-    }
+	public void checkNewPeakSize(int peakSize) {
+		if (peakSize != 0) throw new InvalidPeakSizeException();
+	}
 
-    public void delete() {
-        if (side == Side.BUY)
-            broker.increaseCreditBy(getValue());
-    }
+	public void checkNewMinimumExecutionQuantity(int minimumExecutionQuantity) {
+		if (
+			this.minimumExecutionQuantity != minimumExecutionQuantity
+		) throw new UpdateMinimumExecutionQuantityException();
+	}
 
-    public boolean willPriortyLostInUpdate(Order tempOrder) {
-        return (this.quantity < tempOrder.quantity) || (this.price != tempOrder.price);
-    }
+	public void checkNewStopLimitPrice(int stopLimitPrice) {
+		if (stopLimitPrice != 0) throw new InvalidStopLimitPriceException();
+	}
+
+	public void checkExecutionQuantity(int quantitySome) {
+		if (this.status != OrderStatus.NEW) return;
+		if (quantitySome < this.minimumExecutionQuantity) throw new NotEnoughExecutionException();
+	}
+
+	public void addYourselfToQueue() {
+		if (this.quantity != 0) this.security.getOrderBook().enqueue(this);
+	}
+
+	public void delete() {
+		if (side == Side.BUY) broker.increaseCreditBy(getValue());
+	}
+
+	public boolean willPriorityLostInUpdate(Order tempOrder) {
+		return (this.quantity < tempOrder.quantity) || (this.price != tempOrder.price);
+	}
 }

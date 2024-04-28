@@ -20,9 +20,6 @@ public class EnterOrderRq extends BaseOrderRq{
     private int peakSize;
     private int minimumExecutionQuantity;
     private int stopPrice;
-    // TODO 
-    // why update(amend) order should have brokerId and shareholder ?
-    // the orderId isn't enough ?
 
     private EnterOrderRq(OrderEntryType orderEntryType, long requestId, String securityIsin, long orderId,
     LocalDateTime entryTime, Side side, int quantity, int price, long brokerId, long shareholderId, int peakSize, 
@@ -117,8 +114,6 @@ public class EnterOrderRq extends BaseOrderRq{
 
     private boolean isPeakSizeValid() {
         return (peakSize >= 0) && (peakSize < quantity);
-        //TODO 
-        // peakSize <= quantity ??
     }
 
     private boolean isMinimumExecutionQuantityValid() {
