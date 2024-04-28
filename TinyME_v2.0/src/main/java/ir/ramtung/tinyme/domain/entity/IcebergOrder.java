@@ -71,8 +71,7 @@ public class IcebergOrder extends Order {
         super.queue();
         if (displayedQuantity > quantity)
             displayedQuantity = quantity;
-        // TODO
-        // asking for replenish
+        this.replenish();
     }
 
     @Override
@@ -90,7 +89,6 @@ public class IcebergOrder extends Order {
             status = OrderStatus.DONE;
             security.deleteOrder(side, orderId);
             if (quantity != 0) {
-                replenish();
                 security.getOrderBook().enqueue(this);
             }
         }
