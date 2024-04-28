@@ -103,11 +103,11 @@ class SecurityTest {
         security = Security.builder().build();
         broker = Broker.builder().credit(1_000_000L).build();
         orders = Arrays.asList(
-                new Order(1, security, Side.BUY, 304, 15700, broker, shareholder),
-                new Order(2, security, Side.BUY, 43, 15500, broker, shareholder),
-                new IcebergOrder(3, security, Side.BUY, 445, 15450, broker, shareholder, 100),
-                new Order(4, security, Side.BUY, 526, 15450, broker, shareholder),
-                new Order(5, security, Side.BUY, 1000, 15400, broker, shareholder)
+                new Order(1, security, Side.BUY, 304, 15700, broker, shareholder, entryTime),
+                new Order(2, security, Side.BUY, 43, 15500, broker, shareholder, entryTime),
+                new IcebergOrder(3, security, Side.BUY, 445, 0, 15450, broker, shareholder, entryTime, 100),
+                new Order(4, security, Side.BUY, 526, 15450, broker, shareholder, entryTime),
+                new Order(5, security, Side.BUY, 1000, 15400, broker, shareholder, entryTime)
         );
         broker.increaseCreditBy(35_841_250);
         orders.forEach(order -> security.getOrderBook().enqueue(order));
