@@ -2,42 +2,41 @@ package ir.ramtung.tinyme.repository;
 
 import ir.ramtung.tinyme.domain.entity.Security;
 import ir.ramtung.tinyme.repository.exception.NotFoundException;
-
-import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
+import org.springframework.stereotype.Component;
 
 @Component
 public class SecurityRepository {
-    private final HashMap<String, Security> securityByIsin = new HashMap<>();
 
-    public Security findSecurityByIsin(String isin) {
-        Security security = securityByIsin.get(isin);
-        if (security == null)
-            throw new NotFoundException();
-        else 
-            return security;
-    }
+	private final HashMap<String, Security> securityByIsin = new HashMap<>();
 
-    public boolean isThereSecurityWithIsin(String isin) {
-        try {
-            this.findSecurityByIsin(isin);
-            return true;
-        }
-        catch (NotFoundException exp) {
-            return false;
-        }
-    }
+	public Security findSecurityByIsin(String isin) {
+		Security security = securityByIsin.get(isin);
+		if (security == null) {
+			throw new NotFoundException();
+		}
 
-    public void addSecurity(Security security) {
-        securityByIsin.put(security.getIsin(), security);
-    }
+		return security;
+	}
 
-    public void clear() {
-        securityByIsin.clear();
-    }
+	public boolean isThereSecurityWithIsin(String isin) {
+		try {
+			this.findSecurityByIsin(isin);
+			return true;
+		} catch (NotFoundException exp) {
+			return false;
+		}
+	}
 
-    Iterable<? extends Security> allSecurities() {
-        return securityByIsin.values();
-    }
+	public void addSecurity(Security security) {
+		securityByIsin.put(security.getIsin(), security);
+	}
+
+	public void clear() {
+		securityByIsin.clear();
+	}
+
+	Iterable<? extends Security> allSecurities() {
+		return securityByIsin.values();
+	}
 }

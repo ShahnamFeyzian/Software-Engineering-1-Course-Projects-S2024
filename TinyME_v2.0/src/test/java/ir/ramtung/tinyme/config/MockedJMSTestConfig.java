@@ -7,8 +7,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 @TestConfiguration
 public class MockedJMSTestConfig {
-    @MockBean
-    EventPublisher eventPublisher;
-    @MockBean
-    RequestDispatcher requestDispatcher;
+
+	@MockBean
+	EventPublisher eventPublisher;
+
+	@MockBean
+	RequestDispatcher requestDispatcher;
 }

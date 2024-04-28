@@ -1,22 +1,20 @@
 package ir.ramtung.tinyme.messaging.exception;
 
+import java.util.List;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.List;
-
 @ToString
 public class InvalidRequestException extends RuntimeException {
-    @Getter
-    private final List<String> reasons;
 
-    public InvalidRequestException(List<String> reasons) {
-        this.reasons = reasons;
-    }
+	@Getter
+	private final List<String> reasons;
 
-    public InvalidRequestException(String reason) {
-        this.reasons = List.of(reason);
-    }
+	public InvalidRequestException(List<String> reasons) {
+		this.reasons = reasons;
+	}
 
-
+	public InvalidRequestException(String reason) {
+		this.reasons = List.of(reason);
+	}
 }

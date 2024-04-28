@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderActivatedEvent extends Event {
-    private long orderId;
+
+	private long orderId;
 }
