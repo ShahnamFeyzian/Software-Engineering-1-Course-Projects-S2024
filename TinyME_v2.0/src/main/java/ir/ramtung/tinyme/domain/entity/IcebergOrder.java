@@ -85,6 +85,10 @@ public class IcebergOrder extends Order {
         
         quantity -= amount;
         displayedQuantity -= amount;
+        checkEmptyDisplayQuantity();
+    }
+
+    private void checkEmptyDisplayQuantity() {
         if(displayedQuantity == 0) {
             status = OrderStatus.DONE;
             security.deleteOrder(side, orderId);
@@ -92,8 +96,6 @@ public class IcebergOrder extends Order {
                 security.getOrderBook().enqueue(this);
             }
         }
-        // TODO
-        // clean up this shit
     }
 
     @Override
