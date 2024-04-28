@@ -3,6 +3,8 @@ package ir.ramtung.tinyme.domain.entity;
 import ir.ramtung.tinyme.domain.exception.InvalidIcebergPeakSizeException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -54,6 +56,36 @@ public class IcebergOrder extends Order {
 		int price,
 		Broker broker,
 		Shareholder shareholder,
+		List<LocalDateTime> entryTimes,
+		int peakSize,
+		int displayedQuantity,
+		OrderStatus status
+	) {
+		super(
+			orderId,
+			security,
+			side,
+			quantity,
+			minimumExecutionQuantity,
+			price,
+			broker,
+			shareholder,
+			entryTimes,
+			status
+		);
+		this.peakSize = peakSize;
+		this.displayedQuantity = displayedQuantity;
+	}
+
+	public IcebergOrder(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
 		LocalDateTime entryTime,
 		int peakSize,
 		OrderStatus status
@@ -72,6 +104,36 @@ public class IcebergOrder extends Order {
 			Math.min(peakSize, quantity),
 			status
 		);
+	}
+
+	public IcebergOrder(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		List<LocalDateTime> entryTimes,
+		int peakSize,
+		OrderStatus status
+	) {
+		this(
+			orderId,
+			security,
+			side,
+			quantity,
+			minimumExecutionQuantity,
+			price,
+			broker,
+			shareholder,
+			entryTimes.getFirst(),
+			peakSize,
+			Math.min(peakSize, quantity),
+			status
+		);
+		this.entryTimes = entryTimes;
 	}
 
 	public IcebergOrder(
@@ -162,7 +224,7 @@ public class IcebergOrder extends Order {
 			price,
 			broker,
 			shareholder,
-			entryTime,
+			entryTimes,
 			peakSize,
 			OrderStatus.SNAPSHOT
 		);
@@ -179,7 +241,7 @@ public class IcebergOrder extends Order {
 			price,
 			broker,
 			shareholder,
-			entryTime,
+			entryTimes,
 			peakSize,
 			this.status
 		);

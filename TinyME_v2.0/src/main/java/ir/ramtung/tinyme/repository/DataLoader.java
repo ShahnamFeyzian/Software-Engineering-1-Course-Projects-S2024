@@ -269,7 +269,7 @@ public class DataLoader {
 			.add(String.valueOf(order.getPrice()))
 			.add(String.valueOf(order.getBroker().getBrokerId()))
 			.add(String.valueOf(order.getShareholder().getShareholderId()))
-			.add(order.getEntryTime().toString());
+			.add(order.getEntryTimes().getFirst().toString());
 		if (order instanceof IcebergOrder icebergOrder) {
 			orderJoiner
 				.add(String.valueOf(icebergOrder.getPeakSize()))

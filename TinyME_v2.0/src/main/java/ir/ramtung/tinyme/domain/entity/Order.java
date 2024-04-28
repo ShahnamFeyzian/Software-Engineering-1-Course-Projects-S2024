@@ -7,6 +7,9 @@ import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,9 +29,7 @@ public class Order {
 	protected int price;
 	protected Broker broker;
 	protected Shareholder shareholder;
-
-	@Builder.Default
-	protected LocalDateTime entryTime = LocalDateTime.now();
+	protected List<LocalDateTime> entryTimes = new ArrayList<>();
 
 	@Builder.Default
 	protected OrderStatus status = OrderStatus.NEW;
@@ -51,7 +52,31 @@ public class Order {
 		this.quantity = quantity;
 		this.minimumExecutionQuantity = minimumExecutionQuantity;
 		this.price = price;
-		this.entryTime = entryTime;
+		this.entryTimes.add(entryTime);
+		this.broker = broker;
+		this.shareholder = shareholder;
+		this.status = status;
+	}
+
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		List<LocalDateTime> entryTimes,
+		OrderStatus status
+	) {
+		this.orderId = orderId;
+		this.security = security;
+		this.side = side;
+		this.quantity = quantity;
+		this.minimumExecutionQuantity = minimumExecutionQuantity;
+		this.price = price;
+		this.entryTimes = entryTimes;
 		this.broker = broker;
 		this.shareholder = shareholder;
 		this.status = status;
@@ -175,7 +200,7 @@ public class Order {
 			price,
 			broker,
 			shareholder,
-			entryTime,
+			entryTimes,
 			OrderStatus.SNAPSHOT
 		);
 	}
@@ -190,7 +215,7 @@ public class Order {
 			price,
 			broker,
 			shareholder,
-			entryTime,
+			entryTimes,
 			this.status
 		);
 	}
@@ -228,7 +253,7 @@ public class Order {
 
 	public boolean queuesBefore(Order order) {
 		if (price == order.getPrice()) {
-			return entryTime.isBefore(order.getEntryTime());
+			return entryTimes.getLast().isBefore(order.entryTimes.getLast());
 		}
 
 		if (order.getSide() == Side.BUY) {
@@ -260,7 +285,7 @@ public class Order {
 		} else {
 			this.status = OrderStatus.UPDATING;
 		}
-
+		this.entryTimes.add(LocalDateTime.now());
 		this.quantity = tempOrder.quantity;
 		this.price = tempOrder.price;
 	}

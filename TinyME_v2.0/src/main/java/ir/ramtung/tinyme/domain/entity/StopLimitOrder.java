@@ -3,6 +3,8 @@ package ir.ramtung.tinyme.domain.entity;
 import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -44,6 +46,22 @@ public class StopLimitOrder extends Order {
 		this.stopPrice = stopPrice;
 	}
 
+	public StopLimitOrder(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		List<LocalDateTime> entryTimes,
+		int stopPrice,
+		OrderStatus status
+	) {
+		super(orderId, security, side, quantity, 0, price, broker, shareholder, entryTimes, status);
+		this.stopPrice = stopPrice;
+	}
+
 	public static StopLimitOrder createTempOrderByEnterRq(
 		Security security,
 		Broker broker,
@@ -74,7 +92,7 @@ public class StopLimitOrder extends Order {
 			price,
 			broker,
 			shareholder,
-			entryTime,
+			entryTimes,
 			stopPrice,
 			OrderStatus.SNAPSHOT
 		);
@@ -82,11 +100,14 @@ public class StopLimitOrder extends Order {
 
 	@Override
 	public boolean queuesBefore(Order order) {
-		StopLimitOrder sloOrder = (StopLimitOrder) order;
+		StopLimitOrder slo = (StopLimitOrder) order;
+		if (stopPrice == slo.stopPrice) {
+			return entryTimes.getLast().isBefore(slo.entryTimes.getLast());
+		}
 		if (this.side == Side.BUY) {
-			return stopPrice < sloOrder.getStopPrice();
+			return stopPrice < slo.getStopPrice();
 		} else {
-			return (stopPrice > sloOrder.getStopPrice());
+			return (stopPrice > slo.getStopPrice());
 		}
 	}
 
