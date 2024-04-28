@@ -55,7 +55,6 @@ public class Security {
 		if (!trades.isEmpty()) lastTradePrice = trades.getLast().getPrice();
 	}
 
-	// FIXME: can be called directly, maybe?
 	private void addNewStopLimitOrder(StopLimitOrder newOrder) {
 		orderBook.enqueue(newOrder);
 	}

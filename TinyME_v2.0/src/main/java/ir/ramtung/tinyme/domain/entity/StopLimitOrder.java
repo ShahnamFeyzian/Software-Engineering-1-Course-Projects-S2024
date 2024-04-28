@@ -3,8 +3,6 @@ package ir.ramtung.tinyme.domain.entity;
 import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.time.LocalDateTime;
-
-import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -105,8 +103,7 @@ public class StopLimitOrder extends Order {
 
 	@Override
 	public void queue() {
-		if(side == Side.BUY)
-			broker.decreaseCreditBy(getValue());
+		if (side == Side.BUY) broker.decreaseCreditBy(this.getValue());
 	}
 
 	@Override
