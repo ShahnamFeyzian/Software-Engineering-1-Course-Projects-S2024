@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,6 +23,7 @@ class SecurityTest {
     private Broker broker;
     private Shareholder shareholder;
     private List<Order> orders;
+    LocalDateTime entryTime = LocalDateTime.of(2001, 9, 11, 2, 14, 0);
     @Autowired
     Matcher matcher;
     @BeforeEach
@@ -31,16 +33,16 @@ class SecurityTest {
         shareholder = Shareholder.builder().shareholderId(0).build();
         shareholder.incPosition(security, 100_000);
         orders = Arrays.asList(
-                new Order(1, security, Side.BUY, 304, 15700, broker, shareholder),
-                new Order(2, security, Side.BUY, 43, 15500, broker, shareholder),
-                new Order(3, security, Side.BUY, 445, 15450, broker, shareholder),
-                new Order(4, security, Side.BUY, 526, 15450, broker, shareholder),
-                new Order(5, security, Side.BUY, 1000, 15400, broker, shareholder),
-                new Order(6, security, Side.SELL, 350, 15800, broker, shareholder),
-                new Order(7, security, Side.SELL, 285, 15810, broker, shareholder),
-                new Order(8, security, Side.SELL, 800, 15810, broker, shareholder),
-                new Order(9, security, Side.SELL, 340, 15820, broker, shareholder),
-                new Order(10, security, Side.SELL, 65, 15820, broker, shareholder)
+                new Order(1, security, Side.BUY, 304, 15700, broker, shareholder, entryTime),
+                new Order(2, security, Side.BUY, 43, 15500, broker, shareholder, entryTime),
+                new Order(3, security, Side.BUY, 445, 15450, broker, shareholder, entryTime),
+                new Order(4, security, Side.BUY, 526, 15450, broker, shareholder, entryTime),
+                new Order(5, security, Side.BUY, 1000, 15400, broker, shareholder, entryTime),
+                new Order(6, security, Side.SELL, 350, 15800, broker, shareholder, entryTime),
+                new Order(7, security, Side.SELL, 285, 15810, broker, shareholder, entryTime),
+                new Order(8, security, Side.SELL, 800, 15810, broker, shareholder, entryTime),
+                new Order(9, security, Side.SELL, 340, 15820, broker, shareholder, entryTime),
+                new Order(10, security, Side.SELL, 65, 15820, broker, shareholder, entryTime)
         );
         orders.forEach(order -> security.getOrderBook().enqueue(order));
     }
