@@ -27,6 +27,7 @@ public class SecurityTest {
     private List<Order> orders;
     private AssertingPack assertPack;
     private ScenarioGenerator scenarioGenerator;
+    LocalDateTime entryTime = LocalDateTime.of(2001, 9, 11, 2, 14, 0);
     @Autowired
     private Matcher matcher;
 
@@ -575,10 +576,8 @@ public class SecurityTest {
 
         
         public void add_two_buy_orders_with_same_price() {
-            Order order1 = new Order(6, security, Side.BUY, 10, 0, 300, buyerBroker, 
-                                     buyerShareholder, LocalDateTime.now().minusHours(1));
-            Order order2 = new Order(7, security, Side.BUY, 10, 0, 300, buyerBroker, 
-                                     buyerShareholder, LocalDateTime.now().minusHours(2));
+            Order order1 = new Order(6, security, Side.BUY, 10, 0, 300, buyerBroker, buyerShareholder, entryTime.minusHours(1));
+            Order order2 = new Order(7, security, Side.BUY, 10, 0, 300, buyerBroker, buyerShareholder, entryTime.minusHours(2));
 
             buyerBroker.increaseCreditBy(6000);
             security.addNewOrder(order1, matcher);
@@ -586,10 +585,8 @@ public class SecurityTest {
         }
 
         public void add_two_buy_ice_orders_with_same_price() {
-            IcebergOrder order1 = new IcebergOrder(6, security, Side.BUY, 10, 0, 300, buyerBroker, 
-                                                   buyerShareholder, LocalDateTime.now().plusHours(1), 10);
-            IcebergOrder order2 = new IcebergOrder(7, security, Side.BUY, 10, 0, 300, buyerBroker, 
-                                                   buyerShareholder, LocalDateTime.now().plusHours(2), 10);
+            IcebergOrder order1 = new IcebergOrder(6, security, Side.BUY, 10, 0, 300, buyerBroker, buyerShareholder, entryTime.plusHours(1), 10);
+            IcebergOrder order2 = new IcebergOrder(7, security, Side.BUY, 10, 0, 300, buyerBroker, buyerShareholder, entryTime.plusHours(2), 10);
 
             buyerBroker.increaseCreditBy(6000);
             security.addNewOrder(order1, matcher);
@@ -808,16 +805,16 @@ public class SecurityTest {
         buyerShareholder.incPosition(security, 0);
         orderBook = security.getOrderBook();
         orders = Arrays.asList(
-            new Order(1, security, Side.BUY, 10, 100, buyerBroker, buyerShareholder),
-            new Order(2, security, Side.BUY, 10, 200, buyerBroker, buyerShareholder),
-            new Order(3, security, Side.BUY, 10, 300, buyerBroker, buyerShareholder),
-            new Order(4, security, Side.BUY, 10, 400, buyerBroker, buyerShareholder),
-            new IcebergOrder(5, security, Side.BUY, 45, 500, buyerBroker, buyerShareholder, 10),
-            new Order(1, security, Side.SELL, 10, 600, sellerBroker, sellerShareholder),
-            new Order(2, security, Side.SELL, 10, 700, sellerBroker, sellerShareholder),
-            new Order(3, security, Side.SELL, 10, 800, sellerBroker, sellerShareholder),
-            new Order(4, security, Side.SELL, 10, 900, sellerBroker, sellerShareholder),
-            new IcebergOrder(5, security, Side.SELL, 45, 1000, sellerBroker, sellerShareholder, 10)
+            new Order(1, security, Side.BUY, 10, 100, buyerBroker, buyerShareholder, entryTime),
+            new Order(2, security, Side.BUY, 10, 200, buyerBroker, buyerShareholder, entryTime),
+            new Order(3, security, Side.BUY, 10, 300, buyerBroker, buyerShareholder, entryTime),
+            new Order(4, security, Side.BUY, 10, 400, buyerBroker, buyerShareholder, entryTime),
+            new IcebergOrder(5, security, Side.BUY, 45, 0, 500, buyerBroker, buyerShareholder, entryTime, 10),
+            new Order(1, security, Side.SELL, 10, 600, sellerBroker, sellerShareholder, entryTime),
+            new Order(2, security, Side.SELL, 10, 700, sellerBroker, sellerShareholder, entryTime),
+            new Order(3, security, Side.SELL, 10, 800, sellerBroker, sellerShareholder, entryTime),
+            new Order(4, security, Side.SELL, 10, 900, sellerBroker, sellerShareholder, entryTime),
+            new IcebergOrder(5, security, Side.SELL, 45, 0, 1000, sellerBroker, sellerShareholder, entryTime, 10)
         );
         orders.forEach(order -> orderBook.enqueue(order));
         assertPack = new AssertingPack();
@@ -4027,28 +4024,27 @@ public class SecurityTest {
         assertThat(orderBook.isThereOrderWithId(Side.BUY, 6)).isFalse();
     }
 
-    // FIXME: These three have race condition problem
-    // @Test
-    // public void add_two_buy_orders_with_same_price_and_check_orders_in_queue() {
-    //     scenarioGenerator.add_two_buy_orders_with_same_price();
-    //     assertPack.assertOrderInQueue(Side.BUY, 2, 7, 10, 300);
-    //     assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300);
-    //     assertPack.assertOrderInQueue(Side.BUY, 4, 3, 10, 300);
-    // }
+    @Test
+    public void add_two_buy_orders_with_same_price_and_check_orders_in_queue() {
+        scenarioGenerator.add_two_buy_orders_with_same_price();
+        assertPack.assertOrderInQueue(Side.BUY, 2, 7, 10, 300);
+        assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300);
+        assertPack.assertOrderInQueue(Side.BUY, 4, 3, 10, 300);
+    }
 
-    // @Test
-    // public void add_two_buy_ice_orders_with_same_price_and_check_orders_in_queue() {
-        //     scenarioGenerator.add_two_buy_ice_orders_with_same_price();
-        //     assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
-        //     assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300, 10, 10);
-        //     assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300, 10, 10);
-    // }
+    @Test
+    public void add_two_buy_ice_orders_with_same_price_and_check_orders_in_queue() {
+            scenarioGenerator.add_two_buy_ice_orders_with_same_price();
+            assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
+            assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300, 10, 10);
+            assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300, 10, 10);
+    }
 
-    // @Test
-    // public void add_sell_order_causes_rollback_for_buy_orders_with_same_price_and_check_match_result() {
-        //     MatchResult res = scenarioGenerator.add_sell_order_causes_rollback_for_buy_orders_with_same_price();
-        //     assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
-        // }
+    @Test
+    public void add_sell_order_causes_rollback_for_buy_orders_with_same_price_and_check_match_result() {
+        MatchResult res = scenarioGenerator.add_sell_order_causes_rollback_for_buy_orders_with_same_price();
+        assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
+    }
         
     @Test
     public void add_sell_order_causes_rollback_for_buy_orders_with_same_price_and_check_orders_in_queue() {
@@ -4064,14 +4060,13 @@ public class SecurityTest {
         assertThat(res.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION);
     }
     
-    // FIXME: This has race condition problem
-    // @Test
-    // public void add_sell_order_causes_rollback_for_buy_ice_orders_with_same_price_and_check_orders_in_queue() {
-    //     scenarioGenerator.add_sell_order_causes_rollback_for_buy_ice_orders_with_same_price();
-    //     assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
-    //     assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300, 10, 10);
-    //     assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300, 10, 10);
-    // }
+    @Test
+    public void add_sell_order_causes_rollback_for_buy_ice_orders_with_same_price_and_check_orders_in_queue() {
+        scenarioGenerator.add_sell_order_causes_rollback_for_buy_ice_orders_with_same_price();
+        assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
+        assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300, 10, 10);
+        assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300, 10, 10);
+    }
 
     @Test
     public void add_buy_order_matches_with_all_seller_queue_and_not_finished_and_check_last_trade_price() {

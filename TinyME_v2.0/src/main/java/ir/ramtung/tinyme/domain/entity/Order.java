@@ -13,6 +13,8 @@ import lombok.ToString;
 
 import java.time.LocalDateTime;
 
+import org.springframework.cglib.core.Local;
+
 @Builder
 @EqualsAndHashCode
 @ToString
@@ -30,7 +32,7 @@ public class Order {
     protected LocalDateTime entryTime = LocalDateTime.now();
     @Builder.Default
     protected OrderStatus status = OrderStatus.NEW;
-
+    
     public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder, 
     LocalDateTime entryTime, OrderStatus status) {
         this.orderId = orderId;
@@ -44,20 +46,24 @@ public class Order {
         this.shareholder = shareholder;
         this.status = status;
     }
-
+    
     public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder, 
     LocalDateTime entryTime) {
         this(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, OrderStatus.NEW);
     }
-
+    
+    // The constructor Order(long, Security, Side, int, int, Broker, Shareholder, LocalDateTime) is undefinedJava(134217858)
     public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder) {
         this(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, LocalDateTime.now());
     }
-
+    
     public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder) {
         this(orderId, security, side, quantity, 0, price, broker, shareholder);
     }
-
+    
+    public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, LocalDateTime entryTime) {
+        this(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime);
+    }
     public Order(Order other) {
         this(other.orderId, other.security, other.side, other.quantity, 0, other.price, other.broker, other.shareholder, LocalDateTime.now(), OrderStatus.NEW);
     }
@@ -73,8 +79,6 @@ public class Order {
 
     public Order snapshotWithQuantity(int newQuantity) {
         return new Order(orderId, security, side, newQuantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, this.status);
-        // TODO
-        // this exists just for unit tests and should remove
     }
 
     public boolean matches(Order other) {
@@ -107,8 +111,8 @@ public class Order {
     }
 
     public boolean queuesBefore(Order order) {
-        // if (price == order.getPrice())
-        //     return entryTime.isBefore(order.getEntryTime()); // FIXME: this makes conflict with some tests in domain/securityTest
+        if (price == order.getPrice())
+            return entryTime.isBefore(order.getEntryTime());
         if (order.getSide() == Side.BUY) {
             return price > order.getPrice();
         } else {

@@ -88,7 +88,7 @@ public class StopLimitOrder extends Order {
 	}
 
 	@Override
-	public void queue() { //TODO: should be removed, its parent should handle it
+	public void queue() { 
 		if (side == Side.BUY) broker.decreaseCreditBy(this.getValue());
 	}
 

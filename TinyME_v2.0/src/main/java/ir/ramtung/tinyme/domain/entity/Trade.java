@@ -36,8 +36,6 @@ public class Trade {
             this.buyFirstVersion = order2.snapshot();
         }
         this.isBuyQueued = (this.buy.getStatus() == OrderStatus.QUEUED);
-        // TODO
-        // this exists just for unit tests and should remove
     }
 
     public Trade(Security security, int price, int quantity, Order order1, Order order2, Order sellFirstVersion, Order buyFirstVersion, boolean isBuyQueued) {
