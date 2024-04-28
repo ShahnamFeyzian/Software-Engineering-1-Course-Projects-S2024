@@ -775,6 +775,66 @@ public class SecurityTest {
 			security.addNewOrder(order2, matcher);
 		}
 
+		public void add_two_sell_orders_with_same_price() {
+			Order order1 = new Order(
+				6,
+				security,
+				Side.SELL,
+				10,
+				0,
+				575,
+				sellerBroker,
+				sellerShareholder,
+				entryTime.minusHours(1)
+			);
+			Order order2 = new Order(
+				7,
+				security,
+				Side.SELL,
+				10,
+				0,
+				575,
+				sellerBroker,
+				sellerShareholder,
+				entryTime.minusHours(2)
+			);
+
+			sellerShareholder.incPosition(security, 20);
+			security.addNewOrder(order1, matcher);
+			security.addNewOrder(order2, matcher);
+		}
+
+		public void add_two_sell_ice_orders_with_same_price() {
+			IcebergOrder order1 = new IcebergOrder(
+				6,
+				security,
+				Side.SELL,
+				10,
+				0,
+				575,
+				sellerBroker,
+				sellerShareholder,
+				entryTime.plusHours(1),
+				10
+			);
+			IcebergOrder order2 = new IcebergOrder(
+				7,
+				security,
+				Side.SELL,
+				10,
+				0,
+				575,
+				sellerBroker,
+				sellerShareholder,
+				entryTime.plusHours(2),
+				10
+			);
+
+			sellerShareholder.incPosition(security, 20);
+			security.addNewOrder(order1, matcher);
+			security.addNewOrder(order2, matcher);
+		}
+
 		public MatchResult add_sell_order_causes_rollback_for_buy_orders_with_same_price() {
 			this.add_two_buy_orders_with_same_price();
 			Order order = new Order(9, security, Side.SELL, 300, 300, 0, sellerBroker, sellerShareholder);
@@ -787,6 +847,26 @@ public class SecurityTest {
 			Order order = new Order(9, security, Side.SELL, 300, 300, 0, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 300);
 			return security.addNewOrder(order, matcher).getFirst();
+		}
+
+		public MatchResult change_buy_order_price_and_equals_it_with_another_order() {
+			Order order = new Order(4, security, Side.BUY, 10, 200, buyerBroker, buyerShareholder);
+			return security.updateOrder(order, matcher).getFirst();
+		}
+
+		public MatchResult change_sell_order_price_and_equals_it_with_another_order() {
+			Order order = new Order(4, security, Side.SELL, 10, 700, sellerBroker, sellerShareholder);
+			return security.updateOrder(order, matcher).getFirst();
+		}
+
+		public MatchResult change_buy_ice_order_price_and_equals_it_with_another_order() {
+			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 300, buyerBroker, buyerShareholder, 10);
+			return security.updateOrder(order, matcher).getFirst();
+		}
+
+		public MatchResult change_sell_ice_order_price_and_equals_it_with_another_order() {
+			IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 700, sellerBroker, sellerShareholder, 10);
+			return security.updateOrder(order, matcher).getFirst();
 		}
 
 		public MatchResult add_sell_stop_limit_order_but_not_enough_position() {
@@ -4448,6 +4528,54 @@ public class SecurityTest {
 		assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);
 		assertPack.assertOrderInQueue(Side.BUY, 3, 6, 10, 300, 10, 10);
 		assertPack.assertOrderInQueue(Side.BUY, 4, 7, 10, 300, 10, 10);
+	}
+
+	@Test
+	public void change_buy_order_price_and_equals_it_with_another_order_and_check_buy_queue() {
+		scenarioGenerator.change_buy_order_price_and_equals_it_with_another_order();
+		assertPack.assertOrderInQueue(Side.BUY, 1, 3, 10, 300);
+		assertPack.assertOrderInQueue(Side.BUY, 2, 2, 10, 200);
+		assertPack.assertOrderInQueue(Side.BUY, 3, 4, 10, 200);
+	}
+
+	@Test
+	public void change_sell_order_price_and_equals_it_with_another_order_and_check_sell_queue() {
+		scenarioGenerator.change_sell_order_price_and_equals_it_with_another_order();
+		assertPack.assertOrderInQueue(Side.SELL, 3, 3, 10, 800);
+		assertPack.assertOrderInQueue(Side.SELL, 2, 4, 10, 700);
+		assertPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
+	}
+
+	@Test
+	public void change_buy_ice_order_price_and_equals_it_with_another_order_and_check_buy_queue() {
+		scenarioGenerator.change_buy_ice_order_price_and_equals_it_with_another_order();
+		assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
+		assertPack.assertOrderInQueue(Side.BUY, 1, 3, 10, 300);
+		assertPack.assertOrderInQueue(Side.BUY, 2, 5, 45, 300, 10, 10);
+	}
+
+	@Test
+	public void change_sell_ice_order_price_and_equals_it_with_another_order_and_check_sell_queue() {
+		scenarioGenerator.change_sell_ice_order_price_and_equals_it_with_another_order();
+		assertPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
+		assertPack.assertOrderInQueue(Side.SELL, 2, 5, 45, 700, 10, 10);
+		assertPack.assertOrderInQueue(Side.SELL, 3, 3, 10, 800);
+	}
+
+	@Test
+	public void add_two_sell_orders_with_same_price_and_check_sell_queue() {
+		scenarioGenerator.add_two_sell_orders_with_same_price();
+		assertPack.assertOrderInQueue(Side.SELL, 0, 7, 10, 575);
+		assertPack.assertOrderInQueue(Side.SELL, 1, 6, 10, 575);
+		assertPack.assertOrderInQueue(Side.SELL, 2, 1, 10, 600);
+	}
+
+	@Test
+	public void add_two_sell_ice_orders_with_same_price_and_check_sell_queue() {
+		scenarioGenerator.add_two_sell_ice_orders_with_same_price();
+		assertPack.assertOrderInQueue(Side.SELL, 0, 6, 10, 575, 10, 10);
+		assertPack.assertOrderInQueue(Side.SELL, 1, 7, 10, 575, 10, 10);
+		assertPack.assertOrderInQueue(Side.SELL, 2, 1, 10, 600);
 	}
 
 	@Test
