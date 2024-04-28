@@ -132,7 +132,7 @@ public class OrderHandlerTest {
     }
     
     @Test
-    void update_order_invalid_peaksize() {
+    void update_order_invalid_peak_size() {
         Order inQueueOrder = new Order(1, security, Side.BUY, 100, 100, broker1, shareholder);
         broker1.increaseCreditBy(100 * 100);
         security.getOrderBook().enqueue(inQueueOrder);
@@ -146,7 +146,7 @@ public class OrderHandlerTest {
     }
     
     @Test
-    void update_iceberg_order_invalid_peaksize() {
+    void update_iceberg_order_invalid_peak_size() {
         Order inQueueOrder = new IcebergOrder(1, security, Side.BUY, 100, 100, broker1, shareholder, 10);
         broker1.increaseCreditBy(100 * 100);
         security.getOrderBook().enqueue(inQueueOrder);
@@ -749,7 +749,6 @@ public class OrderHandlerTest {
         StopLimitOrder stopLimitOrder = new StopLimitOrder(6, security, Side.BUY, 1, 600, broker1, shareholder, 700);
         security.getOrderBook().enqueue(stopLimitOrder);
 
-        Trade trade = new Trade(security, 600, 1, order, stopLimitOrder);
         broker1.increaseCreditBy(600);
         orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(3, security.getIsin(), 6, LocalDateTime.now(), Side.BUY, 1, 600, broker1.getBrokerId(), shareholder.getShareholderId(), 0, 0, 400));
         verify(eventPublisher).publish(new OrderAcceptedEvent(3, 6));

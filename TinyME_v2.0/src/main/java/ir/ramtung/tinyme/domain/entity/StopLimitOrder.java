@@ -2,7 +2,6 @@ package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
-
 import java.time.LocalDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,10 +44,25 @@ public class StopLimitOrder extends Order {
 		this.stopPrice = stopPrice;
 	}
 
-	static public StopLimitOrder createTempOrderByEnterRq(Security security, Broker broker, Shareholder shareholder, EnterOrderRq req) {
-        return new StopLimitOrder(req.getOrderId(), security, req.getSide(), req.getQuantity(), 
-                         req.getPrice(), broker, shareholder, req.getEntryTime(), req.getStopPrice(), OrderStatus.NEW);
-    }
+	public static StopLimitOrder createTempOrderByEnterRq(
+		Security security,
+		Broker broker,
+		Shareholder shareholder,
+		EnterOrderRq req
+	) {
+		return new StopLimitOrder(
+			req.getOrderId(),
+			security,
+			req.getSide(),
+			req.getQuantity(),
+			req.getPrice(),
+			broker,
+			shareholder,
+			req.getEntryTime(),
+			req.getStopPrice(),
+			OrderStatus.NEW
+		);
+	}
 
 	@Override
 	public StopLimitOrder snapshot() {
@@ -88,7 +102,7 @@ public class StopLimitOrder extends Order {
 	}
 
 	@Override
-	public void queue() { 
+	public void queue() {
 		if (side == Side.BUY) broker.decreaseCreditBy(this.getValue());
 	}
 
@@ -100,8 +114,8 @@ public class StopLimitOrder extends Order {
 	}
 
 	@Override
-	public boolean willPriortyLostInUpdate(Order tempOrder) {
-		if (super.willPriortyLostInUpdate(tempOrder)) {
+	public boolean willPriorityLostInUpdate(Order tempOrder) {
+		if (super.willPriorityLostInUpdate(tempOrder)) {
 			return true;
 		}
 		StopLimitOrder tempSlo = (StopLimitOrder) tempOrder;

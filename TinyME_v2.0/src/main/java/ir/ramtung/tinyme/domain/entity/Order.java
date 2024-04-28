@@ -2,188 +2,293 @@ package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.exception.CantQueueOrderException;
 import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
+import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
-import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.time.LocalDateTime;
-
-import org.springframework.cglib.core.Local;
 
 @Builder
 @EqualsAndHashCode
 @ToString
 @Getter
 public class Order {
-    protected long orderId;
-    protected Security security;
-    protected Side side;
-    protected int quantity;
-    protected int minimumExecutionQuantity;
-    protected int price;
-    protected Broker broker;
-    protected Shareholder shareholder;
-    @Builder.Default
-    protected LocalDateTime entryTime = LocalDateTime.now();
-    @Builder.Default
-    protected OrderStatus status = OrderStatus.NEW;
-    
-    public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder, 
-    LocalDateTime entryTime, OrderStatus status) {
-        this.orderId = orderId;
-        this.security = security;
-        this.side = side;
-        this.quantity = quantity;
-        this.minimumExecutionQuantity = minimumExecutionQuantity;
-        this.price = price;
-        this.entryTime = entryTime;
-        this.broker = broker;
-        this.shareholder = shareholder;
-        this.status = status;
-    }
-    
-    public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder, 
-    LocalDateTime entryTime) {
-        this(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, OrderStatus.NEW);
-    }
-    
-    // The constructor Order(long, Security, Side, int, int, Broker, Shareholder, LocalDateTime) is undefinedJava(134217858)
-    public Order(long orderId, Security security, Side side, int quantity, int minimumExecutionQuantity, int price, Broker broker, Shareholder shareholder) {
-        this(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, LocalDateTime.now());
-    }
-    
-    public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder) {
-        this(orderId, security, side, quantity, 0, price, broker, shareholder);
-    }
-    
-    public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, LocalDateTime entryTime) {
-        this(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime);
-    }
-    public Order(Order other) {
-        this(other.orderId, other.security, other.side, other.quantity, 0, other.price, other.broker, other.shareholder, LocalDateTime.now(), OrderStatus.NEW);
-    }
 
-    static public Order createTempOrderByEnterRq(Security security, Broker broker, Shareholder shareholder, EnterOrderRq req) {
-        return new Order(req.getOrderId(), security, req.getSide(), req.getQuantity(), req.getMinimumExecutionQuantity(), 
-                         req.getPrice(), broker, shareholder, req.getEntryTime(), OrderStatus.NEW);
-    }
+	protected long orderId;
+	protected Security security;
+	protected Side side;
+	protected int quantity;
+	protected int minimumExecutionQuantity;
+	protected int price;
+	protected Broker broker;
+	protected Shareholder shareholder;
 
-    public Order snapshot() {
-        return new Order(orderId, security, side, quantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, OrderStatus.SNAPSHOT);
-    }
+	@Builder.Default
+	protected LocalDateTime entryTime = LocalDateTime.now();
 
-    public Order snapshotWithQuantity(int newQuantity) {
-        return new Order(orderId, security, side, newQuantity, minimumExecutionQuantity, price, broker, shareholder, entryTime, this.status);
-    }
+	@Builder.Default
+	protected OrderStatus status = OrderStatus.NEW;
 
-    public boolean matches(Order other) {
-        if (side == Side.BUY)
-            return price >= other.price;
-        else
-            return price <= other.price;
-    }
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		LocalDateTime entryTime,
+		OrderStatus status
+	) {
+		this.orderId = orderId;
+		this.security = security;
+		this.side = side;
+		this.quantity = quantity;
+		this.minimumExecutionQuantity = minimumExecutionQuantity;
+		this.price = price;
+		this.entryTime = entryTime;
+		this.broker = broker;
+		this.shareholder = shareholder;
+		this.status = status;
+	}
 
-    public void decreaseQuantity(int amount) {
-        if (amount > quantity || amount <= 0)
-            throw new IllegalArgumentException();
-        
-        quantity -= amount;
-        if(quantity == 0 && status == OrderStatus.QUEUED) {
-            status = OrderStatus.DONE;
-            security.deleteOrder(side, orderId);
-        }
-    }
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		LocalDateTime entryTime
+	) {
+		this(
+			orderId,
+			security,
+			side,
+			quantity,
+			minimumExecutionQuantity,
+			price,
+			broker,
+			shareholder,
+			entryTime,
+			OrderStatus.NEW
+		);
+	}
 
-    public void rollback(Order firstVersion) {
-        this.quantity = firstVersion.quantity;
-        if (status == OrderStatus.DONE) {
-            security.getOrderBook().enqueue(this);
-        }   
-    }
+	// The constructor Order(long, Security, Side, int, int, Broker, Shareholder, LocalDateTime) is undefinedJava(134217858)
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder
+	) {
+		this(
+			orderId,
+			security,
+			side,
+			quantity,
+			minimumExecutionQuantity,
+			price,
+			broker,
+			shareholder,
+			LocalDateTime.now()
+		);
+	}
 
-    public void makeQuantityZero() {
-        quantity = 0;
-    }
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder
+	) {
+		this(orderId, security, side, quantity, 0, price, broker, shareholder);
+	}
 
-    public boolean queuesBefore(Order order) {
-        if (price == order.getPrice())
-            return entryTime.isBefore(order.getEntryTime());
-        if (order.getSide() == Side.BUY) {
-            return price > order.getPrice();
-        } else {
-            return price < order.getPrice();
-        }
-    }
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		LocalDateTime entryTime
+	) {
+		this(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime);
+	}
 
-    public void queue() {
-        if (this.status == OrderStatus.QUEUED){
-            throw new CantQueueOrderException();
-        }
-        if (side == Side.BUY && status != OrderStatus.LOADING) {
-            broker.decreaseCreditBy(this.getValue());
-        }
-        status = OrderStatus.QUEUED;
-    }
+	public Order(Order other) {
+		this(
+			other.orderId,
+			other.security,
+			other.side,
+			other.quantity,
+			0,
+			other.price,
+			other.broker,
+			other.shareholder,
+			LocalDateTime.now(),
+			OrderStatus.NEW
+		);
+	}
 
-    public boolean isQuantityIncreased(int newQuantity) {
-        return newQuantity > quantity;
-    }
+	public static Order createTempOrderByEnterRq(
+		Security security,
+		Broker broker,
+		Shareholder shareholder,
+		EnterOrderRq req
+	) {
+		return new Order(
+			req.getOrderId(),
+			security,
+			req.getSide(),
+			req.getQuantity(),
+			req.getMinimumExecutionQuantity(),
+			req.getPrice(),
+			broker,
+			shareholder,
+			req.getEntryTime(),
+			OrderStatus.NEW
+		);
+	}
 
-    public void updateFromTempOrder(Order tempOrder) {
-        if (!this.willPriortyLostInUpdate(tempOrder) && this.side == Side.BUY) {
-            broker.increaseCreditBy(this.getValue());
-            broker.decreaseCreditBy(tempOrder.getValue());
-        }
-        else
-            this.status = OrderStatus.UPDATING;
-        this.quantity = tempOrder.quantity;
-        this.price = tempOrder.price;
-    }
+	public Order snapshot() {
+		return new Order(
+			orderId,
+			security,
+			side,
+			quantity,
+			minimumExecutionQuantity,
+			price,
+			broker,
+			shareholder,
+			entryTime,
+			OrderStatus.SNAPSHOT
+		);
+	}
 
-    public long getValue() {
-        return (long)price * quantity;
-    }
+	public Order snapshotWithQuantity(int newQuantity) {
+		return new Order(
+			orderId,
+			security,
+			side,
+			newQuantity,
+			minimumExecutionQuantity,
+			price,
+			broker,
+			shareholder,
+			entryTime,
+			this.status
+		);
+	}
 
-    public int getTotalQuantity() { return quantity; }
+	public boolean matches(Order other) {
+		if (side == Side.BUY) return price >= other.price; else return price <= other.price;
+	}
 
-    public void checkNewPeakSize(int peakSize) {
-        if (peakSize != 0)
-            throw new InvalidPeakSizeException();
-    }
+	public void decreaseQuantity(int amount) {
+		if (amount > quantity || amount <= 0) throw new IllegalArgumentException();
 
-    public void checkNewMinimumExecutionQuantity(int minimumExecutionQuantity) {
-        if (this.minimumExecutionQuantity != minimumExecutionQuantity)
-            throw new UpdateMinimumExecutionQuantityException();
-    }
+		quantity -= amount;
+		if (quantity == 0 && status == OrderStatus.QUEUED) {
+			status = OrderStatus.DONE;
+			security.deleteOrder(side, orderId);
+		}
+	}
 
-    public void checkNewStopLimitPrice(int stopLimitPrice) {
-        if(stopLimitPrice != 0)
-            throw new InvalidStopLimitPriceException();
-    }
+	public void rollback(Order firstVersion) {
+		this.quantity = firstVersion.quantity;
+		if (status == OrderStatus.DONE) {
+			security.getOrderBook().enqueue(this);
+		}
+	}
 
-    public void checkExecutionQuantity(int quantitySome) {
-        if (this.status != OrderStatus.NEW)
-            return;
-        if (quantitySome < this.minimumExecutionQuantity)
-            throw new NotEnoughExecutionException();
-    }
+	public void makeQuantityZero() {
+		quantity = 0;
+	}
 
-    public void addYourselfToQueue() {
-        if (this.quantity != 0)
-            this.security.getOrderBook().enqueue(this);
-    }
+	public boolean queuesBefore(Order order) {
+		if (price == order.getPrice()) return entryTime.isBefore(order.getEntryTime());
+		if (order.getSide() == Side.BUY) {
+			return price > order.getPrice();
+		} else {
+			return price < order.getPrice();
+		}
+	}
 
-    public void delete() {
-        if (side == Side.BUY)
-            broker.increaseCreditBy(getValue());
-    }
+	public void queue() {
+		if (this.status == OrderStatus.QUEUED) {
+			throw new CantQueueOrderException();
+		}
+		if (side == Side.BUY && status != OrderStatus.LOADING) {
+			broker.decreaseCreditBy(this.getValue());
+		}
+		status = OrderStatus.QUEUED;
+	}
 
-    public boolean willPriortyLostInUpdate(Order tempOrder) {
-        return (this.quantity < tempOrder.quantity) || (this.price != tempOrder.price);
-    }
+	public boolean isQuantityIncreased(int newQuantity) {
+		return newQuantity > quantity;
+	}
+
+	public void updateFromTempOrder(Order tempOrder) {
+		if (!this.willPriorityLostInUpdate(tempOrder) && this.side == Side.BUY) {
+			broker.increaseCreditBy(this.getValue());
+			broker.decreaseCreditBy(tempOrder.getValue());
+		} else this.status = OrderStatus.UPDATING;
+		this.quantity = tempOrder.quantity;
+		this.price = tempOrder.price;
+	}
+
+	public long getValue() {
+		return (long) price * quantity;
+	}
+
+	public int getTotalQuantity() {
+		return quantity;
+	}
+
+	public void checkNewPeakSize(int peakSize) {
+		if (peakSize != 0) throw new InvalidPeakSizeException();
+	}
+
+	public void checkNewMinimumExecutionQuantity(int minimumExecutionQuantity) {
+		if (
+			this.minimumExecutionQuantity != minimumExecutionQuantity
+		) throw new UpdateMinimumExecutionQuantityException();
+	}
+
+	public void checkNewStopLimitPrice(int stopLimitPrice) {
+		if (stopLimitPrice != 0) throw new InvalidStopLimitPriceException();
+	}
+
+	public void checkExecutionQuantity(int quantitySome) {
+		if (this.status != OrderStatus.NEW) return;
+		if (quantitySome < this.minimumExecutionQuantity) throw new NotEnoughExecutionException();
+	}
+
+	public void addYourselfToQueue() {
+		if (this.quantity != 0) this.security.getOrderBook().enqueue(this);
+	}
+
+	public void delete() {
+		if (side == Side.BUY) broker.increaseCreditBy(getValue());
+	}
+
+	public boolean willPriorityLostInUpdate(Order tempOrder) {
+		return (this.quantity < tempOrder.quantity) || (this.price != tempOrder.price);
+	}
 }

@@ -77,19 +77,17 @@ public class Security {
 		try {
 			Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
 			checkPositionForUpdateOrder(mainOrder, tempOrder);
-			boolean losesPriority = mainOrder.willPriortyLostInUpdate(tempOrder);
+			boolean losesPriority = mainOrder.willPriorityLostInUpdate(tempOrder);
 			if (losesPriority) {
 				Order originalOrder = mainOrder.snapshot();
 				orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
 				mainOrder.updateFromTempOrder(tempOrder);
 				return reAddUpdatedOrder(mainOrder, originalOrder, matcher);
-			} 
-			else {
+			} else {
 				mainOrder.updateFromTempOrder(tempOrder);
 				return List.of(MatchResult.executed(null, List.of()));
 			}
-		} 
-		catch (NotEnoughPositionException exp) {
+		} catch (NotEnoughPositionException exp) {
 			return List.of(MatchResult.notEnoughPositions());
 		}
 	}
@@ -98,8 +96,7 @@ public class Security {
 		if (updatedOrder instanceof StopLimitOrder updatedSlo) {
 			StopLimitOrder originalSlo = (StopLimitOrder) originalOrder;
 			return reAddUpdatedSlo(updatedSlo, originalSlo, matcher);
-		}
-		else {
+		} else {
 			return reAddActiveOrder(updatedOrder, originalOrder, matcher);
 		}
 	}
@@ -115,7 +112,11 @@ public class Security {
 		return results;
 	}
 
-	private List<MatchResult> reAddUpdatedSlo(StopLimitOrder updatedOrder, StopLimitOrder originalOrder, Matcher matcher) {
+	private List<MatchResult> reAddUpdatedSlo(
+		StopLimitOrder updatedOrder,
+		StopLimitOrder originalOrder,
+		Matcher matcher
+	) {
 		try {
 			List<MatchResult> results = new LinkedList<>();
 			results.add(MatchResult.executed(updatedOrder, List.of()));
