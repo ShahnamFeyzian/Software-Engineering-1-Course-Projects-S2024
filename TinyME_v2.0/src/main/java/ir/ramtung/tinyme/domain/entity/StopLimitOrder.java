@@ -98,13 +98,6 @@ public class StopLimitOrder extends Order {
 	}
 
 	@Override
-	public void queue() {
-		if (side == Side.BUY) {
-			broker.decreaseCreditBy(this.getValue());
-		}
-	}
-
-	@Override
 	public void updateFromTempOrder(Order tempOrder) {
 		super.updateFromTempOrder(tempOrder);
 		StopLimitOrder tempSlo = (StopLimitOrder) tempOrder;

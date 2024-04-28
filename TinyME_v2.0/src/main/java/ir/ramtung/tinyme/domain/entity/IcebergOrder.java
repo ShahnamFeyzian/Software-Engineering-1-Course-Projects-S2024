@@ -197,9 +197,6 @@ public class IcebergOrder extends Order {
 	@Override
 	public void queue() {
 		super.queue();
-		if (displayedQuantity > quantity) {
-			displayedQuantity = quantity;
-		}
 		this.replenish();
 	}
 
