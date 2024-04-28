@@ -17,7 +17,6 @@ import lombok.ToString;
 @ToString
 @Getter
 public class Order {
-
 	protected long orderId;
 	protected Security security;
 	protected Side side;
@@ -82,7 +81,6 @@ public class Order {
 		);
 	}
 
-	// The constructor Order(long, Security, Side, int, int, Broker, Shareholder, LocalDateTime) is undefinedJava(134217858)
 	public Order(
 		long orderId,
 		Security security,

@@ -66,9 +66,9 @@ public class OrderBook {
 		return null;
 	}
 
-	public boolean isThereOrderWithId(Side side, long orderId) {
+	public boolean isThereSlOrderWithId(Side side, long orderId) {
 		try {
-			findByOrderId(side, orderId);
+			findSlOrder(side, orderId);
 			return true;
 		} catch (NotFoundException exp) {
 			return false;
@@ -83,12 +83,12 @@ public class OrderBook {
 	}
 
 	public Order findOrderToMatchWith(Order newOrder) {
-		var queue = getQueue(newOrder.getSide().opposite());
+		var queue = getOrderQueue(newOrder.getSide().opposite());
 		if (newOrder.matches(queue.getFirst())) return queue.getFirst(); else throw new NotFoundException();
 	}
 
 	public void putBack(Order order) {
-		LinkedList<Order> queue = getQueue(order.getSide());
+		LinkedList<Order> queue = getOrderQueue(order.getSide());
 		order.queue();
 		queue.addFirst(order);
 	}
@@ -99,11 +99,7 @@ public class OrderBook {
 	}
 
 	public boolean hasOrderOfType(Side side) {
-		return !getQueue(side).isEmpty();
-	}
-
-	public void removeFirst(Side side) {
-		getQueue(side).removeFirst();
+		return !getOrderQueue(side).isEmpty();
 	}
 
 	public int totalSellQuantityByShareholder(Shareholder shareholder) {
