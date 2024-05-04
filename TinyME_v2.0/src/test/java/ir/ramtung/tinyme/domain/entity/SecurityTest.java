@@ -4,14 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
-import ir.ramtung.tinyme.domain.service.Matcher;
+
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
@@ -27,9 +26,6 @@ public class SecurityTest {
 	private AssertingPack assertPack;
 	private ScenarioGenerator scenarioGenerator;
 	LocalDateTime entryTime = LocalDateTime.of(2001, 9, 11, 2, 14, 0);
-
-	@Autowired
-	private Matcher matcher;
 
 	// --------------------------------------------------------------------------------
 	// Helper classes
@@ -200,7 +196,7 @@ public class SecurityTest {
 
 		public MatchResult decrease_sell_order_quantity() {
 			Order order = new Order(1, security, Side.SELL, 4, 600, sellerBroker, sellerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_sell_ice_order_quantity() {
@@ -214,23 +210,23 @@ public class SecurityTest {
 				sellerShareholder,
 				10
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_buy_order_quantity() {
 			Order order = new Order(3, security, Side.BUY, 7, 300, buyerBroker, buyerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_buy_ice_order_quantity() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 7, 500, buyerBroker, buyerShareholder, 10);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_sell_order_quantity() {
 			Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 5);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_sell_ice_order_quantity() {
@@ -245,12 +241,12 @@ public class SecurityTest {
 				10
 			);
 			sellerShareholder.incPosition(security, 15);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_sell_order_quantity_but_not_enough_position() {
 			Order order = new Order(2, security, Side.SELL, 15, 700, sellerBroker, sellerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_sell_ice_order_quantity_but_not_enough_position() {
@@ -264,76 +260,76 @@ public class SecurityTest {
 				sellerShareholder,
 				10
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_order_quantity() {
 			Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(6000);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_ice_order_quantity() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
 			buyerBroker.increaseCreditBy(7500);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_order_quantity_but_not_enough_credit() {
 			Order order = new Order(4, security, Side.BUY, 25, 400, buyerBroker, buyerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_ice_order_quantity_but_not_enough_credit() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 60, 500, buyerBroker, buyerShareholder, 10);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_sell_order_price_no_trading_happens() {
 			Order order = new Order(3, security, Side.SELL, 10, 650, sellerBroker, sellerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_sell_ice_order_price_no_trading_happens() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 600, sellerBroker, sellerShareholder, 10);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_sell_order_price_and_completely_traded() {
 			Order order = new Order(3, security, Side.SELL, 10, 450, sellerBroker, sellerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_sell_ice_order_price_and_completely_traded() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 450, sellerBroker, sellerShareholder, 10);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_sell_order_price_and_partially_traded() {
 			Order order = new Order(3, security, Side.SELL, 50, 450, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 40);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_sell_ice_order_price_and_partially_traded() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 50, 450, sellerBroker, sellerShareholder, 10);
 			sellerShareholder.incPosition(security, 5);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_buy_order_price() {
 			Order order = new Order(3, security, Side.BUY, 10, 150, buyerBroker, buyerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_buy_ice_order_price() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 200, buyerBroker, buyerShareholder, 10);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_sell_order_price() {
 			Order order = new Order(3, security, Side.SELL, 10, 950, sellerBroker, sellerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_sell_ice_order_price() {
@@ -347,135 +343,135 @@ public class SecurityTest {
 				sellerShareholder,
 				10
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_order_price_no_trading_happens() {
 			Order order = new Order(1, security, Side.BUY, 10, 250, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(1500);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_ice_order_price_no_trading_happens() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
 			buyerBroker.increaseCreditBy(2250);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_order_price_no_trading_happens_and_not_enough_credit() {
 			Order order = new Order(1, security, Side.BUY, 10, 250, buyerBroker, buyerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_ice_order_price_no_trading_happens_and_not_enough_credit() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 550, buyerBroker, buyerShareholder, 10);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_order_price_and_completely_traded() {
 			Order order = new Order(2, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(5000);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_ice_order_price_and_completely_traded() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 1000, buyerBroker, buyerShareholder, 10);
 			buyerBroker.increaseCreditBy(12500);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_order_price_and_partially_traded() {
 			Order order = new Order(3, security, Side.BUY, 25, 700, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(13500);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_ice_order_price_and_partially_traded() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
 			buyerBroker.increaseCreditBy(80000);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_order_price_and_trade_happens_but_not_enough_credit() {
 			Order order = new Order(3, security, Side.BUY, 25, 800, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(13500);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_buy_ice_order_price_and_trade_happens_but_not_enough_credit_causes_rollback() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
 			buyerBroker.increaseCreditBy(57000);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_order_no_trades_happens() {
 			Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 15);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_ice_order_no_trades_happens() {
 			IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 20, 1000, sellerBroker, sellerShareholder, 7);
 			sellerShareholder.incPosition(security, 20);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_order_and_not_enough_position() {
 			Order order = new Order(6, security, Side.SELL, 15, 650, sellerBroker, sellerShareholder);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_ice_order_and_not_enough_position() {
 			IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 20, 1000, sellerBroker, sellerShareholder, 7);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_order_and_completely_traded() {
 			Order order = new Order(8, security, Side.SELL, 13, 400, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 13);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_ice_order_and_completely_traded() {
 			IcebergOrder order = new IcebergOrder(8, security, Side.SELL, 67, 100, sellerBroker, sellerShareholder, 9);
 			sellerShareholder.incPosition(security, 67);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_order_and_partially_traded() {
 			Order order = new Order(7, security, Side.SELL, 60, 500, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 60);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size() {
 			IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 3);
 			sellerShareholder.incPosition(security, 60);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_ice_order_and_partially_traded_and_remainder_is_less_than_peak_size() {
 			IcebergOrder order = new IcebergOrder(7, security, Side.SELL, 60, 400, sellerBroker, sellerShareholder, 7);
 			sellerShareholder.incPosition(security, 60);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_order_matches_with_all_buyer_queue_and_finished() {
 			Order order = new Order(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 85);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_ice_order_matches_with_all_buyer_queue_and_finished() {
 			IcebergOrder order = new IcebergOrder(6, security, Side.SELL, 85, 100, sellerBroker, sellerShareholder, 10);
 			sellerShareholder.incPosition(security, 85);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_order_matches_with_all_buyer_queue_and_not_finished() {
 			Order order = new Order(6, security, Side.SELL, 120, 100, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 120);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_ice_order_matches_with_all_buyer_queue_and_not_finished() {
@@ -490,13 +486,13 @@ public class SecurityTest {
 				10
 			);
 			sellerShareholder.incPosition(security, 100);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_order_with_min_execution_quantity_and_next_go_to_queue() {
 			Order order = new Order(6, security, Side.SELL, 50, 10, 500, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 50);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_ice_order_with_min_execution_quantity_and_next_go_to_queue() {
@@ -512,13 +508,13 @@ public class SecurityTest {
 				10
 			);
 			sellerShareholder.incPosition(security, 50);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_order_not_enough_execution_cause_rollback() {
 			Order order = new Order(6, security, Side.SELL, 60, 50, 500, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 60);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_ice_order_not_enough_execution_cause_rollback() {
@@ -534,13 +530,13 @@ public class SecurityTest {
 				10
 			);
 			sellerShareholder.incPosition(security, 100);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_order_quantity_is_equal_to_min_execution_quantity() {
 			Order order = new Order(6, security, Side.SELL, 50, 50, 300, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 50);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_ice_order_quantity_is_equal_to_min_execution_quantity() {
@@ -556,103 +552,103 @@ public class SecurityTest {
 				10
 			);
 			sellerShareholder.incPosition(security, 50);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_order_no_trades_happens() {
 			Order order = new Order(6, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(6600);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_no_trades_happens() {
 			IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 5, 450, buyerBroker, buyerShareholder, 1);
 			buyerBroker.increaseCreditBy(2250);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_order_but_not_enough_credit() {
 			Order order = new Order(10, security, Side.BUY, 22, 300, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(6000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_but_not_enough_credit() {
 			IcebergOrder order = new IcebergOrder(10, security, Side.BUY, 5, 450, buyerBroker, buyerShareholder, 1);
 			buyerBroker.increaseCreditBy(2000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_order_and_completely_traded() {
 			Order order = new Order(8, security, Side.BUY, 13, 700, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(8100);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_and_completely_traded() {
 			IcebergOrder order = new IcebergOrder(8, security, Side.BUY, 52, 1100, buyerBroker, buyerShareholder, 10);
 			buyerBroker.increaseCreditBy(42000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_order_and_partially_traded() {
 			Order order = new Order(6, security, Side.BUY, 13, 600, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(7800);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_and_partially_traded_and_remainder_is_bigger_than_peak_size() {
 			IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 13, 600, buyerBroker, buyerShareholder, 2);
 			buyerBroker.increaseCreditBy(7800);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_and_partially_traded_and_remainder_is_less_than_peak_size() {
 			IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 14, 600, buyerBroker, buyerShareholder, 5);
 			buyerBroker.increaseCreditBy(8400);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_order_not_enough_credit_causes_rollback() {
 			Order order = new Order(6, security, Side.BUY, 15, 750, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(9000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_not_enough_credit_causes_rollback() {
 			IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 90, 1000, buyerBroker, buyerShareholder, 10);
 			buyerBroker.increaseCreditBy(78000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_order_matches_with_all_seller_queue_and_finished() {
 			Order order = new Order(6, security, Side.BUY, 85, 1000, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(75000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_matches_with_all_seller_queue_and_finished() {
 			IcebergOrder order = new IcebergOrder(6, security, Side.BUY, 85, 1000, buyerBroker, buyerShareholder, 10);
 			buyerBroker.increaseCreditBy(75000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_order_matches_with_all_seller_queue_and_not_finished() {
 			Order order = new Order(8, security, Side.BUY, 100, 1000, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(90000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_matches_with_all_seller_queue_and_not_finished() {
 			IcebergOrder order = new IcebergOrder(8, security, Side.BUY, 100, 1000, buyerBroker, buyerShareholder, 10);
 			buyerBroker.increaseCreditBy(90000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_order_with_min_execution_quantity_and_next_go_to_queue() {
 			Order order = new Order(6, security, Side.BUY, 22, 17, 700, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(14400);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_with_min_execution_quantity_and_next_go_to_queue() {
@@ -668,13 +664,13 @@ public class SecurityTest {
 				10
 			);
 			buyerBroker.increaseCreditBy(21400);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_order_not_enough_execution_cause_rollback() {
 			Order order = new Order(6, security, Side.BUY, 60, 50, 600, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(36000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_not_enough_execution_cause_rollback() {
@@ -690,13 +686,13 @@ public class SecurityTest {
 				10
 			);
 			buyerBroker.increaseCreditBy(80000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_order_quantity_is_equal_to_min_execution_quantity() {
 			Order order = new Order(6, security, Side.BUY, 40, 40, 1000, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(40000);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_ice_order_quantity_is_equal_to_min_execution_quantity() {
@@ -712,7 +708,7 @@ public class SecurityTest {
 				10
 			);
 			buyerBroker.increaseCreditBy(14600);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public void add_two_buy_orders_with_same_price() {
@@ -740,8 +736,8 @@ public class SecurityTest {
 			);
 
 			buyerBroker.increaseCreditBy(6000);
-			security.addNewOrder(order1, matcher);
-			security.addNewOrder(order2, matcher);
+			security.addNewOrder(order1);
+			security.addNewOrder(order2);
 		}
 
 		public void add_two_buy_ice_orders_with_same_price() {
@@ -771,8 +767,8 @@ public class SecurityTest {
 			);
 
 			buyerBroker.increaseCreditBy(6000);
-			security.addNewOrder(order1, matcher);
-			security.addNewOrder(order2, matcher);
+			security.addNewOrder(order1);
+			security.addNewOrder(order2);
 		}
 
 		public void add_two_sell_orders_with_same_price() {
@@ -800,8 +796,8 @@ public class SecurityTest {
 			);
 
 			sellerShareholder.incPosition(security, 20);
-			security.addNewOrder(order1, matcher);
-			security.addNewOrder(order2, matcher);
+			security.addNewOrder(order1);
+			security.addNewOrder(order2);
 		}
 
 		public void add_two_sell_ice_orders_with_same_price() {
@@ -831,42 +827,42 @@ public class SecurityTest {
 			);
 
 			sellerShareholder.incPosition(security, 20);
-			security.addNewOrder(order1, matcher);
-			security.addNewOrder(order2, matcher);
+			security.addNewOrder(order1);
+			security.addNewOrder(order2);
 		}
 
 		public MatchResult add_sell_order_causes_rollback_for_buy_orders_with_same_price() {
 			this.add_two_buy_orders_with_same_price();
 			Order order = new Order(9, security, Side.SELL, 300, 300, 0, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 300);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_order_causes_rollback_for_buy_ice_orders_with_same_price() {
 			this.add_two_buy_ice_orders_with_same_price();
 			Order order = new Order(9, security, Side.SELL, 300, 300, 0, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 300);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult change_buy_order_price_and_equals_it_with_another_order() {
 			Order order = new Order(4, security, Side.BUY, 10, 200, buyerBroker, buyerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult change_sell_order_price_and_equals_it_with_another_order() {
 			Order order = new Order(4, security, Side.SELL, 10, 700, sellerBroker, sellerShareholder);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult change_buy_ice_order_price_and_equals_it_with_another_order() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 300, buyerBroker, buyerShareholder, 10);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult change_sell_ice_order_price_and_equals_it_with_another_order() {
 			IcebergOrder order = new IcebergOrder(5, security, Side.SELL, 45, 700, sellerBroker, sellerShareholder, 10);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult add_sell_stop_limit_order_but_not_enough_position() {
@@ -880,7 +876,7 @@ public class SecurityTest {
 				sellerShareholder,
 				525
 			);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public MatchResult add_buy_stop_limit_order_but_not_enough_credit() {
@@ -894,7 +890,7 @@ public class SecurityTest {
 				buyerShareholder,
 				575
 			);
-			return security.addNewOrder(order, matcher).getFirst();
+			return security.addNewOrder(order).getFirst();
 		}
 
 		public void add_three_stop_limit_order_both_buy_and_sell() {
@@ -908,28 +904,28 @@ public class SecurityTest {
 			);
 			sellerShareholder.incPosition(security, 45);
 			buyerBroker.increaseCreditBy(36000);
-			orders.forEach(order -> security.addNewOrder(order, matcher));
+			orders.forEach(order -> security.addNewOrder(order));
 		}
 
 		public List<MatchResult> new_sell_order_activate_all_sell_stop_limit_orders() {
 			this.add_three_stop_limit_order_both_buy_and_sell();
 			Order order = new Order(9, security, Side.SELL, 45, 500, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 45);
-			return security.addNewOrder(order, matcher);
+			return security.addNewOrder(order);
 		}
 
 		public List<MatchResult> new_buy_order_activate_all_buy_stop_limit_orders() {
 			this.add_three_stop_limit_order_both_buy_and_sell();
 			Order order = new Order(9, security, Side.BUY, 10, 600, buyerBroker, buyerShareholder);
 			buyerBroker.increaseCreditBy(6000);
-			return security.addNewOrder(order, matcher);
+			return security.addNewOrder(order);
 		}
 
 		public List<MatchResult> new_sell_order_activate_one_sell_stop_limit_order() {
 			this.add_three_stop_limit_order_both_buy_and_sell();
 			Order order = new Order(9, security, Side.SELL, 30, 500, sellerBroker, sellerShareholder);
 			sellerShareholder.incPosition(security, 30);
-			return security.addNewOrder(order, matcher);
+			return security.addNewOrder(order);
 		}
 
 		public List<MatchResult> new_buy_order_activate_one_buy_stop_limit_order() {
@@ -938,8 +934,8 @@ public class SecurityTest {
 			Order order2 = new Order(9, security, Side.BUY, 5, 600, buyerBroker, buyerShareholder);
 			sellerShareholder.incPosition(security, 10);
 			buyerBroker.increaseCreditBy(3000);
-			security.addNewOrder(order1, matcher);
-			return security.addNewOrder(order2, matcher);
+			security.addNewOrder(order1);
+			return security.addNewOrder(order2);
 		}
 
 		public List<MatchResult> new_sell_stop_limit_order_and_active_at_the_first() {
@@ -954,7 +950,7 @@ public class SecurityTest {
 				600
 			);
 			sellerShareholder.incPosition(security, 10);
-			return security.addNewOrder(order, matcher);
+			return security.addNewOrder(order);
 		}
 
 		public List<MatchResult> new_buy_stop_limit_order_and_active_at_the_first() {
@@ -969,7 +965,7 @@ public class SecurityTest {
 				500
 			);
 			buyerBroker.increaseCreditBy(2100);
-			return security.addNewOrder(order, matcher);
+			return security.addNewOrder(order);
 		}
 
 		public MatchResult decrease_price_stop_limit_sell_order() {
@@ -984,7 +980,7 @@ public class SecurityTest {
 				sellerShareholder,
 				500
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_price_stop_limit_sell_order() {
@@ -999,7 +995,7 @@ public class SecurityTest {
 				sellerShareholder,
 				500
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_quantity_stop_limit_sell_order() {
@@ -1014,7 +1010,7 @@ public class SecurityTest {
 				sellerShareholder,
 				500
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_quantity_stop_limit_sell_order() {
@@ -1030,7 +1026,7 @@ public class SecurityTest {
 				500
 			);
 			sellerShareholder.incPosition(security, 5);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_quantity_stop_limit_sell_order_and_not_enough_position() {
@@ -1045,7 +1041,7 @@ public class SecurityTest {
 				sellerShareholder,
 				500
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_stop_price_stop_limit_sell_order() {
@@ -1060,7 +1056,7 @@ public class SecurityTest {
 				sellerShareholder,
 				350
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_stop_price_stop_limit_sell_order_and_not_activated() {
@@ -1075,7 +1071,7 @@ public class SecurityTest {
 				sellerShareholder,
 				525
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public List<MatchResult> increase_stop_price_stop_limit_sell_order_and_activated() {
@@ -1090,7 +1086,7 @@ public class SecurityTest {
 				sellerShareholder,
 				555
 			);
-			return security.updateOrder(order, matcher);
+			return security.updateOrder(order);
 		}
 
 		public MatchResult decrease_price_stop_limit_buy_order() {
@@ -1105,7 +1101,7 @@ public class SecurityTest {
 				buyerShareholder,
 				600
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_price_stop_limit_buy_order() {
@@ -1121,7 +1117,7 @@ public class SecurityTest {
 				600
 			);
 			buyerBroker.increaseCreditBy(750);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_price_stop_limit_buy_order_and_not_enough_credit() {
@@ -1136,7 +1132,7 @@ public class SecurityTest {
 				buyerShareholder,
 				600
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_quantity_stop_limit_buy_order() {
@@ -1151,7 +1147,7 @@ public class SecurityTest {
 				buyerShareholder,
 				600
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_quantity_stop_limit_buy_order() {
@@ -1167,7 +1163,7 @@ public class SecurityTest {
 				600
 			);
 			buyerBroker.increaseCreditBy(3500);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult increase_quantity_stop_limit_buy_order_and_not_enough_credit() {
@@ -1182,7 +1178,7 @@ public class SecurityTest {
 				buyerShareholder,
 				600
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public MatchResult decrease_stop_price_stop_limit_buy_order_and_not_activated() {
@@ -1197,7 +1193,7 @@ public class SecurityTest {
 				buyerShareholder,
 				575
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public List<MatchResult> decrease_stop_price_stop_limit_buy_order_and_activated() {
@@ -1212,7 +1208,7 @@ public class SecurityTest {
 				buyerShareholder,
 				500
 			);
-			return security.updateOrder(order, matcher);
+			return security.updateOrder(order);
 		}
 
 		public MatchResult increase_stop_price_stop_limit_buy_order() {
@@ -1227,7 +1223,7 @@ public class SecurityTest {
 				buyerShareholder,
 				750
 			);
-			return security.updateOrder(order, matcher).getFirst();
+			return security.updateOrder(order).getFirst();
 		}
 
 		public void delete_stop_limit_sell_order() {

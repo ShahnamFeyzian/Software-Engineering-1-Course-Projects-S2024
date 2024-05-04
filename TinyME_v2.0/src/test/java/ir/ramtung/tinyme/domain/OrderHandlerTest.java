@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import ir.ramtung.tinyme.config.MockedJMSTestConfig;
 import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.service.ApplicationServices;
-import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.domain.service.OrderHandler;
 import ir.ramtung.tinyme.messaging.EventPublisher;
 import ir.ramtung.tinyme.messaging.Message;
@@ -475,7 +474,7 @@ public class OrderHandlerTest {
 
 		EventPublisher mockEventPublisher = mock(EventPublisher.class, withSettings().verboseLogging());
 		OrderHandler myOrderHandler = new OrderHandler(
-			new ApplicationServices(securityRepository, brokerRepository, shareholderRepository, new Matcher()),
+			new ApplicationServices(securityRepository, brokerRepository, shareholderRepository),
 			mockEventPublisher
 		);
 		myOrderHandler.handleEnterOrder(
