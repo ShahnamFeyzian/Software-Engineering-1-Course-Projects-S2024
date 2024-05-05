@@ -1,0 +1,3 @@
+[submodule "TinyME-Base"]
+	path = TinyME-Base
+	url = https://github.com/SE1-ECE-UT/TinyME.git
