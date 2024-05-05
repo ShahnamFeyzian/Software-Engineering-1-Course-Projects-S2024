@@ -9,6 +9,7 @@
   - [Assignment 4: Minimum Execution Quantity](#assignment-4-minimum-execution-quantity)
   - [Assignment 5: Stop Limit Order](#assignment-5-stop-limit-order)
   - [Assignment 6: Technical Debt](#assignment-6-technical-debt)
+  - [Assignment 7: Auction Matching](#assignment-7-auction-matching)
 
 ## Intro
 
@@ -41,3 +42,7 @@ In this assignment, we were supposed to add a new type of order to the `TinyME` 
 ## Assignment 6: Technical Debt
 
 In this assignment, we were supposed to refactor the `TinyME` application to remove the technical debt, since the last version of the application was not well-designed. The technical debt was supposed to be removed in a way that the existing tests would not fail. For more information, please refer to the description file in the `A6` folder.
+
+## Assignment 7: Auction Matching
+
+In this assignment, we were supposed to add a new feature to the `TinyME` application. The new feature was to add an auction mechanism to the application. For more information, please refer to the description file in the `A7` folder.
