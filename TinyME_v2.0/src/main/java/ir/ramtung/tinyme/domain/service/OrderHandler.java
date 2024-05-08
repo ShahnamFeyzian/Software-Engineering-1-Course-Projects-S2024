@@ -29,8 +29,6 @@ public class OrderHandler {
 		this.services = services;
 	}
 
-
-
 	public void handleRq(BaseRq baseRq) {
 		try {
 			ApplicationServiceResponse response = callService(baseRq);
@@ -90,7 +88,7 @@ public class OrderHandler {
 	}
 
 	private ApplicationServiceResponse callChangeStateServices(ChangeMatchingStateRq req) {
-		return null;
+		return services.changeMatchingState(req);
 	}
 
 	private ApplicationServiceResponse callAddServices(EnterOrderRq req) {

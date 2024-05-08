@@ -9,6 +9,7 @@ import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityExceptio
 import ir.ramtung.tinyme.domain.service.ApplicationServiceResponse.ApplicationServiceType;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
+import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.repository.BrokerRepository;
@@ -112,6 +113,19 @@ public class ApplicationServices {
 		security.deleteOrder(req.getSide(), req.getOrderId());
 
 		return new ApplicationServiceResponse(ApplicationServiceType.DELETE_ORDER, null, req);
+	}
+
+	public void validateChangeMatchingState(ChangeMatchingStateRq req) {
+		try {
+			Security security = securityRepository.findSecurityByIsin(req.getSecurityIsin());
+		} catch (NotFoundException exp) {
+			throw new InvalidRequestException(Message.UNKNOWN_SECURITY_ISIN);
+		}
+	}
+
+	public ApplicationServiceResponse changeMatchingState(ChangeMatchingStateRq req) {
+		validateChangeMatchingState(req);
+		return null;
 	}
 
 	public ApplicationServiceResponse addLimitOrder(EnterOrderRq req) {
