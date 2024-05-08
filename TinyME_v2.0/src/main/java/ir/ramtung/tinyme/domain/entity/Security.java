@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import ir.ramtung.tinyme.messaging.request.MatchingState;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -29,7 +30,9 @@ public class Security {
 
 	private int lastTradePrice;
 
-	private static  Matcher continuesMatcher = new Matcher();
+	private static Matcher continuesMatcher = new Matcher();
+
+	private MatchingState matchingState = MatchingState.CONTINUOUS;
 
 	public List<MatchResult> addNewOrder(Order newOrder) {
 		try {
@@ -83,6 +86,10 @@ public class Security {
 
 	public void deleteOrder(Side side, long orderId) {
 		orderBook.removeByOrderId(side, orderId);
+	}
+
+	public void changeMatchingState(MatchingState newState) {
+		this.matchingState = newState;
 	}
 
 	public List<MatchResult> updateOrder(Order tempOrder) {
