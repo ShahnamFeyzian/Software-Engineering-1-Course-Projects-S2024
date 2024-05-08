@@ -1,6 +1,7 @@
 package ir.ramtung.tinyme.messaging;
 
 import ir.ramtung.tinyme.domain.service.OrderHandler;
+import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.util.logging.Logger;
@@ -17,7 +18,10 @@ public class RequestDispatcher {
 		this.orderHandler = orderHandler;
 	}
 
-	@JmsListener(destination = "${requestQueue}", selector = "_type='ir.ramtung.tinyme.messaging.request.EnterOrderRq'")
+	@JmsListener(
+			destination = "${requestQueue}",
+			selector = "_type='ir.ramtung.tinyme.messaging.request.EnterOrderRq'"
+	)
 	public void receiveEnterOrderRq(EnterOrderRq enterOrderRq) {
 		log.info("Received message: " + enterOrderRq);
 		orderHandler.handleEnterOrder(enterOrderRq);
@@ -30,5 +34,15 @@ public class RequestDispatcher {
 	public void receiveDeleteOrderRq(DeleteOrderRq deleteOrderRq) {
 		log.info("Received message: " + deleteOrderRq);
 		orderHandler.handleDeleteOrder(deleteOrderRq);
+	}
+
+	@JmsListener(
+			destination = "${requestQueue}",
+			selector = "_type='ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq'"
+	)
+	public void receiveChangeMatchingStateRq(ChangeMatchingStateRq changeMatchingStateRq) {
+		log.info("Received message: " + changeMatchingStateRq);
+		// TODO
+//		orderHandler.handleChangeMatchingState(changeMatchingStateRq);
 	}
 }
