@@ -30,18 +30,14 @@ public class OrderHandler {
 	}
 
 
-	// FIXME:
+
 	public void handleRq(BaseRq baseRq) {
-		if(baseRq instanceof ChangeMatchingStateRq) {
-
-			return;
-		}
-
-		BaseOrderRq baseOrderRq = (BaseOrderRq) baseRq;
 		try {
-			ApplicationServiceResponse response = callService(baseOrderRq);
+			ApplicationServiceResponse response = callService(baseRq);
 			publishApplicationServiceResponse(response);
 		} catch (InvalidRequestException ex) {
+			// Add line 40 to fix line 42
+			BaseOrderRq baseOrderRq = (BaseOrderRq) baseRq;
 			eventPublisher.publish(
 					new OrderRejectedEvent(baseOrderRq.getRequestId(), baseOrderRq.getOrderId(), ex.getReasons())
 			);
@@ -70,7 +66,10 @@ public class OrderHandler {
 		}
 	}
 
-	private ApplicationServiceResponse callService(BaseOrderRq req) {
+	private ApplicationServiceResponse callService(BaseRq req) {
+		if (req instanceof ChangeMatchingStateRq changeMatchingStateRq) {
+			return callChangeStateServices(changeMatchingStateRq);
+		}
 		if (req instanceof DeleteOrderRq deleteReq) {
 			return callDeleteServices(deleteReq);
 		}
@@ -88,6 +87,10 @@ public class OrderHandler {
 
 	private ApplicationServiceResponse callDeleteServices(DeleteOrderRq req) {
 		return services.deleteOrder(req);
+	}
+
+	private ApplicationServiceResponse callChangeStateServices(ChangeMatchingStateRq req) {
+		return null;
 	}
 
 	private ApplicationServiceResponse callAddServices(EnterOrderRq req) {
