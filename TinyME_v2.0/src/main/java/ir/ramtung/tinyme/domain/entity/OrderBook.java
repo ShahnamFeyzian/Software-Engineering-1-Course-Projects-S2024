@@ -150,7 +150,7 @@ public class OrderBook {
 	}
 
 	private StopLimitOrder findSatisfiedStopLimitOrder(List<Order> queue, int lastTradePrice) {
-		if (queue.size() == 0) {
+		if (queue.isEmpty()) {
 			return null;
 		}
 
