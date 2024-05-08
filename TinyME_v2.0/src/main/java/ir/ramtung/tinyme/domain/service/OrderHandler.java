@@ -12,6 +12,7 @@ import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.messaging.request.OrderEntryType;
 import ir.ramtung.tinyme.messaging.request.BaseRq;
+import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,16 +31,22 @@ public class OrderHandler {
 
 
 	// FIXME:
-//	public void handleRq(BaseRq baseRq) {
-//		try {
-//			ApplicationServiceResponse response = callService(baseRq);
-//			publishApplicationServiceResponse(response);
-//		} catch (InvalidRequestException ex) {
-//			eventPublisher.publish(
-//					new OrderRejectedEvent(baseRq.getRequestId(), baseRq.getOrderId(), ex.getReasons())
-//			);
-//		}
-//	}
+	public void handleRq(BaseRq baseRq) {
+		if(baseRq instanceof ChangeMatchingStateRq) {
+
+			return;
+		}
+
+		BaseOrderRq baseOrderRq = (BaseOrderRq) baseRq;
+		try {
+			ApplicationServiceResponse response = callService(baseOrderRq);
+			publishApplicationServiceResponse(response);
+		} catch (InvalidRequestException ex) {
+			eventPublisher.publish(
+					new OrderRejectedEvent(baseOrderRq.getRequestId(), baseOrderRq.getOrderId(), ex.getReasons())
+			);
+		}
+	}
 
 	public void handleEnterOrder(EnterOrderRq enterOrderRq) {
 		try {

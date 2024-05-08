@@ -24,7 +24,7 @@ public class RequestDispatcher {
 	)
 	public void receiveEnterOrderRq(EnterOrderRq enterOrderRq) {
 		log.info("Received message: " + enterOrderRq);
-		orderHandler.handleEnterOrder(enterOrderRq);
+		orderHandler.handleRq(enterOrderRq);
 	}
 
 	@JmsListener(
@@ -33,7 +33,7 @@ public class RequestDispatcher {
 	)
 	public void receiveDeleteOrderRq(DeleteOrderRq deleteOrderRq) {
 		log.info("Received message: " + deleteOrderRq);
-		orderHandler.handleDeleteOrder(deleteOrderRq);
+		orderHandler.handleRq(deleteOrderRq);
 	}
 
 	@JmsListener(
@@ -42,7 +42,6 @@ public class RequestDispatcher {
 	)
 	public void receiveChangeMatchingStateRq(ChangeMatchingStateRq changeMatchingStateRq) {
 		log.info("Received message: " + changeMatchingStateRq);
-		// TODO
-//		orderHandler.handleChangeMatchingState(changeMatchingStateRq);
+		orderHandler.handleRq(changeMatchingStateRq);
 	}
 }
