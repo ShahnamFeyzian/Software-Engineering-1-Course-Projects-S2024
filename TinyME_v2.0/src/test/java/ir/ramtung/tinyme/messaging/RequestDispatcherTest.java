@@ -58,6 +58,6 @@ public class RequestDispatcherTest {
 			0
 		);
 		jmsTemplate.convertAndSend(requestQueue, rq);
-		verify(mockOrderHandler, timeout(1000)).handleEnterOrder(rq);
+		verify(mockOrderHandler, timeout(1000)).handleRq(rq);
 	}
 }

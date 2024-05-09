@@ -37,6 +37,10 @@ public class ApplicationServiceResponse {
 		return this.type == ApplicationServiceType.DELETE_ORDER;
 	}
 
+	public boolean isTypeChangeState() {
+		return this.type == ApplicationServiceType.CHANGE_MATCHING_STATE;
+	}
+
 	public boolean isTypeUpdate() {
 		return (
 			this.type == ApplicationServiceType.UPDATE_LIMIT_ORDER ||

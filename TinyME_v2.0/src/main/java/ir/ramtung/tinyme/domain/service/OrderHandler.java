@@ -42,28 +42,6 @@ public class OrderHandler {
 		}
 	}
 
-	public void handleEnterOrder(EnterOrderRq enterOrderRq) {
-		try {
-			ApplicationServiceResponse response = callService(enterOrderRq);
-			publishApplicationServiceResponse(response);
-		} catch (InvalidRequestException ex) {
-			eventPublisher.publish(
-				new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), ex.getReasons())
-			);
-		}
-	}
-
-	public void handleDeleteOrder(DeleteOrderRq deleteOrderRq) {
-		try {
-			ApplicationServiceResponse response = callService(deleteOrderRq);
-			publishApplicationServiceResponse(response);
-		} catch (InvalidRequestException ex) {
-			eventPublisher.publish(
-				new OrderRejectedEvent(deleteOrderRq.getRequestId(), deleteOrderRq.getOrderId(), ex.getReasons())
-			);
-		}
-	}
-
 	private ApplicationServiceResponse callService(BaseRq req) {
 		if (req instanceof ChangeMatchingStateRq changeMatchingStateRq) {
 			return callChangeStateServices(changeMatchingStateRq);

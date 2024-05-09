@@ -84,7 +84,7 @@ public class OrderHandlerTest {
 
 	@Test
 	void new_order_invalid_fields() {
-		orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(0, "ABC", -1, null, null, -1, -1, 1, 1, -1, -1));
+		orderHandler.handleRq(EnterOrderRq.createNewOrderRq(0, "ABC", -1, null, null, -1, -1, 1, 1, -1, -1));
 		OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
 
 		assertThat(outputEvent.getErrors())
@@ -100,7 +100,7 @@ public class OrderHandlerTest {
 
 	@Test
 	void new_order_invalid_repos() {
-		orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(0, "-1", 1, null, Side.BUY, 1, 1, -1, -1, 0, 1));
+		orderHandler.handleRq(EnterOrderRq.createNewOrderRq(0, "-1", 1, null, Side.BUY, 1, 1, -1, -1, 0, 1));
 		OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
 
 		assertThat(outputEvent.getErrors())
@@ -111,7 +111,7 @@ public class OrderHandlerTest {
 	void new_order_invalid_quantity_and_price_due_to_lot_and_tick_size() {
 		Security security2 = Security.builder().isin("ABC2").lotSize(3).tickSize(3).build();
 		securityRepository.addSecurity(security2);
-		orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(0, "ABC2", 1, null, Side.BUY, 4, 4, 1, 1, 0, 1));
+		orderHandler.handleRq(EnterOrderRq.createNewOrderRq(0, "ABC2", 1, null, Side.BUY, 4, 4, 1, 1, 0, 1));
 		OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
 
 		assertThat(outputEvent.getErrors())
@@ -124,7 +124,7 @@ public class OrderHandlerTest {
 		broker1.increaseCreditBy(100 * 100);
 		security.getOrderBook().enqueue(inQueueOrder);
 
-		orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(0, "ABC", 2, null, Side.BUY, 1, 1, 1, 1, 0, 0));
+		orderHandler.handleRq(EnterOrderRq.createUpdateOrderRq(0, "ABC", 2, null, Side.BUY, 1, 1, 1, 1, 0, 0));
 		OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
 
 		assertThat(outputEvent.getErrors()).containsOnly(Message.ORDER_ID_NOT_FOUND);
@@ -136,7 +136,7 @@ public class OrderHandlerTest {
 		broker1.increaseCreditBy(100 * 100);
 		security.getOrderBook().enqueue(inQueueOrder);
 
-		orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(0, "ABC", 1, null, Side.BUY, 5, 1, 1, 1, 1, 0));
+		orderHandler.handleRq(EnterOrderRq.createUpdateOrderRq(0, "ABC", 1, null, Side.BUY, 5, 1, 1, 1, 1, 0));
 		OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
 
 		assertThat(outputEvent.getErrors()).containsOnly(Message.INVALID_PEAK_SIZE);
@@ -148,7 +148,7 @@ public class OrderHandlerTest {
 		broker1.increaseCreditBy(100 * 100);
 		security.getOrderBook().enqueue(inQueueOrder);
 
-		orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(0, "ABC", 1, null, Side.BUY, 5, 1, 1, 1, 0, 0));
+		orderHandler.handleRq(EnterOrderRq.createUpdateOrderRq(0, "ABC", 1, null, Side.BUY, 5, 1, 1, 1, 0, 0));
 		OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
 
 		assertThat(outputEvent.getErrors()).containsOnly(Message.CANNOT_SPECIFY_0_PEAK_SIZE_FOR_A_ICEBERG_ORDER);
@@ -160,7 +160,7 @@ public class OrderHandlerTest {
 		broker1.increaseCreditBy(100 * 100);
 		security.getOrderBook().enqueue(inQueueOrder);
 
-		orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(0, "ABC", 1, null, Side.BUY, 5, 1, 1, 1, 0, 1));
+		orderHandler.handleRq(EnterOrderRq.createUpdateOrderRq(0, "ABC", 1, null, Side.BUY, 5, 1, 1, 1, 0, 1));
 		OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
 
 		assertThat(outputEvent.getErrors()).containsOnly(Message.CANNOT_UPDATE_MINIMUM_EXECUTION_QUANTITY);
@@ -172,7 +172,7 @@ public class OrderHandlerTest {
 		broker1.increaseCreditBy(100 * 100);
 		security.getOrderBook().enqueue(inQueueOrder);
 
-		orderHandler.handleDeleteOrder(new DeleteOrderRq(1, "ABC", Side.BUY, -1));
+		orderHandler.handleRq(new DeleteOrderRq(1, "ABC", Side.BUY, -1));
 		OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
 
 		assertThat(outputEvent.getErrors()).containsOnly(Message.INVALID_ORDER_ID);
@@ -184,7 +184,7 @@ public class OrderHandlerTest {
 		broker1.increaseCreditBy(100 * 100);
 		security.getOrderBook().enqueue(inQueueOrder);
 
-		orderHandler.handleDeleteOrder(new DeleteOrderRq(1, "-1", null, -1));
+		orderHandler.handleRq(new DeleteOrderRq(1, "-1", null, -1));
 		OrderRejectedEvent outputEvent = this.captureOrderRejectedEvent();
 
 		assertThat(outputEvent.getErrors())
@@ -198,7 +198,7 @@ public class OrderHandlerTest {
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 		shareholder.incPosition(security, 9);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				"ABC",
@@ -228,7 +228,7 @@ public class OrderHandlerTest {
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 		shareholder.incPosition(security, 9);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				1,
 				"ABC",
@@ -254,7 +254,7 @@ public class OrderHandlerTest {
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 
 		broker1.increaseCreditBy(250 - 1);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				"ABC",
@@ -283,7 +283,7 @@ public class OrderHandlerTest {
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 		shareholder.incPosition(security, 10);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				1,
 				"ABC",
@@ -309,7 +309,7 @@ public class OrderHandlerTest {
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 
 		broker1.increaseCreditBy(300);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				"ABC",
@@ -336,7 +336,7 @@ public class OrderHandlerTest {
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 
 		shareholder.incPosition(security, 20);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				"ABC",
@@ -364,7 +364,7 @@ public class OrderHandlerTest {
 		shareholder.incPosition(security, 300);
 		security.getOrderBook().enqueue(matchingBuyOrder);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				"ABC",
@@ -394,7 +394,7 @@ public class OrderHandlerTest {
 	@Test
 	void new_order_queued_with_no_trade() {
 		shareholder.incPosition(security, 300);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				"ABC",
@@ -436,7 +436,7 @@ public class OrderHandlerTest {
 			matchingBuyOrder2,
 			incomingSellOrder.snapshotWithQuantity(700)
 		);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				incomingSellOrder.getSecurity().getIsin(),
@@ -477,7 +477,7 @@ public class OrderHandlerTest {
 			new ApplicationServices(securityRepository, brokerRepository, shareholderRepository),
 			mockEventPublisher
 		);
-		myOrderHandler.handleEnterOrder(
+		myOrderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				incomingSellOrder.getSecurity().getIsin(),
@@ -502,7 +502,7 @@ public class OrderHandlerTest {
 		Order queuedOrder = new Order(200, security, Side.SELL, 500, 15450, broker1, shareholder);
 		shareholder.incPosition(security, 1000);
 		security.getOrderBook().enqueue(queuedOrder);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				1,
 				"ABC",
@@ -530,7 +530,7 @@ public class OrderHandlerTest {
 		security.getOrderBook().enqueue(matchingOrder);
 		security.getOrderBook().enqueue(beforeUpdate);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				1,
 				"ABC",
@@ -567,7 +567,7 @@ public class OrderHandlerTest {
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 		shareholder.incPosition(security, 350);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				1,
 				"ABC",
@@ -605,7 +605,7 @@ public class OrderHandlerTest {
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 		shareholder.decPosition(security, 99_500);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				"ABC",
@@ -643,7 +643,7 @@ public class OrderHandlerTest {
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 		shareholder.decPosition(security, 99_500);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				"ABC",
@@ -674,8 +674,8 @@ public class OrderHandlerTest {
 		shareholder.incPosition(security, 10);
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 
-		orderHandler.handleDeleteOrder(new DeleteOrderRq(1, "ABC", Side.BUY, 1));
-		orderHandler.handleDeleteOrder(new DeleteOrderRq(2, "ABC", Side.SELL, 2));
+		orderHandler.handleRq(new DeleteOrderRq(1, "ABC", Side.BUY, 1));
+		orderHandler.handleRq(new DeleteOrderRq(2, "ABC", Side.SELL, 2));
 
 		verify(eventPublisher).publish(new OrderDeletedEvent(1, 1));
 		verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
@@ -685,7 +685,7 @@ public class OrderHandlerTest {
 
 	@Test
 	void invalid_stop_limit_price() {
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				2,
 				security.getIsin(),
@@ -703,7 +703,7 @@ public class OrderHandlerTest {
 		);
 		verify(eventPublisher).publish(new OrderRejectedEvent(2, 3, List.of(Message.INVALID_STOP_PRICE)));
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				2,
 				security.getIsin(),
@@ -724,7 +724,7 @@ public class OrderHandlerTest {
 				new OrderRejectedEvent(2, 3, List.of(Message.STOP_LIMIT_ORDERS_CAN_NOT_HAVE_MINIMUM_EXECUTION_QUANTITY))
 			);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				2,
 				security.getIsin(),
@@ -750,7 +750,7 @@ public class OrderHandlerTest {
 
 		StopLimitOrder slo = new StopLimitOrder(20, security, Side.BUY, 10, 15, broker1, shareholder, 100);
 		security.getOrderBook().enqueue(slo);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				2,
 				security.getIsin(),
@@ -770,7 +770,7 @@ public class OrderHandlerTest {
 
 		Order order = new Order(21, security, Side.BUY, 10, 15, broker1, shareholder);
 		security.getOrderBook().enqueue(order);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				3,
 				security.getIsin(),
@@ -799,8 +799,8 @@ public class OrderHandlerTest {
 		shareholder.incPosition(security, 10);
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 
-		orderHandler.handleDeleteOrder(new DeleteOrderRq(1, "ABC", Side.BUY, 1));
-		orderHandler.handleDeleteOrder(new DeleteOrderRq(2, "ABC", Side.SELL, 2));
+		orderHandler.handleRq(new DeleteOrderRq(1, "ABC", Side.BUY, 1));
+		orderHandler.handleRq(new DeleteOrderRq(2, "ABC", Side.SELL, 2));
 
 		verify(eventPublisher).publish(new OrderDeletedEvent(1, 1));
 		verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
@@ -810,7 +810,7 @@ public class OrderHandlerTest {
 		security.getOrderBook().enqueue(new Order(1000, security, Side.SELL, 1, price, broker1, shareholder));
 		broker1.increaseCreditBy(price);
 		shareholder.incPosition(security, 1);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1000,
 				security.getIsin(),
@@ -868,7 +868,7 @@ public class OrderHandlerTest {
 		Trade secondTrade = new Trade(security, 300, 10, stopLimitOrders.get(1), orders.get(2));
 		Trade thirdTrade = new Trade(security, 200, 10, stopLimitOrders.get(2), orders.get(1));
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				security.getIsin(),
@@ -905,7 +905,7 @@ public class OrderHandlerTest {
 		Trade secondTrade = new Trade(security, 800, 10, stopLimitOrders.get(4), orders.get(7));
 		Trade thirdTrade = new Trade(security, 900, 10, stopLimitOrders.get(5), orders.get(8));
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				1,
 				security.getIsin(),
@@ -963,12 +963,12 @@ public class OrderHandlerTest {
 			200
 		);
 		shareholder.incPosition(security, 500 - 1);
-		orderHandler.handleEnterOrder(orderRq);
+		orderHandler.handleRq(orderRq);
 		OrderRejectedEvent output = captureOrderRejectedEvent();
 		assertThat(output.getErrors()).containsOnly(Message.SELLER_HAS_NOT_ENOUGH_POSITIONS);
 
 		shareholder.incPosition(security, 1);
-		orderHandler.handleEnterOrder(orderRq);
+		orderHandler.handleRq(orderRq);
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 3));
 	}
 
@@ -989,12 +989,12 @@ public class OrderHandlerTest {
 			200
 		);
 		broker1.increaseCreditBy(500 * 250 - 1);
-		orderHandler.handleEnterOrder(orderRq);
+		orderHandler.handleRq(orderRq);
 		OrderRejectedEvent output = captureOrderRejectedEvent();
 		assertThat(output.getErrors()).containsOnly(Message.BUYER_HAS_NOT_ENOUGH_CREDIT);
 
 		broker1.increaseCreditBy(1);
-		orderHandler.handleEnterOrder(orderRq);
+		orderHandler.handleRq(orderRq);
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 3));
 	}
 
@@ -1004,7 +1004,7 @@ public class OrderHandlerTest {
 		StopLimitOrder order = new StopLimitOrder(6, security, Side.SELL, 10, 400, broker1, shareholder, 500);
 		security.getOrderBook().enqueue(order);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				3,
 				security.getIsin(),
@@ -1029,7 +1029,7 @@ public class OrderHandlerTest {
 		StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 400, broker1, shareholder, 500);
 		security.getOrderBook().enqueue(order);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				3,
 				security.getIsin(),
@@ -1054,7 +1054,7 @@ public class OrderHandlerTest {
 		StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 400, broker1, shareholder, 500);
 		security.getOrderBook().enqueue(order);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				3,
 				security.getIsin(),
@@ -1080,7 +1080,7 @@ public class OrderHandlerTest {
 		StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 400, broker1, shareholder, 500);
 		security.getOrderBook().enqueue(order);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				3,
 				security.getIsin(),
@@ -1107,7 +1107,7 @@ public class OrderHandlerTest {
 		StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 400, broker1, shareholder, 550);
 		security.getOrderBook().enqueue(order);
 
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				3,
 				security.getIsin(),
@@ -1138,7 +1138,7 @@ public class OrderHandlerTest {
 		security.getOrderBook().enqueue(stopLimitOrder);
 
 		Trade trade = new Trade(security, 600, 1, order, stopLimitOrder);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createUpdateOrderRq(
 				3,
 				security.getIsin(),
@@ -1162,7 +1162,7 @@ public class OrderHandlerTest {
 	@Test
 	void new_stop_limit_order_with_submitted_stop_price_no_trade() {
 		broker1.increaseCreditBy(600);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				3,
 				security.getIsin(),
@@ -1193,7 +1193,7 @@ public class OrderHandlerTest {
 		security.getOrderBook().enqueue(stopLimitOrder);
 
 		broker1.increaseCreditBy(600);
-		orderHandler.handleEnterOrder(
+		orderHandler.handleRq(
 			EnterOrderRq.createNewOrderRq(
 				3,
 				security.getIsin(),
