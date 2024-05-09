@@ -9,8 +9,10 @@ import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityExceptio
 import ir.ramtung.tinyme.domain.service.ApplicationServiceResponse.ApplicationServiceType;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
+import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
+import ir.ramtung.tinyme.messaging.request.MatchingState;
 import ir.ramtung.tinyme.repository.BrokerRepository;
 import ir.ramtung.tinyme.repository.SecurityRepository;
 import ir.ramtung.tinyme.repository.ShareholderRepository;
@@ -23,7 +25,6 @@ public class ApplicationServices {
 	private SecurityRepository securityRepository;
 	private BrokerRepository brokerRepository;
 	private ShareholderRepository shareholderRepository;
-	private Matcher matcher;
 	private Security security;
 	private Broker broker;
 	private Shareholder shareholder;
@@ -31,22 +32,24 @@ public class ApplicationServices {
 	public ApplicationServices(
 		SecurityRepository securityRepository,
 		BrokerRepository brokerRepository,
-		ShareholderRepository shareholderRepository,
-		Matcher matcher
+		ShareholderRepository shareholderRepository
 	) {
 		this.brokerRepository = brokerRepository;
 		this.shareholderRepository = shareholderRepository;
 		this.securityRepository = securityRepository;
-		this.matcher = matcher;
 	}
 
-	private void setEntitiesByEnterOrderRq(EnterOrderRq req) {
+	private void setEntitiesByRq(EnterOrderRq req) {
 		this.security = securityRepository.findSecurityByIsin(req.getSecurityIsin());
 		this.broker = brokerRepository.findBrokerById(req.getBrokerId());
 		this.shareholder = shareholderRepository.findShareholderById(req.getShareholderId());
 	}
 
-	private void setEntitiesByEnterOrderRq(DeleteOrderRq req) {
+	private void setEntitiesByRq(DeleteOrderRq req) {
+		this.security = securityRepository.findSecurityByIsin(req.getSecurityIsin());
+	}
+
+	private void setEntitiesByRq(ChangeMatchingStateRq req) {
 		this.security = securityRepository.findSecurityByIsin(req.getSecurityIsin());
 	}
 
@@ -73,7 +76,7 @@ public class ApplicationServices {
 			errors.add(Message.UNKNOWN_SECURITY_ISIN);
 		} else {
 			Security security = securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin());
-			errors.addAll(security.checkLotAndTickSize(enterOrderRq));
+			errors.addAll(security.checkEnterOrderRq(enterOrderRq));
 		}
 
 		if (!brokerRepository.isThereBrokerWithId(enterOrderRq.getBrokerId())) {
@@ -111,17 +114,33 @@ public class ApplicationServices {
 
 	public ApplicationServiceResponse deleteOrder(DeleteOrderRq req) {
 		validateDeleteOrderRq(req);
-		setEntitiesByEnterOrderRq(req);
+		setEntitiesByRq(req);
 		security.deleteOrder(req.getSide(), req.getOrderId());
 
 		return new ApplicationServiceResponse(ApplicationServiceType.DELETE_ORDER, null, req);
 	}
 
+	public void validateChangeMatchingState(ChangeMatchingStateRq req) {
+		try {
+			securityRepository.findSecurityByIsin(req.getSecurityIsin());
+		} catch (NotFoundException exp) {
+			throw new InvalidRequestException(Message.UNKNOWN_SECURITY_ISIN);
+		}
+	}
+
+	public ApplicationServiceResponse changeMatchingState(ChangeMatchingStateRq req) {
+		validateChangeMatchingState(req);
+		setEntitiesByRq(req);
+		security.changeMatchingState(req.getTargetState());
+
+		return new ApplicationServiceResponse(ApplicationServiceType.CHANGE_MATCHING_STATE, null, req);
+	}
+
 	public ApplicationServiceResponse addLimitOrder(EnterOrderRq req) {
 		generalEnterOrderValidation(req);
-		setEntitiesByEnterOrderRq(req);
+		setEntitiesByRq(req);
 		Order tempOrder = Order.createTempOrderByEnterRq(security, broker, shareholder, req);
-		List<MatchResult> results = security.addNewOrder(tempOrder, matcher);
+		List<MatchResult> results = security.addNewOrder(tempOrder);
 
 		return new ApplicationServiceResponse(ApplicationServiceType.ADD_LIMIT_ORDER, results, req);
 	}
@@ -129,18 +148,18 @@ public class ApplicationServices {
 	public ApplicationServiceResponse updateLimitOrder(EnterOrderRq req) {
 		generalEnterOrderValidation(req);
 		validateUpdateOrderRq(req);
-		setEntitiesByEnterOrderRq(req);
+		setEntitiesByRq(req);
 		Order tempOrder = Order.createTempOrderByEnterRq(security, broker, shareholder, req);
-		List<MatchResult> results = security.updateOrder(tempOrder, matcher);
+		List<MatchResult> results = security.updateOrder(tempOrder);
 
 		return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_LIMIT_ORDER, results, req);
 	}
 
 	public ApplicationServiceResponse addIcebergOrder(EnterOrderRq req) {
 		generalEnterOrderValidation(req);
-		setEntitiesByEnterOrderRq(req);
+		setEntitiesByRq(req);
 		IcebergOrder tempOrder = IcebergOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
-		List<MatchResult> results = security.addNewOrder(tempOrder, matcher);
+		List<MatchResult> results = security.addNewOrder(tempOrder);
 
 		return new ApplicationServiceResponse(ApplicationServiceType.ADD_ICEBERG_ORDER, results, req);
 	}
@@ -148,18 +167,18 @@ public class ApplicationServices {
 	public ApplicationServiceResponse updateIcebergOrder(EnterOrderRq req) {
 		generalEnterOrderValidation(req);
 		validateUpdateOrderRq(req);
-		setEntitiesByEnterOrderRq(req);
+		setEntitiesByRq(req);
 		IcebergOrder tempOrder = IcebergOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
-		List<MatchResult> results = security.updateOrder(tempOrder, matcher);
+		List<MatchResult> results = security.updateOrder(tempOrder);
 
 		return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_ICEBERG_ORDER, results, req);
 	}
 
 	public ApplicationServiceResponse addStopLimitOrder(EnterOrderRq req) {
 		generalEnterOrderValidation(req);
-		setEntitiesByEnterOrderRq(req);
+		setEntitiesByRq(req);
 		StopLimitOrder tempOrder = StopLimitOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
-		List<MatchResult> results = security.addNewOrder(tempOrder, matcher);
+		List<MatchResult> results = security.addNewOrder(tempOrder);
 
 		return new ApplicationServiceResponse(ApplicationServiceType.ADD_STOP_LIMIT_ORDER, results, req);
 	}
@@ -167,9 +186,9 @@ public class ApplicationServices {
 	public ApplicationServiceResponse updateStopLimitOrder(EnterOrderRq req) {
 		generalEnterOrderValidation(req);
 		validateUpdateOrderRq(req);
-		setEntitiesByEnterOrderRq(req);
+		setEntitiesByRq(req);
 		StopLimitOrder tempOrder = StopLimitOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
-		List<MatchResult> results = security.updateOrder(tempOrder, matcher);
+		List<MatchResult> results = security.updateOrder(tempOrder);
 
 		return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_STOP_LIMIT_ORDER, results, req);
 	}

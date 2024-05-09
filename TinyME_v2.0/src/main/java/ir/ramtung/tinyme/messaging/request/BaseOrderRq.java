@@ -12,10 +12,9 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public abstract class BaseOrderRq {
+public abstract class BaseOrderRq extends BaseRq {
 
 	protected long requestId;
-	protected String securityIsin;
 	protected Side side;
 	protected long orderId;
 

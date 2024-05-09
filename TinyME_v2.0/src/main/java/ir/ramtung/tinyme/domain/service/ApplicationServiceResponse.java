@@ -5,6 +5,8 @@ import ir.ramtung.tinyme.domain.entity.MatchingOutcome;
 import ir.ramtung.tinyme.domain.entity.Trade;
 import ir.ramtung.tinyme.messaging.request.BaseOrderRq;
 import java.util.List;
+
+import ir.ramtung.tinyme.messaging.request.BaseRq;
 import lombok.Getter;
 
 @Getter
@@ -12,7 +14,7 @@ public class ApplicationServiceResponse {
 
 	private ApplicationServiceType type;
 	private List<MatchResult> matchResults;
-	private BaseOrderRq req;
+	private BaseRq req;
 
 	public enum ApplicationServiceType {
 		DELETE_ORDER,
@@ -22,9 +24,10 @@ public class ApplicationServiceResponse {
 		UPDATE_ICEBERG_ORDER,
 		ADD_STOP_LIMIT_ORDER,
 		UPDATE_STOP_LIMIT_ORDER,
+		CHANGE_MATCHING_STATE,
 	}
 
-	public ApplicationServiceResponse(ApplicationServiceType type, List<MatchResult> matchResults, BaseOrderRq req) {
+	public ApplicationServiceResponse(ApplicationServiceType type, List<MatchResult> matchResults, BaseRq req) {
 		this.type = type;
 		this.matchResults = matchResults;
 		this.req = req;
@@ -32,6 +35,10 @@ public class ApplicationServiceResponse {
 
 	public boolean isTypeDelete() {
 		return this.type == ApplicationServiceType.DELETE_ORDER;
+	}
+
+	public boolean isTypeChangeState() {
+		return this.type == ApplicationServiceType.CHANGE_MATCHING_STATE;
 	}
 
 	public boolean isTypeUpdate() {
@@ -51,11 +58,15 @@ public class ApplicationServiceResponse {
 	}
 
 	public long getRequestId() {
-		return req.getRequestId();
+		// Fixme:
+		BaseOrderRq baseOrderRq = (BaseOrderRq) this.req;
+		return baseOrderRq.getRequestId();
 	}
 
 	public long getOrderId() {
-		return req.getOrderId();
+		// Fixme:
+		BaseOrderRq baseOrderRq = (BaseOrderRq) this.req;
+		return baseOrderRq.getOrderId();
 	}
 
 	public long getOrderId(int idx) {

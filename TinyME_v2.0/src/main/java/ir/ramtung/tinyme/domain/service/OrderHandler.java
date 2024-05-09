@@ -11,6 +11,8 @@ import ir.ramtung.tinyme.messaging.request.BaseOrderRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.messaging.request.OrderEntryType;
+import ir.ramtung.tinyme.messaging.request.BaseRq;
+import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,29 +29,23 @@ public class OrderHandler {
 		this.services = services;
 	}
 
-	public void handleEnterOrder(EnterOrderRq enterOrderRq) {
+	public void handleRq(BaseRq baseRq) {
 		try {
-			ApplicationServiceResponse response = callService(enterOrderRq);
+			ApplicationServiceResponse response = callService(baseRq);
 			publishApplicationServiceResponse(response);
 		} catch (InvalidRequestException ex) {
+			// Add line 40 to fix line 42
+			BaseOrderRq baseOrderRq = (BaseOrderRq) baseRq;
 			eventPublisher.publish(
-				new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), ex.getReasons())
+					new OrderRejectedEvent(baseOrderRq.getRequestId(), baseOrderRq.getOrderId(), ex.getReasons())
 			);
 		}
 	}
 
-	public void handleDeleteOrder(DeleteOrderRq deleteOrderRq) {
-		try {
-			ApplicationServiceResponse response = callService(deleteOrderRq);
-			publishApplicationServiceResponse(response);
-		} catch (InvalidRequestException ex) {
-			eventPublisher.publish(
-				new OrderRejectedEvent(deleteOrderRq.getRequestId(), deleteOrderRq.getOrderId(), ex.getReasons())
-			);
+	private ApplicationServiceResponse callService(BaseRq req) {
+		if (req instanceof ChangeMatchingStateRq changeMatchingStateRq) {
+			return callChangeStateServices(changeMatchingStateRq);
 		}
-	}
-
-	private ApplicationServiceResponse callService(BaseOrderRq req) {
 		if (req instanceof DeleteOrderRq deleteReq) {
 			return callDeleteServices(deleteReq);
 		}
@@ -67,6 +63,10 @@ public class OrderHandler {
 
 	private ApplicationServiceResponse callDeleteServices(DeleteOrderRq req) {
 		return services.deleteOrder(req);
+	}
+
+	private ApplicationServiceResponse callChangeStateServices(ChangeMatchingStateRq req) {
+		return services.changeMatchingState(req);
 	}
 
 	private ApplicationServiceResponse callAddServices(EnterOrderRq req) {
