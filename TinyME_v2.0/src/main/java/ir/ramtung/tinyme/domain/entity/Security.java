@@ -164,7 +164,7 @@ public class Security {
 		}
 	}
 
-	public List<String> checkLotAndTickSize(EnterOrderRq order) {
+	public List<String> checkEnterOrderRq(EnterOrderRq order) {
 		List<String> errors = new LinkedList<>();
 		
 		if (order.getQuantity() % lotSize != 0) {
@@ -173,6 +173,10 @@ public class Security {
 
 		if (order.getPrice() % tickSize != 0) {
 			errors.add(Message.PRICE_NOT_MULTIPLE_OF_TICK_SIZE);
+		}
+
+		if(matchingState == MatchingState.AUCTION && order.getMinimumExecutionQuantity() != 0) {
+			errors.add(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE);
 		}
 
 		return errors;

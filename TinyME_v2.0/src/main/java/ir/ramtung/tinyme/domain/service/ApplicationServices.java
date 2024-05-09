@@ -76,7 +76,7 @@ public class ApplicationServices {
 			errors.add(Message.UNKNOWN_SECURITY_ISIN);
 		} else {
 			Security security = securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin());
-			errors.addAll(security.checkLotAndTickSize(enterOrderRq));
+			errors.addAll(security.checkEnterOrderRq(enterOrderRq));
 		}
 
 		if (!brokerRepository.isThereBrokerWithId(enterOrderRq.getBrokerId())) {
