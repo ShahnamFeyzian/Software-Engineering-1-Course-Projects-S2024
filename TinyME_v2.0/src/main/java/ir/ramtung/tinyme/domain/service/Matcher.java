@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class Matcher {
 
-	public List<Trade> match(Order newOrder) {
+	public List<Trade> continuesMatch(Order newOrder) {
 		OrderBook orderBook = newOrder.getSecurity().getOrderBook();
 		LinkedList<Trade> trades = new LinkedList<>();
 		try {
@@ -42,11 +42,11 @@ public class Matcher {
 		trades.reversed().forEach(Trade::rollback);
 	}
 
-	public MatchResult execute(Order order) {
+	public MatchResult continuesExecuting(Order order) {
 		List<Trade> trades = new LinkedList<>();
 		
 		try {
-			trades = match(order);
+			trades = continuesMatch(order);
 			order.checkExecutionQuantity(sumOfExecutionQuantity(trades));
 			order.addYourselfToQueue();
 			return MatchResult.executed(order, trades);
