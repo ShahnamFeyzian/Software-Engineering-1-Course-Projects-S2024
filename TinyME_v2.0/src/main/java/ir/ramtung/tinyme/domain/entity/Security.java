@@ -30,7 +30,7 @@ public class Security {
 
 	private int lastTradePrice;
 
-	private static Matcher continuesMatcher = new Matcher();
+	private static Matcher matcher = new Matcher();
 
 	private MatchingState matchingState = MatchingState.CONTINUOUS;
 
@@ -53,7 +53,7 @@ public class Security {
 			addNewStopLimitOrder(newStopLimitOrder);
 			results.addFirst(MatchResult.executed(newOrder, List.of()));
 		} else {
-			MatchResult newOrderMatchResult = continuesMatcher.execute(newOrder);
+			MatchResult newOrderMatchResult = matcher.continuesExecuting(newOrder);
 			updateLastTradePrice(newOrderMatchResult.trades());
 			results.addFirst(newOrderMatchResult);
 		}
@@ -125,7 +125,7 @@ public class Security {
 	}
 
 	private List<MatchResult> reAddActiveOrder(Order updatedOrder, Order originalOrder) {
-		MatchResult updatedOrderResult = continuesMatcher.execute(updatedOrder);
+		MatchResult updatedOrderResult = matcher.continuesExecuting(updatedOrder);
 
 		if (updatedOrderResult.outcome() != MatchingOutcome.EXECUTED) {
 			orderBook.enqueue(originalOrder);
@@ -188,7 +188,7 @@ public class Security {
 
 		while ((sloOrder = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
 			Order activatedOrder = new Order(sloOrder);
-			MatchResult result = continuesMatcher.execute(activatedOrder);
+			MatchResult result = matcher.continuesExecuting(activatedOrder);
 			updateLastTradePrice(result.trades());
 			results.add(result);
 		}
