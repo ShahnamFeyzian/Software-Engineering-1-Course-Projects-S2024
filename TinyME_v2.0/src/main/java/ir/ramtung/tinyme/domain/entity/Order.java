@@ -221,11 +221,15 @@ public class Order {
 	}
 
 	public boolean matches(Order other) {
+		return canTradeWithPrice(other.price);
+	}
+
+	public boolean canTradeWithPrice(int price) {
 		if (side == Side.BUY) {
-			return price >= other.price;
+			return this.price >= price;
 		}
 
-		return price <= other.price;
+		return this.price <= price;
 	}
 
 	public void decreaseQuantity(int amount) {

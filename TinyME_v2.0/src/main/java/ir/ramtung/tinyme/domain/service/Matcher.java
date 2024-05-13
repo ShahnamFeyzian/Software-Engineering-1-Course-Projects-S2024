@@ -11,6 +11,45 @@ import org.springframework.stereotype.Service;
 @Service
 public class Matcher {
 
+	public int calcOpeningAuctionPrice(OrderBook orderBook, int lastTradePrice) {
+		int minPrice = orderBook.getBuyQueue().getLast().getPrice(); // TODO: add method
+		int maxPrice = orderBook.getSellQueue().getLast().getPrice(); // TODO: add method
+		int maxTradableQuantity = 0;
+		int openingPrice = lastTradePrice; 
+		
+		for (int price=minPrice; price<=maxPrice; price++) {
+			int currentTradableQuantity = calcOpeningAuctionPrice(orderBook, price);
+			if (currentTradableQuantity > maxTradableQuantity) {
+				openingPrice = price;
+				maxTradableQuantity = currentTradableQuantity;
+			} 
+			else if (currentTradableQuantity == maxTradableQuantity && Math.abs(price - lastTradePrice) < Math.abs(openingPrice - lastTradePrice)) {
+				openingPrice = price;
+			}
+		}
+		
+		return openingPrice;
+	}
+
+	public int calcTradableQuantity(OrderBook orderBook, int openingPrice) {
+		int buysQuantity = 0;
+		int sellsQuantity = 0;
+
+		for (Order order : orderBook.getBuyQueue()) {
+			if (order.canTradeWithPrice(openingPrice)) {
+				buysQuantity += order.getTotalQuantity();
+			} 
+		}
+
+		for (Order order : orderBook.getSellQueue()) {
+			if (order.canTradeWithPrice(openingPrice)) {
+				sellsQuantity += order.getTotalQuantity();
+			} 
+		}
+
+		return Math.min(buysQuantity, sellsQuantity);
+	}
+
 	public List<Trade> continuesMatch(Order newOrder) {
 		OrderBook orderBook = newOrder.getSecurity().getOrderBook();
 		LinkedList<Trade> trades = new LinkedList<>();
