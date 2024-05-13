@@ -133,7 +133,7 @@ public class IcebergOrder extends Order {
 			Math.min(peakSize, quantity),
 			status
 		);
-		this.entryTimes = entryTimes;
+		this.entryTimes.addAll(entryTimes);
 	}
 
 	public IcebergOrder(

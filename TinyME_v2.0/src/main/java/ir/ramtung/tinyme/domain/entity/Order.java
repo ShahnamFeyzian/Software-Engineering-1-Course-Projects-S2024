@@ -29,9 +29,7 @@ public class Order {
 	protected int price;
 	protected Broker broker;
 	protected Shareholder shareholder;
-	
-	@Builder.Default
-	protected List<LocalDateTime> entryTimes = new ArrayList<>();
+	protected final List<LocalDateTime> entryTimes = new ArrayList<>();
 
 	@Builder.Default
 	protected OrderStatus status = OrderStatus.NEW;
@@ -69,6 +67,28 @@ public class Order {
 		int price,
 		Broker broker,
 		Shareholder shareholder,
+		OrderStatus status
+	) {
+		this.orderId = orderId;
+		this.security = security;
+		this.side = side;
+		this.quantity = quantity;
+		this.minimumExecutionQuantity = minimumExecutionQuantity;
+		this.price = price;
+		this.broker = broker;
+		this.shareholder = shareholder;
+		this.status = status;
+	}
+
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
 		List<LocalDateTime> entryTimes,
 		OrderStatus status
 	) {
@@ -78,7 +98,7 @@ public class Order {
 		this.quantity = quantity;
 		this.minimumExecutionQuantity = minimumExecutionQuantity;
 		this.price = price;
-		this.entryTimes = entryTimes;
+		this.entryTimes.addAll(entryTimes);
 		this.broker = broker;
 		this.shareholder = shareholder;
 		this.status = status;
