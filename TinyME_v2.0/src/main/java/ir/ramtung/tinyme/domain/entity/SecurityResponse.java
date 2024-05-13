@@ -1,15 +1,15 @@
 package ir.ramtung.tinyme.domain.entity;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import ir.ramtung.tinyme.domain.entity.security_stats.SecurityStats;
 import lombok.Getter;
 
 @Getter
 public final class SecurityResponse {
-	private final ArrayList<SecurityStats> stats;
+	private final List<SecurityStats> stats;
 
-	public SecurityResponse(ArrayList<SecurityStats> stats) {
+	public SecurityResponse(List<SecurityStats> stats) {
 		this.stats = stats;
 	}
 }

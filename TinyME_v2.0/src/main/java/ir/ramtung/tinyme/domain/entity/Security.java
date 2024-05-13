@@ -1,5 +1,8 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import ir.ramtung.tinyme.domain.entity.security_stats.ExecuteStats;
+import ir.ramtung.tinyme.domain.entity.security_stats.SecurityStats;
+import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStats;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughPositionException;
 import ir.ramtung.tinyme.domain.service.Matcher;
@@ -34,29 +37,40 @@ public class Security {
 	@Builder.Default
 	private SecurityState state = SecurityState.CONTINUOUES;
 
-	public List<MatchResult> addNewOrder(Order newOrder) {
+	public SecurityResponse addNewOrder(Order newOrder) {
 		try {
-			List<MatchResult> results = new ArrayList<>();
 			checkPositionForNewOrder(newOrder);
-			handleAdd(newOrder, results);
-			results.addAll(executeStopLimitOrders());
-			return results;
+			List<SecurityStats> stats = handleAdd(newOrder);
+			return new SecurityResponse(stats);
 		} catch (NotEnoughPositionException exp) {
-			return List.of(MatchResult.notEnoughPositions());
+			List<SecurityStats> stats = List.of(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId()));
+			return new SecurityResponse(stats);
 		} catch (NotEnoughCreditException exp) {
-			return List.of(MatchResult.notEnoughCredit());
+			List<SecurityStats> stats = List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
+			return new SecurityResponse(stats);
 		}
 	}
 
-	private void handleAdd(Order newOrder, List<MatchResult> results) {
+	private List<SecurityStats> handleAdd(Order newOrder) {
+		List<SecurityStats> stats = new ArrayList<>();
+		stats.add(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
+
 		if (newOrder instanceof StopLimitOrder newStopLimitOrder) {
 			addNewStopLimitOrder(newStopLimitOrder);
-			results.addFirst(MatchResult.executed(newOrder, List.of()));
 		} else {
 			MatchResult newOrderMatchResult = matcher.continuesExecuting(newOrder);
+			if (!newOrderMatchResult.isSuccessful()) {
+				stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(newOrderMatchResult, newOrder.getOrderId()));
+			}
+			if(!newOrderMatchResult.trades().isEmpty()) {
+				stats.add(ExecuteStats.createContinuesExecuteStats(newOrderMatchResult.trades(), newOrder.getOrderId()));
+			}
 			updateLastTradePrice(newOrderMatchResult.trades());
-			results.addFirst(newOrderMatchResult);
 		}
+
+		stats.addAll(executeStopLimitOrders());
+
+		return stats;
 	}
 
 	private void updateLastTradePrice(List<Trade> trades) {
@@ -84,26 +98,30 @@ public class Security {
 		}
 	}
 
-	public void deleteOrder(Side side, long orderId) {
+	public SecurityResponse deleteOrder(Side side, long orderId) {
 		orderBook.removeByOrderId(side, orderId);
+		List<SecurityStats> stats = List.of(SituationalStats.createDeleteOrderStats(orderId));
+		return new SecurityResponse(stats);
 	}
 
 	public void changeMatchingState(SecurityState newState) {
 		this.state = newState;
 	}
 
-	public List<MatchResult> updateOrder(Order tempOrder) {
+	public SecurityResponse updateOrder(Order tempOrder) {
 		try {
 			Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
 			checkPositionForUpdateOrder(mainOrder, tempOrder);
-			boolean losesPriority = mainOrder.willPriorityLostInUpdate(tempOrder);
-			return handleUpdate(tempOrder, mainOrder, losesPriority);
+			List<SecurityStats> stats = handleUpdate(tempOrder, mainOrder);
+			return new SecurityResponse(stats);
 		} catch (NotEnoughPositionException exp) {
-			return List.of(MatchResult.notEnoughPositions());
+			List<SecurityStats> stats = List.of(SituationalStats.createNotEnoughPositionsStats(tempOrder.getOrderId()));
+			return new SecurityResponse(stats);
 		}
 	}
 
-	private List<MatchResult> handleUpdate(Order tempOrder, Order mainOrder, boolean losesPriority) {
+	private List<SecurityStats> handleUpdate(Order tempOrder, Order mainOrder) {
+		boolean losesPriority = mainOrder.willPriorityLostInUpdate(tempOrder);
 		if (losesPriority) {
 			Order originalOrder = mainOrder.snapshot();
 			orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
@@ -111,11 +129,11 @@ public class Security {
 			return reAddUpdatedOrder(mainOrder, originalOrder);
 		} else {
 			mainOrder.updateFromTempOrder(tempOrder);
-			return List.of(MatchResult.executed(null, List.of()));
+			return List.of(SituationalStats.createUpdateOrderStats(mainOrder.getOrderId()));
 		}
 	}
 
-	private List<MatchResult> reAddUpdatedOrder(Order updatedOrder, Order originalOrder) {
+	private List<SecurityStats> reAddUpdatedOrder(Order updatedOrder, Order originalOrder) {
 		if (updatedOrder instanceof StopLimitOrder updatedSlo) {
 			StopLimitOrder originalSlo = (StopLimitOrder) originalOrder;
 			return reAddUpdatedSlo(updatedSlo, originalSlo);
@@ -124,29 +142,32 @@ public class Security {
 		}
 	}
 
-	private List<MatchResult> reAddActiveOrder(Order updatedOrder, Order originalOrder) {
+	private List<SecurityStats> reAddActiveOrder(Order updatedOrder, Order originalOrder) {
+		List<SecurityStats> stats = new LinkedList<>();
+		stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
+		
 		MatchResult updatedOrderResult = matcher.continuesExecuting(updatedOrder);
 
-		if (updatedOrderResult.outcome() != MatchingOutcome.EXECUTED) {
+		if (!updatedOrderResult.isSuccessful()) {
 			orderBook.enqueue(originalOrder);
+			stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(updatedOrderResult, originalOrder.getOrderId()));
 		}
 
 		updateLastTradePrice(updatedOrderResult.trades());
-		List<MatchResult> results = executeStopLimitOrders();
-		results.addFirst(updatedOrderResult);
-		return results;
+		stats.addAll(executeStopLimitOrders());
+		return stats;
 	}
 
-	private List<MatchResult> reAddUpdatedSlo(StopLimitOrder updatedOrder,StopLimitOrder originalOrder) {
+	private List<SecurityStats> reAddUpdatedSlo(StopLimitOrder updatedOrder,StopLimitOrder originalOrder) {
 		try {
-			List<MatchResult> results = new LinkedList<>();
-			results.add(MatchResult.executed(updatedOrder, List.of()));
+			List<SecurityStats> stats = new LinkedList<>();
+			stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
 			addNewStopLimitOrder(updatedOrder);
-			results.addAll(executeStopLimitOrders());
-			return results;
+			stats.addAll(executeStopLimitOrders());
+			return stats;
 		} catch (NotEnoughCreditException exp) {
 			addNewStopLimitOrder(originalOrder);
-			return List.of(MatchResult.notEnoughCredit());
+			return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
 		}
 	}
 
@@ -182,18 +203,21 @@ public class Security {
 		return errors;
 	}
 
-	private List<MatchResult> executeStopLimitOrders() {
-		List<MatchResult> results = new LinkedList<>();
-		StopLimitOrder sloOrder;
+	private List<SecurityStats> executeStopLimitOrders() {
+		List<SecurityStats> stats = new LinkedList<>();
+		StopLimitOrder slo;
 
-		while ((sloOrder = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
-			Order activatedOrder = new Order(sloOrder);
+		while ((slo = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
+			stats.add(SituationalStats.createOrderActivatedStats(slo.getOrderId()));
+			Order activatedOrder = new Order(slo);
 			MatchResult result = matcher.continuesExecuting(activatedOrder);
+			if(!result.trades().isEmpty()) {
+				stats.add(ExecuteStats.createContinuesExecuteStats(result.trades(), activatedOrder.getOrderId()));
+			}
 			updateLastTradePrice(result.trades());
-			results.add(result);
 		}
 
-		return results;
+		return stats;
 	}
 
 	public Order findByOrderId(Side side, long orderId) {
