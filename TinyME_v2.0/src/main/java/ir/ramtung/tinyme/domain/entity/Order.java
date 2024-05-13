@@ -29,6 +29,8 @@ public class Order {
 	protected int price;
 	protected Broker broker;
 	protected Shareholder shareholder;
+	
+	@Builder.Default
 	protected List<LocalDateTime> entryTimes = new ArrayList<>();
 
 	@Builder.Default

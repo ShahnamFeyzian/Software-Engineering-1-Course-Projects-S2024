@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import ir.ramtung.tinyme.messaging.request.MatchingState;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -32,7 +31,8 @@ public class Security {
 
 	private static Matcher matcher = new Matcher();
 
-	private MatchingState matchingState = MatchingState.CONTINUOUS;
+	@Builder.Default
+	private SecurityState state = SecurityState.CONTINUOUES;
 
 	public List<MatchResult> addNewOrder(Order newOrder) {
 		try {
@@ -88,8 +88,8 @@ public class Security {
 		orderBook.removeByOrderId(side, orderId);
 	}
 
-	public void changeMatchingState(MatchingState newState) {
-		this.matchingState = newState;
+	public void changeMatchingState(SecurityState newState) {
+		this.state = newState;
 	}
 
 	public List<MatchResult> updateOrder(Order tempOrder) {
@@ -175,7 +175,7 @@ public class Security {
 			errors.add(Message.PRICE_NOT_MULTIPLE_OF_TICK_SIZE);
 		}
 
-		if(matchingState == MatchingState.AUCTION && order.getMinimumExecutionQuantity() != 0) {
+		if(this.state == SecurityState.AUCTION && order.getMinimumExecutionQuantity() != 0) {
 			errors.add(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE);
 		}
 

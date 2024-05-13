@@ -12,6 +12,7 @@ import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
+import ir.ramtung.tinyme.messaging.request.MatchingState;
 import ir.ramtung.tinyme.repository.BrokerRepository;
 import ir.ramtung.tinyme.repository.SecurityRepository;
 import ir.ramtung.tinyme.repository.ShareholderRepository;
@@ -111,6 +112,14 @@ public class ApplicationServices {
 		}
 	}
 
+	private void validateChangeMatchingState(ChangeMatchingStateRq req) {
+		try {
+			securityRepository.findSecurityByIsin(req.getSecurityIsin());
+		} catch (NotFoundException exp) {
+			throw new InvalidRequestException(Message.UNKNOWN_SECURITY_ISIN);
+		}
+	}
+
 	public ApplicationServiceResponse deleteOrder(DeleteOrderRq req) {
 		validateDeleteOrderRq(req);
 		setEntitiesByRq(req);
@@ -119,18 +128,11 @@ public class ApplicationServices {
 		return new ApplicationServiceResponse(ApplicationServiceType.DELETE_ORDER, null, req);
 	}
 
-	public void validateChangeMatchingState(ChangeMatchingStateRq req) {
-		try {
-			securityRepository.findSecurityByIsin(req.getSecurityIsin());
-		} catch (NotFoundException exp) {
-			throw new InvalidRequestException(Message.UNKNOWN_SECURITY_ISIN);
-		}
-	}
-
 	public ApplicationServiceResponse changeMatchingState(ChangeMatchingStateRq req) {
 		validateChangeMatchingState(req);
 		setEntitiesByRq(req);
-		security.changeMatchingState(req.getTargetState());
+		SecurityState targetSecurityState = (req.getTargetState() == MatchingState.AUCTION) ? SecurityState.AUCTION : SecurityState.CONTINUOUES;
+		security.changeMatchingState(targetSecurityState);
 
 		return new ApplicationServiceResponse(ApplicationServiceType.CHANGE_MATCHING_STATE, null, req);
 	}
