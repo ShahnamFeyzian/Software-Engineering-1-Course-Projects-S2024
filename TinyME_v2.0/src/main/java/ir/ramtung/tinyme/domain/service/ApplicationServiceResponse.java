@@ -1,8 +1,6 @@
 package ir.ramtung.tinyme.domain.service;
 
-import ir.ramtung.tinyme.domain.entity.MatchResult;
-import ir.ramtung.tinyme.domain.entity.MatchingOutcome;
-import ir.ramtung.tinyme.domain.entity.Trade;
+import ir.ramtung.tinyme.messaging.event.Event;
 import ir.ramtung.tinyme.messaging.request.BaseOrderRq;
 import java.util.List;
 
@@ -13,7 +11,7 @@ import lombok.Getter;
 public class ApplicationServiceResponse {
 
 	private ApplicationServiceType type;
-	private List<MatchResult> matchResults;
+	private List<Event> events;
 	private BaseRq req;
 
 	public enum ApplicationServiceType {
@@ -27,9 +25,9 @@ public class ApplicationServiceResponse {
 		CHANGE_MATCHING_STATE,
 	}
 
-	public ApplicationServiceResponse(ApplicationServiceType type, List<MatchResult> matchResults, BaseRq req) {
+	public ApplicationServiceResponse(ApplicationServiceType type, List<Event> events, BaseRq req) {
 		this.type = type;
-		this.matchResults = matchResults;
+		this.events = events;
 		this.req = req;
 	}
 
@@ -67,25 +65,5 @@ public class ApplicationServiceResponse {
 		// Fixme:
 		BaseOrderRq baseOrderRq = (BaseOrderRq) this.req;
 		return baseOrderRq.getOrderId();
-	}
-
-	public long getOrderId(int idx) {
-		return matchResults.get(idx).remainder().getOrderId();
-	}
-
-	public boolean isSuccessful(int idx) {
-		return matchResults.get(idx).isSuccessful();
-	}
-
-	public boolean hasTrades(int idx) {
-		return !matchResults.get(idx).trades().isEmpty();
-	}
-
-	public List<Trade> getTrades(int idx) {
-		return matchResults.get(idx).trades();
-	}
-
-	public MatchingOutcome getOutcome(int idx) {
-		return matchResults.get(idx).outcome();
 	}
 }

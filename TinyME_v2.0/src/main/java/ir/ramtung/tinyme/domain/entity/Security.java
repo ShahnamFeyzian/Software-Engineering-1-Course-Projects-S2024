@@ -105,6 +105,7 @@ public class Security {
 	}
 
 	public void changeMatchingState(SecurityState newState) {
+		// TODO: complete this part
 		this.state = newState;
 	}
 

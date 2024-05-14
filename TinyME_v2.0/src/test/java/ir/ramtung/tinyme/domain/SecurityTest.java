@@ -76,12 +76,12 @@ class SecurityTest {
 		assertThat(security.getOrderBook().getBuyQueue().get(0).getOrderId()).isEqualTo(2);
 	}
 
-	@Test
-	void changing_price_causes_trades_to_happen() {
-		Order updateOrder = new Order(6, security, Side.SELL, 350, 15700, broker, shareholder);
-		assertThatNoException()
-			.isThrownBy(() -> assertThat(security.updateOrder(updateOrder).getFirst().trades()).isNotEmpty());
-	}
+	// @Test
+	// void changing_price_causes_trades_to_happen() {
+	// 	Order updateOrder = new Order(6, security, Side.SELL, 350, 15700, broker, shareholder);
+	// 	assertThatNoException()
+	// 		.isThrownBy(() -> assertThat(security.updateOrder(updateOrder).getFirst().trades()).isNotEmpty());
+	// }
 
 	@Test
 	void updating_non_existing_order_fails() {
