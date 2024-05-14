@@ -12,13 +12,13 @@ import org.springframework.stereotype.Service;
 public class Matcher {
 
 	public int calcOpeningAuctionPrice(OrderBook orderBook, int lastTradePrice) {
-		int minPrice = orderBook.getBuyQueue().getLast().getPrice(); // TODO: add method
-		int maxPrice = orderBook.getSellQueue().getLast().getPrice(); // TODO: add method
+		int minPrice = orderBook.getLowestPriorityActiveOrder(Side.BUY).getPrice();
+		int maxPrice = orderBook.getLowestPriorityActiveOrder(Side.SELL).getPrice();
 		int maxTradableQuantity = 0;
 		int openingPrice = lastTradePrice; 
 		
 		for (int price=minPrice; price<=maxPrice; price++) {
-			int currentTradableQuantity = calcOpeningAuctionPrice(orderBook, price);
+			int currentTradableQuantity = calcTradableQuantity(orderBook, price);
 			if (currentTradableQuantity > maxTradableQuantity) {
 				openingPrice = price;
 				maxTradableQuantity = currentTradableQuantity;

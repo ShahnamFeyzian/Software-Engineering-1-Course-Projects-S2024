@@ -21,6 +21,14 @@ public class OrderBook {
 		stopLimitOrderBuyQueue = new LinkedList<>();
 	}
 
+	public Order getLowestPriorityActiveOrder(Side side) {
+		if (side == Side.BUY) {
+			return buyQueue.getLast();
+		} else {
+			return sellQueue.getLast();
+		}
+	}
+
 	public void enqueue(Order order) {
 		List<Order> queue = getQueue(order);
 		ListIterator<Order> it = queue.listIterator();
