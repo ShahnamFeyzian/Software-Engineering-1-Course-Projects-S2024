@@ -52,24 +52,24 @@ public class Security {
 	}
 
 	private List<SecurityStats> handleAdd(Order newOrder) {
-		List<SecurityStats> stats = new ArrayList<>();
-		stats.add(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
-
-		if (newOrder instanceof StopLimitOrder newStopLimitOrder) {
-			addNewStopLimitOrder(newStopLimitOrder);
+		if (this.state == SecurityState.CONTINUOUES) {
+			return handleAddInContinuesState(newOrder);
+		} else if (this.state == SecurityState.AUCTION) {
+			// TODO: complete this part
+			return null;
 		} else {
-			MatchResult newOrderMatchResult = matcher.continuesExecuting(newOrder);
-			if (!newOrderMatchResult.isSuccessful()) {
-				stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(newOrderMatchResult, newOrder.getOrderId()));
-			}
-			if(!newOrderMatchResult.trades().isEmpty()) {
-				stats.add(ExecuteStats.createContinuesExecuteStats(newOrderMatchResult.trades(), newOrder.getOrderId()));
-			}
-			updateLastTradePrice(newOrderMatchResult.trades());
+			throw new UnknownError("Unknown security state");
 		}
+	}
 
+	private List<SecurityStats> handleAddInContinuesState(Order newOrder) {
+		List<SecurityStats> stats = new ArrayList<>();
+		if (newOrder instanceof StopLimitOrder newStopLimitOrder) {
+			stats.addAll(addNewStopLimitOrder(newStopLimitOrder));
+		} else {
+			stats.addAll(addNewLimitOrderInContinuesState(newOrder));
+		}
 		stats.addAll(executeStopLimitOrders());
-
 		return stats;
 	}
 
@@ -79,8 +79,24 @@ public class Security {
 		}
 	}
 
-	private void addNewStopLimitOrder(StopLimitOrder newOrder) {
+	private List<SecurityStats> addNewStopLimitOrder(StopLimitOrder newOrder) {
 		orderBook.enqueue(newOrder);
+		return List.of(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
+	}
+
+	private List<SecurityStats> addNewLimitOrderInContinuesState(Order newOrder) {
+		List<SecurityStats> stats = new ArrayList<>();
+		stats.add(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
+
+		MatchResult newOrderMatchResult = matcher.continuesExecuting(newOrder);
+		if (!newOrderMatchResult.isSuccessful()) {
+			stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(newOrderMatchResult, newOrder.getOrderId()));
+		}
+		if(!newOrderMatchResult.trades().isEmpty()) {
+			stats.add(ExecuteStats.createContinuesExecuteStats(newOrderMatchResult.trades(), newOrder.getOrderId()));
+		}
+		updateLastTradePrice(newOrderMatchResult.trades());
+		return stats;
 	}
 
 	private void checkPositionForNewOrder(Order newOrder) {
