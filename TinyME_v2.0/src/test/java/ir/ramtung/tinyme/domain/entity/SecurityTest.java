@@ -1246,6 +1246,16 @@ public class SecurityTest {
 			security.deleteOrder(Side.BUY, 7);
 		}
 
+		public SecurityResponse delete_buy_order_in_auction_state() {
+			security.changeMatchingState(SecurityState.AUCTION);
+			return security.deleteOrder(Side.BUY, 3);
+		}
+
+		public SecurityResponse delete_sell_order_in_auction_state() {
+			security.changeMatchingState(SecurityState.AUCTION);
+			return security.deleteOrder(Side.SELL, 3);
+		}
+
 		public SecurityResponse add_sell_order_in_auction_state_but_not_enough_position() {
 			Order order = new Order(6, security, Side.SELL, 10, 575, sellerBroker, sellerShareholder);
 			security.changeMatchingState(SecurityState.AUCTION);
@@ -5148,6 +5158,81 @@ public class SecurityTest {
 		scenarioGenerator.delete_stop_limit_buy_order();
 		assertPack.exceptedBuyerCredit = 12000;
 		assertPack.assertBuyerCredit();
+	}
+
+	@Test
+	public void delete_buy_order_in_auction_state_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.delete_buy_order_in_auction_state();
+		assertThat(((SituationalStats)response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.DELETE_ORDER);
+		assertPack.assertAuctionStats((AuctionStats)response.getStats().get(1), 550, 0);
+	}
+
+	@Test
+	public void delete_buy_order_in_auction_state_and_check_buy_queue() {
+		scenarioGenerator.delete_buy_order_in_auction_state();
+		assertThat(security.isThereOrderWithId(Side.BUY, 3)).isFalse();
+	}
+
+	@Test
+	public void delete_buy_order_in_auction_state_and_check_buyer_credit() {
+		scenarioGenerator.delete_buy_order_in_auction_state();
+		assertPack.exceptedBuyerCredit = 3000;
+		assertPack.assertBuyerCredit();
+	}
+
+	@Test
+	public void delete_buy_order_in_auction_state_and_check_buyer_position() {
+		scenarioGenerator.delete_buy_order_in_auction_state();
+		assertPack.assertBuyerPosition();
+	}
+
+	@Test
+	public void delete_buy_order_in_auction_state_and_check_seller_credit() {
+		scenarioGenerator.delete_buy_order_in_auction_state();
+		assertPack.assertSellerCredit();
+	}
+
+	@Test
+	public void delete_buy_order_in_auction_state_and_check_seller_position() {
+		scenarioGenerator.delete_buy_order_in_auction_state();
+		assertPack.assertSellerPosition();
+	}
+
+	@Test
+	public void delete_sell_order_in_auction_state_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.delete_sell_order_in_auction_state();
+		assertThat(((SituationalStats)response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.DELETE_ORDER);
+		assertPack.assertAuctionStats((AuctionStats)response.getStats().get(1), 550, 0);
+	}
+
+	@Test
+	public void delete_sell_order_in_auction_state_and_check_buy_queue() {
+		scenarioGenerator.delete_sell_order_in_auction_state();
+		assertThat(security.isThereOrderWithId(Side.SELL, 3)).isFalse();
+	}
+
+	@Test
+	public void delete_sell_order_in_auction_state_and_check_buyer_credit() {
+		scenarioGenerator.delete_sell_order_in_auction_state();
+		assertPack.assertBuyerCredit();
+	}
+
+	@Test
+	public void delete_sell_order_in_auction_state_and_check_buyer_position() {
+		scenarioGenerator.delete_sell_order_in_auction_state();
+		assertPack.assertBuyerPosition();
+	}
+
+	@Test
+	public void delete_sell_order_in_auction_state_and_check_seller_credit() {
+		scenarioGenerator.delete_sell_order_in_auction_state();
+		assertPack.assertSellerCredit();
+	}
+
+	@Test
+	public void delete_sell_order_in_auction_state_and_check_seller_position() {
+		scenarioGenerator.delete_sell_order_in_auction_state();
+		assertPack.assertSellerPosition();
 	}
 
 	@Test
