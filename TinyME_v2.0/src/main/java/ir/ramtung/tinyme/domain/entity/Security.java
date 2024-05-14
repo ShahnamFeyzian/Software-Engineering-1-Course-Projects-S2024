@@ -6,6 +6,7 @@ import ir.ramtung.tinyme.domain.entity.security_stats.SecurityStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStats;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughPositionException;
+import ir.ramtung.tinyme.domain.exception.UnknownSecurityStateException;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
@@ -56,18 +57,16 @@ public class Security {
 		} else if (this.state == SecurityState.AUCTION) {
 			return handleAddInAuctionState(newOrder);
 		} else {
-			throw new UnknownError("Unknown security state");
+			throw new UnknownSecurityStateException();
 		}
 	}
 
 	private List<SecurityStats> handleAddInAuctionState(Order newOrder) {
 		orderBook.enqueue(newOrder);
-		int openingPrice = matcher.calcOpeningAuctionPrice(orderBook, lastTradePrice);
-		int tradableQuantity = matcher.calcTradableQuantity(orderBook, openingPrice);
 
 		List<SecurityStats> stats = new ArrayList<>();
 		stats.add(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
-		stats.add(AuctionStats.createAuctionStats(openingPrice, tradableQuantity));
+		stats.add(createAuctionStats());
 		return stats;
 	}
 
@@ -125,7 +124,13 @@ public class Security {
 
 	public SecurityResponse deleteOrder(Side side, long orderId) {
 		orderBook.removeByOrderId(side, orderId);
-		return new SecurityResponse(SituationalStats.createDeleteOrderStats(orderId));
+
+		List<SecurityStats> stats = new ArrayList<>();
+		stats.add(SituationalStats.createDeleteOrderStats(orderId));
+		if (this.state == SecurityState.AUCTION) {
+			stats.add(createAuctionStats());
+		}
+		return new SecurityResponse(stats);
 	}
 
 	public void changeMatchingState(SecurityState newState) {
@@ -257,5 +262,11 @@ public class Security {
 
 	public boolean isThereOrderWithId(Side side, long orderId) {
 		return orderBook.isThereOrderWithId(side, orderId);
+	}
+
+	private AuctionStats createAuctionStats() {
+		int openingPrice = matcher.calcOpeningAuctionPrice(orderBook, lastTradePrice);
+		int tradableQuantity = matcher.calcTradableQuantity(orderBook, openingPrice);
+		return AuctionStats.createAuctionStats(openingPrice, tradableQuantity);
 	}
 }
