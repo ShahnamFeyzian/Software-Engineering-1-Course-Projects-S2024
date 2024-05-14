@@ -1,5 +1,6 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import ir.ramtung.tinyme.domain.entity.security_stats.AuctionStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.ExecuteStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SecurityStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStats;
@@ -55,11 +56,21 @@ public class Security {
 		if (this.state == SecurityState.CONTINUOUES) {
 			return handleAddInContinuesState(newOrder);
 		} else if (this.state == SecurityState.AUCTION) {
-			// TODO: complete this part
-			return null;
+			return handleAddInAuctionState(newOrder);
 		} else {
 			throw new UnknownError("Unknown security state");
 		}
+	}
+
+	private List<SecurityStats> handleAddInAuctionState(Order newOrder) {
+		orderBook.enqueue(newOrder);
+		int openingPrice = matcher.calcOpeningAuctionPrice(orderBook, lastTradePrice);
+		int tradableQuantity = matcher.calcTradableQuantity(orderBook, openingPrice);
+
+		List<SecurityStats> stats = new ArrayList<>();
+		stats.add(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
+		stats.add(AuctionStats.createAuctionStats(openingPrice, tradableQuantity));
+		return stats;
 	}
 
 	private List<SecurityStats> handleAddInContinuesState(Order newOrder) {
