@@ -1,10 +1,7 @@
 package ir.ramtung.tinyme.domain.service;
 
-import ir.ramtung.tinyme.domain.entity.MatchingOutcome;
-import ir.ramtung.tinyme.domain.entity.Trade;
 import ir.ramtung.tinyme.messaging.EventPublisher;
 import ir.ramtung.tinyme.messaging.Message;
-import ir.ramtung.tinyme.messaging.TradeDTO;
 import ir.ramtung.tinyme.messaging.event.*;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.request.BaseOrderRq;
@@ -13,9 +10,7 @@ import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.messaging.request.OrderEntryType;
 import ir.ramtung.tinyme.messaging.request.BaseRq;
 import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -93,93 +88,4 @@ public class OrderHandler {
 		List<Event> events = response.getEvents();
 		events.forEach(event -> eventPublisher.publish(event));
 	}
-
-	// TODO: clean this mess after fix OrderHandlerTest
-	// private List<Event> createEvents(ApplicationServiceResponse response) {
-	// 	if (response.isTypeDelete()) {
-	// 		return List.of(new OrderDeletedEvent(response.getRequestId(), response.getOrderId()));
-	// 	}
-
-	// 	List<Event> events = createFirstMatchResultEvents(response);
-	// 	events.addAll(createActivatedEvents(response));
-	// 	return events;
-	// }
-
-	// private List<Event> createFirstMatchResultEvents(ApplicationServiceResponse response) {
-	// 	if (response.isSuccessful(0)) {
-	// 		return createSuccessEvents(response);
-	// 	} else {
-	// 		return createRejectedEvents(response);
-	// 	}
-	// }
-
-	// private List<Event> createActivatedEvents(ApplicationServiceResponse response) {
-	// 	List<Event> events = new LinkedList<>();
-	// 	int numOfMatchResults = response.getMatchResults().size();
-
-	// 	for (int i = 1; i < numOfMatchResults; i++) {
-	// 		events.add(new OrderActivatedEvent(response.getOrderId(i)));
-	// 		if ((response.hasTrades(i))) {
-	// 			events.add(createExecutedEvent(response.getOrderId(i), response.getTrades(i)));
-	// 		}
-	// 	}
-
-	// 	return events;
-	// }
-
-	// private List<Event> createSuccessEvents(ApplicationServiceResponse response) {
-	// 	List<Event> events = new LinkedList<>();
-
-	// 	if (response.isTypeAdd()) {
-	// 		events.add(new OrderAcceptedEvent(response.getRequestId(), response.getOrderId()));
-	// 	} else {
-	// 		events.add(new OrderUpdatedEvent(response.getRequestId(), response.getOrderId()));
-	// 	}
-
-	// 	if (response.hasTrades(0)) {
-	// 		events.add(createExecutedEvent(response.getRequestId(), response.getOrderId(), response.getTrades(0)));
-	// 	}
-
-	// 	return events;
-	// }
-
-	// private List<Event> createRejectedEvents(ApplicationServiceResponse response) {
-	// 	List<Event> events = new LinkedList<>();
-	// 	MatchingOutcome outcome = response.getOutcome(0);
-
-	// 	if (outcome == MatchingOutcome.NOT_ENOUGH_CREDIT) {
-	// 		events.add(
-	// 			new OrderRejectedEvent(
-	// 				response.getRequestId(),
-	// 				response.getOrderId(),
-	// 				List.of(Message.BUYER_HAS_NOT_ENOUGH_CREDIT)
-	// 			)
-	// 		);
-	// 	} else if (outcome == MatchingOutcome.NOT_ENOUGH_POSITIONS) {
-	// 		events.add(
-	// 			new OrderRejectedEvent(
-	// 				response.getRequestId(),
-	// 				response.getOrderId(),
-	// 				List.of(Message.SELLER_HAS_NOT_ENOUGH_POSITIONS)
-	// 			)
-	// 		);
-	// 	} else if (outcome == MatchingOutcome.NOT_ENOUGH_EXECUTION) {
-	// 		events.add(
-	// 			new OrderRejectedEvent(
-	// 				response.getRequestId(),
-	// 				response.getOrderId(),
-	// 				List.of(Message.MINIMUM_EXECUTION_QUANTITY_NOT_MET)
-	// 			)
-	// 		);
-	// 	}
-	// 	return events;
-	// }
-
-	// private Event createExecutedEvent(long reqId, long orderId, List<Trade> trades) {
-	// 	return new OrderExecutedEvent(reqId, orderId, trades.stream().map(TradeDTO::new).collect(Collectors.toList()));
-	// }
-
-	// private Event createExecutedEvent(long orderId, List<Trade> trades) {
-	// 	return new OrderExecutedEvent(orderId, trades.stream().map(TradeDTO::new).collect(Collectors.toList()));
-	// }
 }

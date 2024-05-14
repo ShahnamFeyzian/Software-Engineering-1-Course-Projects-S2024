@@ -152,6 +152,8 @@ public class Security {
 		if (!updatedOrderResult.isSuccessful()) {
 			orderBook.enqueue(originalOrder);
 			stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(updatedOrderResult, originalOrder.getOrderId()));
+		} else {
+			stats.add(ExecuteStats.createContinuesExecuteStats(updatedOrderResult.trades(), originalOrder.getOrderId()));
 		}
 
 		updateLastTradePrice(updatedOrderResult.trades());

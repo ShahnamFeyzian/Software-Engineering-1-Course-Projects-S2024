@@ -864,6 +864,13 @@ public class OrderHandlerTest {
 		create_stop_limit_scenario();
 		shareholder.incPosition(security, 45);
 
+		List<TradeDTO> limitOrderTradesDto = Arrays.asList(
+			new TradeDTO("ABC", 500, 10, 5, 9),	
+			new TradeDTO("ABC", 500, 10, 5, 9),	
+			new TradeDTO("ABC", 500, 10, 5, 9),	
+			new TradeDTO("ABC", 500, 10, 5, 9),	
+			new TradeDTO("ABC", 500, 5, 5, 9)
+		);
 		Trade firstTrade = new Trade(security, 400, 10, stopLimitOrders.get(0), orders.get(3));
 		Trade secondTrade = new Trade(security, 300, 10, stopLimitOrders.get(1), orders.get(2));
 		Trade thirdTrade = new Trade(security, 200, 10, stopLimitOrders.get(2), orders.get(1));
@@ -885,14 +892,17 @@ public class OrderHandlerTest {
 			)
 		);
 
+		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 9));
+		verify(eventPublisher).publish(new OrderExecutedEvent(1, 9, limitOrderTradesDto));
+
 		verify(eventPublisher).publish(new OrderActivatedEvent(6));
-		verify(eventPublisher).publish(new OrderExecutedEvent(6, List.of(new TradeDTO(firstTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(1, 6, List.of(new TradeDTO(firstTrade))));
 
 		verify(eventPublisher).publish(new OrderActivatedEvent(7));
-		verify(eventPublisher).publish(new OrderExecutedEvent(7, List.of(new TradeDTO(secondTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(1, 7, List.of(new TradeDTO(secondTrade))));
 
 		verify(eventPublisher).publish(new OrderActivatedEvent(8));
-		verify(eventPublisher).publish(new OrderExecutedEvent(8, List.of(new TradeDTO(thirdTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(1, 8, List.of(new TradeDTO(thirdTrade))));
 	}
 
 	@Test
@@ -901,6 +911,7 @@ public class OrderHandlerTest {
 
 		broker2.increaseCreditBy(6000);
 
+		TradeDTO limitOrderTradeDto = new TradeDTO(security.getIsin(), 600, 10, 9, 1);
 		Trade firstTrade = new Trade(security, 700, 10, stopLimitOrders.get(3), orders.get(6));
 		Trade secondTrade = new Trade(security, 800, 10, stopLimitOrders.get(4), orders.get(7));
 		Trade thirdTrade = new Trade(security, 900, 10, stopLimitOrders.get(5), orders.get(8));
@@ -922,14 +933,17 @@ public class OrderHandlerTest {
 			)
 		);
 
+		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 9));
+		verify(eventPublisher).publish(new OrderExecutedEvent(1, 9, List.of(limitOrderTradeDto)));
+
 		verify(eventPublisher).publish(new OrderActivatedEvent(6));
-		verify(eventPublisher).publish(new OrderExecutedEvent(6, List.of(new TradeDTO(firstTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(1, 6, List.of(new TradeDTO(firstTrade))));
 
 		verify(eventPublisher).publish(new OrderActivatedEvent(7));
-		verify(eventPublisher).publish(new OrderExecutedEvent(7, List.of(new TradeDTO(secondTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(1, 7, List.of(new TradeDTO(secondTrade))));
 
 		verify(eventPublisher).publish(new OrderActivatedEvent(8));
-		verify(eventPublisher).publish(new OrderExecutedEvent(8, List.of(new TradeDTO(thirdTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(1, 8, List.of(new TradeDTO(thirdTrade))));
 	}
 
 	@Test
@@ -1156,7 +1170,7 @@ public class OrderHandlerTest {
 		);
 		verify(eventPublisher).publish(new OrderUpdatedEvent(3, 6));
 		verify(eventPublisher).publish(new OrderActivatedEvent(6));
-		verify(eventPublisher).publish(new OrderExecutedEvent(6, List.of(new TradeDTO(trade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(3, 6, List.of(new TradeDTO(trade))));
 	}
 
 	@Test
