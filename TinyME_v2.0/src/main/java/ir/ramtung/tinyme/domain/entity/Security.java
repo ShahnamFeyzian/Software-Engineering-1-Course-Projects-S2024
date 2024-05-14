@@ -163,15 +163,38 @@ public class Security {
 	}
 
 	private List<SecurityStats> reAddUpdatedOrder(Order updatedOrder, Order originalOrder) {
-		if (updatedOrder instanceof StopLimitOrder updatedSlo) {
-			StopLimitOrder originalSlo = (StopLimitOrder) originalOrder;
-			return reAddUpdatedSlo(updatedSlo, originalSlo);
+		if (this.state == SecurityState.CONTINUOUES) {
+			return reAddUpdatedOrderInContinuesState(updatedOrder, originalOrder);
+		} else if (this.state == SecurityState.AUCTION) {
+			return reAddUpdatedOrderInAuctionState(updatedOrder, originalOrder);
 		} else {
-			return reAddActiveOrder(updatedOrder, originalOrder);
+			throw new UnknownSecurityStateException();
 		}
 	}
 
-	private List<SecurityStats> reAddActiveOrder(Order updatedOrder, Order originalOrder) {
+	private List<SecurityStats> reAddUpdatedOrderInContinuesState(Order updatedOrder, Order originalOrder) {
+		if (updatedOrder instanceof StopLimitOrder updatedSlo) {
+			StopLimitOrder originalSlo = (StopLimitOrder) originalOrder;
+			return reAddUpdatedSloInContinuesState(updatedSlo, originalSlo);
+		} else {
+			return reAddActiveOrderInContinuesState(updatedOrder, originalOrder);
+		}
+	}
+
+	private List<SecurityStats> reAddUpdatedOrderInAuctionState(Order updatedOrder, Order originalOrder) {
+		try {
+			orderBook.enqueue(updatedOrder);
+			List<SecurityStats> stats = new LinkedList<>();
+			stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
+			stats.add(createAuctionStats());
+			return stats;
+		} catch (NotEnoughCreditException e) {
+			orderBook.enqueue(originalOrder);
+			return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
+		}
+	}
+
+	private List<SecurityStats> reAddActiveOrderInContinuesState(Order updatedOrder, Order originalOrder) {
 		List<SecurityStats> stats = new LinkedList<>();
 		stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
 		
@@ -190,15 +213,15 @@ public class Security {
 		return stats;
 	}
 
-	private List<SecurityStats> reAddUpdatedSlo(StopLimitOrder updatedOrder,StopLimitOrder originalOrder) {
+	private List<SecurityStats> reAddUpdatedSloInContinuesState(StopLimitOrder updatedOrder,StopLimitOrder originalOrder) {
 		try {
 			List<SecurityStats> stats = new LinkedList<>();
 			stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
-			addNewStopLimitOrder(updatedOrder);
+			orderBook.enqueue(updatedOrder);
 			stats.addAll(executeStopLimitOrders());
 			return stats;
 		} catch (NotEnoughCreditException exp) {
-			addNewStopLimitOrder(originalOrder);
+			orderBook.enqueue(originalOrder);
 			return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
 		}
 	}
