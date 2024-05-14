@@ -204,6 +204,10 @@ public class Security {
 			errors.add(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE);
 		}
 
+		if(this.state == SecurityState.AUCTION && order.getStopPrice() != 0) {
+			errors.add(Message.STOP_PRICE_IN_AUCTION_STATE);
+		}
+
 		return errors;
 	}
 

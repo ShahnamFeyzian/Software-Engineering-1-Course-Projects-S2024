@@ -27,4 +27,5 @@ public class Message {
 	public static final String INVALID_STOP_LIMIT_UPDATE_PRICE = "This order can not be updated by given stop price.";
 	public static final String UNKNOWN_REQUEST_TYPE = "Unknown request type";
 	public static final String MINIMUM_EXECUTION_IN_AUCTION_STATE = "Orders can not have minimum execution quantity in auction state.";
+	public static final String STOP_PRICE_IN_AUCTION_STATE = "Orders can not have stop price in auction state.";
 }
