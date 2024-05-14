@@ -3,6 +3,7 @@ package ir.ramtung.tinyme.domain.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import ir.ramtung.tinyme.domain.entity.security_stats.AuctionStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.ExecuteStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStatsType;
@@ -109,6 +110,14 @@ public class SecurityTest {
 
 			assertThat(actualOrderId).isEqualTo(orderId);
 			assertThat(actualNumOfTrades).isEqualTo(numOfTrades);
+		}
+
+		private void assertAuctionStats(AuctionStats stats, int openingPrice, int tradableQuantity) {
+			int actualOpeningPrice = stats.getOpeningPrice();
+			int acutalTradableQuantity = stats.getTradableQuantity();
+
+			assertThat(actualOpeningPrice).isEqualTo(openingPrice);
+			assertThat(acutalTradableQuantity).isEqualTo(tradableQuantity);
 		}
 
 		private void assertOrderInQueue(
@@ -1235,6 +1244,19 @@ public class SecurityTest {
 		public void delete_stop_limit_buy_order() {
 			this.add_three_stop_limit_order_both_buy_and_sell();
 			security.deleteOrder(Side.BUY, 7);
+		}
+
+		public SecurityResponse add_sell_order_in_auction_state_but_not_enough_position() {
+			Order order = new Order(6, security, Side.SELL, 10, 575, sellerBroker, sellerShareholder);
+			security.changeMatchingState(SecurityState.AUCTION);
+			return security.addNewOrder(order);
+		}
+
+		public SecurityResponse add_sell_order_in_auction_state() {
+			Order order = new Order(6, security, Side.SELL, 10, 100, sellerBroker, sellerShareholder);
+			sellerShareholder.incPosition(security, 10);
+			security.changeMatchingState(SecurityState.AUCTION);
+			return security.addNewOrder(order);
 		}
 	}
 
@@ -5113,5 +5135,44 @@ public class SecurityTest {
 		scenarioGenerator.delete_stop_limit_buy_order();
 		assertPack.exceptedBuyerCredit = 12000;
 		assertPack.assertBuyerCredit();
+	}
+
+	@Test
+	public void add_sell_order_in_auction_state_but_not_enough_position_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.add_sell_order_in_auction_state_but_not_enough_position();
+		assertThat(((SituationalStats)response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.NOT_ENOUGH_POSITIONS);
+		assertThat(response.getStats().size()).isEqualTo(1);
+	}
+
+	@Test
+	public void add_sell_order_in_auction_state_but_not_enough_position_and_check_sell_queue() {
+		scenarioGenerator.add_sell_order_in_auction_state_but_not_enough_position();
+		assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+	}
+
+	@Test
+	public void add_sell_order_in_auction_state_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.add_sell_order_in_auction_state();
+		assertThat(((SituationalStats)response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.ADD_ORDER);
+		assertPack.assertAuctionStats(((AuctionStats)response.getStats().get(1)), 500, 10);
+	}
+
+	@Test
+	public void add_sell_order_in_auction_state_and_check_sell_queue() {
+		scenarioGenerator.add_sell_order_in_auction_state();
+		assertPack.assertOrderInQueue(Side.SELL, 0, 6, 10, 100);
+	}
+
+	@Test
+	public void add_sell_order_in_auction_state_and_check_seller_position() {
+		scenarioGenerator.add_sell_order_in_auction_state();
+		assertPack.exceptedSellerPosition = 95;
+		assertPack.assertSellerPosition();
+	}
+
+	@Test
+	public void add_sell_order_in_auction_state_and_check_seller_credit() {
+		scenarioGenerator.add_sell_order_in_auction_state();
+		assertPack.assertSellerCredit();
 	}
 }
