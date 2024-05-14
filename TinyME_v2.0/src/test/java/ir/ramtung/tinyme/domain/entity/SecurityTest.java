@@ -1293,6 +1293,12 @@ public class SecurityTest {
 			security.changeMatchingState(SecurityState.AUCTION);
 			return security.updateOrder(order);
 		}
+
+		public SecurityResponse increase_sell_order_quantity_in_auction_state_but_not_enough_position() {
+			Order order = new Order(1, security, Side.SELL, 15, 600, sellerBroker, sellerShareholder);
+			security.changeMatchingState(SecurityState.AUCTION);
+			return security.updateOrder(order);
+		}
 	}
 
 	// --------------------------------------------------------------------------------
@@ -5362,5 +5368,19 @@ public class SecurityTest {
 	public void decrease_sell_order_price_in_auction_state_and_check_seller_position() {
 		scenarioGenerator.decrease_sell_order_price_in_auction_state();
 		assertPack.assertSellerPosition();
+	}
+
+	@Test
+	public void increase_sell_order_quantity_in_auction_state_but_not_enough_position_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.increase_sell_order_quantity_in_auction_state_but_not_enough_position();
+		assertThat(((SituationalStats)response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.NOT_ENOUGH_POSITIONS);
+		assertThat(response.getStats().size()).isEqualTo(1);
+	}
+
+	@Test
+	public void increase_sell_order_quantity_in_auction_state_but_not_enough_position_and_check_sell_queue() {
+		scenarioGenerator.increase_sell_order_quantity_in_auction_state_but_not_enough_position();
+		assertPack.assertOrderInQueue(Side.SELL, 0, 1, 10, 600);
+		assertPack.assertOrderInQueue(Side.SELL, 1, 2, 10, 700);
 	}
 }
