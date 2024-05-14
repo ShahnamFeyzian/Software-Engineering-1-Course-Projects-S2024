@@ -44,11 +44,9 @@ public class Security {
 			List<SecurityStats> stats = handleAdd(newOrder);
 			return new SecurityResponse(stats);
 		} catch (NotEnoughPositionException exp) {
-			List<SecurityStats> stats = List.of(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId()));
-			return new SecurityResponse(stats);
+			return new SecurityResponse(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId()));
 		} catch (NotEnoughCreditException exp) {
-			List<SecurityStats> stats = List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
-			return new SecurityResponse(stats);
+			return new SecurityResponse(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
 		}
 	}
 
@@ -127,8 +125,7 @@ public class Security {
 
 	public SecurityResponse deleteOrder(Side side, long orderId) {
 		orderBook.removeByOrderId(side, orderId);
-		List<SecurityStats> stats = List.of(SituationalStats.createDeleteOrderStats(orderId));
-		return new SecurityResponse(stats);
+		return new SecurityResponse(SituationalStats.createDeleteOrderStats(orderId));
 	}
 
 	public void changeMatchingState(SecurityState newState) {
@@ -143,8 +140,7 @@ public class Security {
 			List<SecurityStats> stats = handleUpdate(tempOrder, mainOrder);
 			return new SecurityResponse(stats);
 		} catch (NotEnoughPositionException exp) {
-			List<SecurityStats> stats = List.of(SituationalStats.createNotEnoughPositionsStats(tempOrder.getOrderId()));
-			return new SecurityResponse(stats);
+			return new SecurityResponse(SituationalStats.createNotEnoughPositionsStats(tempOrder.getOrderId()));
 		}
 	}
 
