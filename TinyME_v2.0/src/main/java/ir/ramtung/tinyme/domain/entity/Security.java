@@ -157,9 +157,32 @@ public class Security {
 			mainOrder.updateFromTempOrder(tempOrder);
 			return reAddUpdatedOrder(mainOrder, originalOrder);
 		} else {
-			mainOrder.updateFromTempOrder(tempOrder);
-			return List.of(SituationalStats.createUpdateOrderStats(mainOrder.getOrderId()));
+			return updateByKeepingPriority(tempOrder, mainOrder);
 		}
+	}
+
+	private List<SecurityStats> updateByKeepingPriority(Order tempOrder, Order mainOrder) {
+		if (this.state == SecurityState.CONTINUOUES) {
+			return updateByKeepingPriorityInContinuesState(tempOrder, mainOrder);
+		} else if (this.state == SecurityState.AUCTION) {
+			return updateByKeepingPriorityInAuctionState(tempOrder, mainOrder);
+		} else {
+			throw new UnknownSecurityStateException();
+		}
+	}
+
+	private List<SecurityStats> updateByKeepingPriorityInContinuesState(Order tempOrder, Order mainOrder) {
+		mainOrder.updateFromTempOrder(tempOrder);
+		return List.of(SituationalStats.createUpdateOrderStats(mainOrder.getOrderId()));
+	}
+
+	private List<SecurityStats> updateByKeepingPriorityInAuctionState(Order tempOrder, Order mainOrder) {
+		mainOrder.updateFromTempOrder(tempOrder);
+		
+		List<SecurityStats> stats = new ArrayList<>();
+		stats.add(SituationalStats.createUpdateOrderStats(mainOrder.getOrderId()));
+		stats.add(createAuctionStats());
+		return stats;
 	}
 
 	private List<SecurityStats> reAddUpdatedOrder(Order updatedOrder, Order originalOrder) {
