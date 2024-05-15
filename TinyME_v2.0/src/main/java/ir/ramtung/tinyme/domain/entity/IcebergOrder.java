@@ -282,6 +282,7 @@ public class IcebergOrder extends Order {
 			status = OrderStatus.DONE;
 			security.deleteOrder(side, orderId);
 			if (quantity != 0) {
+				this.entryTimes.add(LocalDateTime.now());
 				security.getOrderBook().enqueue(this);
 			}
 		}

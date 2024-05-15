@@ -129,6 +129,18 @@ public class SecurityTest {
 			assertThat(actualTo).isEqualTo(to);
 		}
 
+		private void assertTrade(Trade trade, long sellId, long buyId, int price, int quantity) {
+			long actualSellId = trade.getSell().getOrderId();
+			long actualBuyId = trade.getBuy().getOrderId();
+			int actualPrice = trade.getPrice();
+			int actualQuantity = trade.getQuantity();
+
+			assertThat(actualSellId).isEqualTo(sellId);
+			assertThat(actualBuyId).isEqualTo(buyId);
+			assertThat(actualPrice).isEqualTo(price);
+			assertThat(actualQuantity).isEqualTo(quantity);
+		}
+
 		private void assertOrderInQueue(
 			Side side,
 			int idx,
@@ -1379,6 +1391,26 @@ public class SecurityTest {
 		public SecurityResponse change_security_state_from_auction_to_auction_with_no_trade() {
 			security.changeMatchingState(SecurityState.AUCTION);
 			return security.changeMatchingState(SecurityState.AUCTION);
+		}
+
+		private void change_state_to_auction_and_add_order_for_each_side() {
+			security.changeMatchingState(SecurityState.AUCTION);
+			List<Order> orders = Arrays.asList(
+				new Order(10, security, Side.BUY, 15, 500, buyerBroker, buyerShareholder, entryTime),	
+				new IcebergOrder(11, security, Side.BUY, 35, 0, 1000, buyerBroker, buyerShareholder, entryTime, 10),	
+				new Order(12, security, Side.BUY, 50, 1200, buyerBroker, buyerShareholder, entryTime),
+				new Order(13, security, Side.SELL, 30, 500, sellerBroker, sellerShareholder, entryTime),	
+				new Order(14, security, Side.SELL, 15, 1100, sellerBroker, sellerShareholder, entryTime),
+				new Order(15, security, Side.SELL, 15, 1000, sellerBroker, sellerShareholder, entryTime.plusNanos(1))
+			);
+			buyerBroker.increaseCreditBy(102_500);
+			sellerShareholder.incPosition(security, 60);
+			orders.forEach(order -> security.addNewOrder(order));
+		}
+
+		public SecurityResponse change_security_state_from_auction_to_continues_with_trades() {
+			change_state_to_auction_and_add_order_for_each_side();
+			return security.changeMatchingState(SecurityState.CONTINUOUES);
 		}
 	}
 
