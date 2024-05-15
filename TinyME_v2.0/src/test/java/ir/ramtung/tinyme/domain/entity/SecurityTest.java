@@ -5905,12 +5905,12 @@ public class SecurityTest {
 		List<SecurityStats> stats = response.getStats();
 
 		assertPack.assertAuctionExecuteStats((ExecuteStats)stats.getFirst(), 7);
-		assertPack.assertSituationalStats((SituationalStats)stats.get(1), SituationalStatsType.ORDER_ACTIVATED, 6);
-		assertPack.assertSituationalStats((SituationalStats)stats.get(2), SituationalStatsType.ORDER_ACTIVATED, 7);
-		assertPack.assertSituationalStats((SituationalStats)stats.get(3), SituationalStatsType.ORDER_ACTIVATED, 8);
-		assertPack.assertSituationalStats((SituationalStats)stats.get(4), SituationalStatsType.ORDER_ACTIVATED, 9);
-		assertPack.assertContinuesExecuteStats((ExecuteStats)stats.get(5), 9, 1);
-		assertPack.assertStateStats((StateStats)stats.get(6), SecurityState.AUCTION, SecurityState.CONTINUOUES);
+		assertPack.assertStateStats((StateStats)stats.get(1), SecurityState.AUCTION, SecurityState.CONTINUOUES);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(2), SituationalStatsType.ORDER_ACTIVATED, 6);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(3), SituationalStatsType.ORDER_ACTIVATED, 7);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(4), SituationalStatsType.ORDER_ACTIVATED, 8);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(5), SituationalStatsType.ORDER_ACTIVATED, 9);
+		assertPack.assertContinuesExecuteStats((ExecuteStats)stats.get(6), 9, 1);
 		assertThat(stats.size()).isEqualTo(7);
 	}
 
@@ -5967,11 +5967,11 @@ public class SecurityTest {
 		List<SecurityStats> stats = response.getStats();
 
 		assertPack.assertAuctionExecuteStats((ExecuteStats)stats.getFirst(), 7);
-		assertPack.assertSituationalStats((SituationalStats)stats.get(1), SituationalStatsType.ORDER_ACTIVATED, 6);
-		assertPack.assertSituationalStats((SituationalStats)stats.get(2), SituationalStatsType.ORDER_ACTIVATED, 7);
-		assertPack.assertSituationalStats((SituationalStats)stats.get(3), SituationalStatsType.ORDER_ACTIVATED, 8);
-		assertPack.assertSituationalStats((SituationalStats)stats.get(4), SituationalStatsType.ORDER_ACTIVATED, 9);
-		assertPack.assertStateStats((StateStats)stats.get(5), SecurityState.AUCTION, SecurityState.AUCTION);
+		assertPack.assertStateStats((StateStats)stats.get(1), SecurityState.AUCTION, SecurityState.AUCTION);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(2), SituationalStatsType.ORDER_ACTIVATED, 6);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(3), SituationalStatsType.ORDER_ACTIVATED, 7);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(4), SituationalStatsType.ORDER_ACTIVATED, 8);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(5), SituationalStatsType.ORDER_ACTIVATED, 9);
 		assertThat(stats.size()).isEqualTo(6);
 	}
 

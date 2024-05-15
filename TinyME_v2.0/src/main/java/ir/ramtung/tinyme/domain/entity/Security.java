@@ -143,6 +143,7 @@ public class Security {
 		} else if (prevState == SecurityState.AUCTION) {
 			List<SecurityStats> stats = openAuction();
 			stats.add(stateStats);
+			stats.addAll(activateStopLimitOrders());
 			return new SecurityResponse(stats);
 		} else {
 			throw new UnknownSecurityStateException();
@@ -158,7 +159,6 @@ public class Security {
 		}
 
 		updateLastTradePrice(trades);
-		stats.addAll(activateStopLimitOrders());
 
 		return stats;
 	}
