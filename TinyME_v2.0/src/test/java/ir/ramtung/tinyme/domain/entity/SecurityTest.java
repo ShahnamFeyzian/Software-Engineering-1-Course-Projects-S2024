@@ -1331,6 +1331,12 @@ public class SecurityTest {
 			security.changeMatchingState(SecurityState.AUCTION);
 			return security.updateOrder(order);
 		}
+
+		public SecurityResponse increase_buy_order_quantity_in_auction_state_but_not_enough_credit() {
+			Order order = new Order(3, security, Side.BUY, 20, 300, buyerBroker, buyerShareholder);
+			security.changeMatchingState(SecurityState.AUCTION);
+			return security.updateOrder(order);
+		}
 	}
 
 	// --------------------------------------------------------------------------------
@@ -5540,5 +5546,18 @@ public class SecurityTest {
 	public void decrease_buy_order_price_in_auction_state_and_check_seller_position() {
 		scenarioGenerator.decrease_buy_order_price_in_auction_state();
 		assertPack.assertSellerPosition();
+	}
+
+	@Test
+	public void increase_buy_order_quantity_in_auction_state_but_not_enough_credit_and_chack_security_response() {
+		SecurityResponse response = scenarioGenerator.increase_buy_order_quantity_in_auction_state_but_not_enough_credit();
+		assertThat(((SituationalStats)response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.NOT_ENOUGH_CREDIT);
+		assertThat(response.getStats().size()).isEqualTo(1);
+	}
+
+	@Test
+	public void increase_buy_order_quantity_in_auction_state_but_not_enough_credit_and_chack_buy_queue() {
+		scenarioGenerator.increase_buy_order_quantity_in_auction_state_but_not_enough_credit();
+		assertPack.assertOrderInQueue(Side.BUY, 2, 3, 10, 300);	
 	}
 }
