@@ -1412,6 +1412,11 @@ public class SecurityTest {
 			change_state_to_auction_and_add_order_for_each_side();
 			return security.changeMatchingState(SecurityState.CONTINUOUES);
 		}
+
+		public SecurityResponse change_security_state_from_auction_to_auction_with_trades() {
+			change_state_to_auction_and_add_order_for_each_side();
+			return security.changeMatchingState(SecurityState.AUCTION);
+		}
 	}
 
 	// --------------------------------------------------------------------------------
@@ -5743,8 +5748,6 @@ public class SecurityTest {
 		assertPack.assertTrade(trades.get(5), 5, 11, 1000, 10);
 		assertPack.assertTrade(trades.get(6), 15, 11, 1000, 5);
 		assertThat(trades.size()).isEqualTo(7);
-		assertPack.assertStateStats((StateStats)response.getStats().get(1), SecurityState.AUCTION, SecurityState.CONTINUOUES);
-		assertThat(response.getStats().size()).isEqualTo(2);
 	}
 
 	@Test
@@ -5795,6 +5798,73 @@ public class SecurityTest {
 	@Test
 	public void change_security_state_from_auction_to_continues_with_trades_and_check_seller_position() {
 		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades();
+		assertPack.exceptedSellerPosition = 60;
+		assertPack.assertSellerPosition();
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_check_trades() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_auction_with_trades();
+		List<Trade> trades = ((ExecuteStats)response.getStats().getFirst()).getTrades();
+
+		assertPack.assertTrade(trades.get(0), 13, 12, 1000, 30);
+		assertPack.assertTrade(trades.get(1), 1, 12, 1000, 10);
+		assertPack.assertTrade(trades.get(2), 2, 12, 1000, 10);
+		assertPack.assertTrade(trades.get(3), 3, 11, 1000, 10);
+		assertPack.assertTrade(trades.get(4), 4, 11, 1000, 10);
+		assertPack.assertTrade(trades.get(5), 5, 11, 1000, 10);
+		assertPack.assertTrade(trades.get(6), 15, 11, 1000, 5);
+		assertThat(trades.size()).isEqualTo(7);
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_auction_with_trades();
+		assertPack.assertStateStats((StateStats)response.getStats().getLast(), SecurityState.AUCTION, SecurityState.AUCTION);
+		assertThat(response.getStats().size()).isEqualTo(2);
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_check_sell_queue() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades();
+		assertPack.assertOrderInQueue(Side.SELL, 0, 15, 10, 1000);
+		assertPack.assertOrderInQueue(Side.SELL, 1, 5, 35, 1000, 10, 10);
+		assertPack.assertOrderInQueue(Side.SELL, 2, 14, 15, 1100);
+		assertThat(security.getOrderBook().getSellQueue().size()).isEqualTo(3);
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_check_buy_queue() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades();
+		assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
+		assertPack.assertOrderInQueue(Side.BUY, 1, 10, 15, 500);
+		assertThat(security.getOrderBook().getBuyQueue().size()).isEqualTo(6);
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_check_buyer_credit() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades();
+		assertPack.exceptedBuyerCredit = 10000;
+		assertPack.assertBuyerCredit();
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_check_buyer_position() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades();
+		assertPack.exceptedBuyerPosition = 85;
+		assertPack.assertBuyerPosition();
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_check_seller_credit() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades();
+		assertPack.exceptedSellerCredit = 85_000;
+		assertPack.assertSellerCredit();
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_check_seller_position() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades();
 		assertPack.exceptedSellerPosition = 60;
 		assertPack.assertSellerPosition();
 	}
