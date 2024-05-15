@@ -1325,6 +1325,12 @@ public class SecurityTest {
 			security.changeMatchingState(SecurityState.AUCTION);
 			return security.updateOrder(order);
 		}
+
+		public SecurityResponse decrease_buy_order_price_in_auction_state() {
+			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 400, buyerBroker, buyerShareholder, 10);
+			security.changeMatchingState(SecurityState.AUCTION);
+			return security.updateOrder(order);
+		}
 	}
 
 	// --------------------------------------------------------------------------------
@@ -5495,5 +5501,44 @@ public class SecurityTest {
 	public void increase_buy_order_price_in_auction_state_and_check_seller_position() {
 		scenarioGenerator.increase_buy_order_price_in_auction_state();
 		assertPack.assertSellerPosition();	
+	}
+
+	@Test
+	public void decrease_buy_order_price_in_auction_state_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.decrease_buy_order_price_in_auction_state();
+		assertThat(((SituationalStats)response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.UPDATE_ORDER);
+		assertPack.assertAuctionStats((AuctionStats)response.getStats().get(1), 550, 0);
+	}
+
+	@Test
+	public void decrease_buy_order_price_in_auction_state_and_check_buy_queue() {
+		scenarioGenerator.decrease_buy_order_price_in_auction_state();
+		assertPack.assertOrderInQueue(Side.BUY, 0, 4, 10, 400);
+		assertPack.assertOrderInQueue(Side.BUY, 1, 5, 45, 400, 10, 10);
+	}
+
+	@Test
+	public void decrease_buy_order_price_in_auction_state_and_check_buyer_credit() {
+		scenarioGenerator.decrease_buy_order_price_in_auction_state();
+		assertPack.exceptedBuyerCredit = 4500;
+		assertPack.assertBuyerCredit();
+	}
+
+	@Test
+	public void decrease_buy_order_price_in_auction_state_and_check_buyer_position() {
+		scenarioGenerator.decrease_buy_order_price_in_auction_state();
+		assertPack.assertBuyerPosition();
+	}
+
+	@Test
+	public void decrease_buy_order_price_in_auction_state_and_check_seller_credit() {
+		scenarioGenerator.decrease_buy_order_price_in_auction_state();
+		assertPack.assertSellerCredit();
+	}
+
+	@Test
+	public void decrease_buy_order_price_in_auction_state_and_check_seller_position() {
+		scenarioGenerator.decrease_buy_order_price_in_auction_state();
+		assertPack.assertSellerPosition();
 	}
 }
