@@ -4,6 +4,7 @@ import ir.ramtung.tinyme.domain.entity.security_stats.AuctionStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.ExecuteStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SecurityStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStats;
+import ir.ramtung.tinyme.domain.entity.security_stats.StateStats;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughPositionException;
 import ir.ramtung.tinyme.domain.exception.UnknownSecurityStateException;
@@ -77,7 +78,7 @@ public class Security {
 		} else {
 			stats.addAll(addNewLimitOrderInContinuesState(newOrder));
 		}
-		stats.addAll(executeStopLimitOrders());
+		stats.addAll(activateStopLimitOrders());
 		return stats;
 	}
 
@@ -133,9 +134,33 @@ public class Security {
 		return new SecurityResponse(stats);
 	}
 
-	public void changeMatchingState(SecurityState newState) {
-		// TODO: complete this part
+	public SecurityResponse changeMatchingState(SecurityState newState) {
+		StateStats stateStats = StateStats.createStateStats(this.state, newState);
+		SecurityState prevState = this.state;
 		this.state = newState;
+		if (prevState == SecurityState.CONTINUOUES) {
+			return new SecurityResponse(stateStats);
+		} else if (prevState == SecurityState.AUCTION) {
+			List<SecurityStats> stats = openAuction();
+			stats.add(stateStats);
+			return new SecurityResponse(stats);
+		} else {
+			throw new UnknownSecurityStateException();
+		}
+	}
+
+	private List<SecurityStats> openAuction() {
+		List<SecurityStats> stats = new ArrayList<>();
+
+		MatchResult result = matcher.auctionExecuting(orderBook);
+		if (!result.trades().isEmpty()) {
+			stats.add(ExecuteStats.createAuctionExecuteStats(result.trades()));
+		}
+
+		updateLastTradePrice(result.trades());
+		stats.addAll(activateStopLimitOrders());
+
+		return stats;
 	}
 
 	public SecurityResponse updateOrder(Order tempOrder) {
@@ -232,7 +257,7 @@ public class Security {
 		}
 
 		updateLastTradePrice(updatedOrderResult.trades());
-		stats.addAll(executeStopLimitOrders());
+		stats.addAll(activateStopLimitOrders());
 		return stats;
 	}
 
@@ -241,7 +266,7 @@ public class Security {
 			List<SecurityStats> stats = new LinkedList<>();
 			stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
 			orderBook.enqueue(updatedOrder);
-			stats.addAll(executeStopLimitOrders());
+			stats.addAll(activateStopLimitOrders());
 			return stats;
 		} catch (NotEnoughCreditException exp) {
 			orderBook.enqueue(originalOrder);
@@ -285,21 +310,38 @@ public class Security {
 		return errors;
 	}
 
-	private List<SecurityStats> executeStopLimitOrders() {
+	private List<SecurityStats> activateStopLimitOrders() {
 		List<SecurityStats> stats = new LinkedList<>();
 		StopLimitOrder slo;
 
 		while ((slo = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
 			stats.add(SituationalStats.createOrderActivatedStats(slo.getOrderId()));
 			Order activatedOrder = new Order(slo);
-			MatchResult result = matcher.continuesExecuting(activatedOrder);
-			if(!result.trades().isEmpty()) {
-				stats.add(ExecuteStats.createContinuesExecuteStats(result.trades(), activatedOrder.getOrderId()));
+			if (this.state == SecurityState.CONTINUOUES) {
+				stats.addAll(activateOrderInContinuesState(activatedOrder));
+			} else if (this.state == SecurityState.AUCTION) {
+				stats.addAll(activateOrderInAuctionState(activatedOrder));
+			} else {
+				throw new UnknownSecurityStateException();
 			}
-			updateLastTradePrice(result.trades());
 		}
 
 		return stats;
+	}
+
+	private List<SecurityStats> activateOrderInContinuesState(Order activatedOrder) {
+		MatchResult result = matcher.continuesExecuting(activatedOrder);
+		updateLastTradePrice(result.trades());
+		if(!result.trades().isEmpty()) {
+			return List.of(ExecuteStats.createContinuesExecuteStats(result.trades(), activatedOrder.getOrderId()));
+		} else {
+			return List.of();
+		}
+	}
+
+	private List<SecurityStats> activateOrderInAuctionState(Order activatedOrder) {
+		orderBook.enqueue(activatedOrder);
+		return List.of();
 	}
 
 	public Order findByOrderId(Side side, long orderId) {

@@ -98,6 +98,11 @@ public class Matcher {
 		}
 	}
 
+	public MatchResult auctionExecuting(OrderBook orderBook) {
+		//TODO: complete this part
+		return null;
+	}
+
 	private int sumOfExecutionQuantity(List<Trade> trades) {
 		int quantitySum = 0;
 		for (Trade trade : trades) quantitySum += trade.getQuantity();
