@@ -152,12 +152,12 @@ public class Security {
 	private List<SecurityStats> openAuction() {
 		List<SecurityStats> stats = new ArrayList<>();
 
-		MatchResult result = matcher.auctionExecuting(orderBook);
-		if (!result.trades().isEmpty()) {
-			stats.add(ExecuteStats.createAuctionExecuteStats(result.trades()));
+		List<Trade> trades = matcher.auctionExecuting(orderBook, lastTradePrice);
+		if (!trades.isEmpty()) {
+			stats.add(ExecuteStats.createAuctionExecuteStats(trades));
 		}
 
-		updateLastTradePrice(result.trades());
+		updateLastTradePrice(trades);
 		stats.addAll(activateStopLimitOrders());
 
 		return stats;

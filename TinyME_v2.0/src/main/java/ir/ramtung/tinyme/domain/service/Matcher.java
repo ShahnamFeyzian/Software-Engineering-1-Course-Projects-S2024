@@ -4,6 +4,8 @@ import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
+
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -55,7 +57,12 @@ public class Matcher {
 		LinkedList<Trade> trades = new LinkedList<>();
 		try {
 			while (hasOrderToMatch(newOrder, orderBook)) {
-				tryToTrade(newOrder, orderBook, trades);
+				Order matchingOrder = orderBook.findOrderToMatchWith(newOrder);
+				if (newOrder.getSide() == Side.SELL) {
+					trades.add(createTrade(newOrder, matchingOrder, matchingOrder.getPrice()));
+				} else {
+					trades.add(createTrade(matchingOrder, newOrder, matchingOrder.getPrice()));
+				}
 			}
 			return trades;
 		} catch (NotFoundException exp) {
@@ -66,12 +73,23 @@ public class Matcher {
 		}
 	}
 
-    private void tryToTrade(Order newOrder, OrderBook orderBook, LinkedList<Trade> trades) {
-        Order matchingOrder = orderBook.findOrderToMatchWith(newOrder);
-        Trade trade = new Trade(newOrder, matchingOrder);
-        trade.confirm();
-        trades.add(trade);
-    }
+	private List<Trade> auctionMatch(OrderBook orderBook, int openingPrice) {
+		List<Trade> trades = new ArrayList<>();
+		Order sellOrder = orderBook.getHighestPriorityActiveOrder(Side.SELL);
+		Order buyOrder = orderBook.getHighestPriorityActiveOrder(Side.BUY);
+		while(sellOrder.canTradeWithPrice(openingPrice) && buyOrder.canTradeWithPrice(openingPrice)) {
+			trades.add(createTrade(sellOrder, buyOrder, openingPrice));
+			sellOrder = orderBook.getHighestPriorityActiveOrder(Side.SELL);
+			buyOrder = orderBook.getHighestPriorityActiveOrder(Side.BUY);
+		}
+		return trades;
+	}
+
+	private Trade createTrade(Order sellOrder, Order buyOrder, int price) {
+		Trade trade = new Trade(sellOrder, buyOrder, price);
+		trade.confirm();
+		return trade;
+	}
 
 	private boolean hasOrderToMatch(Order newOrder, OrderBook orderBook) {
 		return (orderBook.hasOrderOfType(newOrder.getSide().opposite())) && (newOrder.getQuantity() > 0);
@@ -98,9 +116,9 @@ public class Matcher {
 		}
 	}
 
-	public MatchResult auctionExecuting(OrderBook orderBook) {
-		//TODO: complete this part
-		return null;
+	public List<Trade> auctionExecuting(OrderBook orderBook, int lastTradePrice) {
+		int openingPrice = calcOpeningAuctionPrice(orderBook, lastTradePrice);
+		return auctionMatch(orderBook, openingPrice);
 	}
 
 	private int sumOfExecutionQuantity(List<Trade> trades) {

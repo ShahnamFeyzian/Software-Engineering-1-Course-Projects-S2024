@@ -74,6 +74,17 @@ public class Trade {
 		this.isBuyQueued = (this.buy.getStatus() == OrderStatus.QUEUED);
 	}
 
+	public Trade(Order sellOrder, Order buyOrder, int price) {
+		this.security = sellOrder.getSecurity();
+		this.price = price;
+		this.quantity = Math.min(sellOrder.getQuantity(), buyOrder.getQuantity());
+		this.buy = buyOrder;
+		this.sell = sellOrder;
+		this.buyFirstVersion = buyOrder.snapshot();
+		this.sellFirstVersion = sellOrder.snapshot();
+		this.isBuyQueued = (buyOrder.status == OrderStatus.QUEUED);
+	}
+
 	public long getTradedValue() {
 		return (long) price * quantity;
 	}
@@ -113,6 +124,9 @@ public class Trade {
 	public void confirm() {
 		if (!isBuyQueued) {
 			decreaseBuyersCredit();
+		} else if (price < buy.getPrice()) {
+			long backCredit = (long) ((buy.getPrice() - this.price) * this.quantity);
+			buy.getBroker().increaseCreditBy(backCredit);
 		}
 
 		increaseSellersCredit();

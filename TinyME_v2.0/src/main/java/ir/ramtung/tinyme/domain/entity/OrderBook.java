@@ -29,6 +29,14 @@ public class OrderBook {
 		}
 	}
 
+	public Order getHighestPriorityActiveOrder(Side side) {
+		if (side == Side.BUY) {
+			return buyQueue.getFirst();
+		} else {
+			return sellQueue.getFirst();
+		}
+	}
+
 	public void enqueue(Order order) {
 		List<Order> queue = getQueue(order);
 		ListIterator<Order> it = queue.listIterator();
@@ -95,6 +103,12 @@ public class OrderBook {
 		queue.remove(targetOrder);
 	}
 
+	public void removeOrder(Order order) {
+		List<Order> queue = getQueue(order);
+		queue.remove(order);
+		order.delete();
+	}
+
 	public Order findOrderToMatchWith(Order newOrder) {
 		var queue = getQueue(newOrder.getSide().opposite());
 
@@ -118,10 +132,6 @@ public class OrderBook {
 
 	public boolean hasOrderOfType(Side side) {
 		return !getQueue(side).isEmpty();
-	}
-
-	public void removeFirst(Side side) {
-		getQueue(side).removeFirst();
 	}
 
 	public int totalSellQuantityByShareholder(Shareholder shareholder) {
