@@ -1313,8 +1313,15 @@ public class SecurityTest {
 			return security.updateOrder(order);
 		}
 
-		public SecurityResponse increase_buy_order_price_but_not_enough_credit() {
+		public SecurityResponse increase_buy_order_price_in_auction_state_but_not_enough_credit() {
 			Order order = new Order(1, security, Side.BUY, 10, 200, buyerBroker, buyerShareholder);
+			security.changeMatchingState(SecurityState.AUCTION);
+			return security.updateOrder(order);
+		}
+
+		public SecurityResponse increase_buy_order_price_in_auction_state() {
+			IcebergOrder order = new IcebergOrder(5, security, Side.BUY, 45, 820, buyerBroker, buyerShareholder, 10);
+			buyerBroker.increaseCreditBy(14400);
 			security.changeMatchingState(SecurityState.AUCTION);
 			return security.updateOrder(order);
 		}
@@ -5439,16 +5446,54 @@ public class SecurityTest {
 	}
 
 	@Test
-	public void increase_buy_order_price_but_not_enough_credit_and_check_security_response() {
-		SecurityResponse response = scenarioGenerator.increase_buy_order_price_but_not_enough_credit();
+	public void increase_buy_order_price_in_auction_state_but_not_enough_credit_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.increase_buy_order_price_in_auction_state_but_not_enough_credit();
 		assertThat(((SituationalStats)response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.NOT_ENOUGH_CREDIT);
 		assertThat(response.getStats().size()).isEqualTo(1);
 	}
 
 	@Test
-	public void increase_buy_order_price_but_not_enough_credit_and_check_buy_queue() {
-		scenarioGenerator.increase_buy_order_price_but_not_enough_credit();
+	public void increase_buy_order_price_in_auction_state_but_not_enough_credit_and_check_buy_queue() {
+		scenarioGenerator.increase_buy_order_price_in_auction_state_but_not_enough_credit();
 		assertPack.assertOrderInQueue(Side.BUY, 4, 1, 10, 100);
 		assertPack.assertOrderInQueue(Side.BUY, 3, 2, 10, 200);
+	}
+
+	@Test
+	public void increase_buy_order_price_in_auction_state_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.increase_buy_order_price_in_auction_state();
+		assertThat(((SituationalStats)response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.UPDATE_ORDER);
+		assertPack.assertAuctionStats((AuctionStats)response.getStats().get(1), 800, 30);
+	}
+
+	@Test
+	public void increase_buy_order_price_in_auction_state_and_check_buy_queue() {
+		scenarioGenerator.increase_buy_order_price_in_auction_state();
+		assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 820, 10, 10);	
+		assertPack.assertOrderInQueue(Side.BUY, 1, 4, 10, 400);	
+	}
+
+	@Test
+	public void increase_buy_order_price_in_auction_state_and_check_buyer_credit() {
+		scenarioGenerator.increase_buy_order_price_in_auction_state();
+		assertPack.assertBuyerCredit();	
+	}
+
+	@Test
+	public void increase_buy_order_price_in_auction_state_and_check_buyer_position() {
+		scenarioGenerator.increase_buy_order_price_in_auction_state();
+		assertPack.assertBuyerPosition();	
+	}
+
+	@Test
+	public void increase_buy_order_price_in_auction_state_and_check_seller_credit() {
+		scenarioGenerator.increase_buy_order_price_in_auction_state();
+		assertPack.assertSellerCredit();	
+	}
+
+	@Test
+	public void increase_buy_order_price_in_auction_state_and_check_seller_position() {
+		scenarioGenerator.increase_buy_order_price_in_auction_state();
+		assertPack.assertSellerPosition();	
 	}
 }
