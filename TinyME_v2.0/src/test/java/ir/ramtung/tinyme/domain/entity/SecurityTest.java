@@ -1370,6 +1370,11 @@ public class SecurityTest {
 		public SecurityResponse change_security_state_from_continues_to_continues() {
 			return security.changeMatchingState(SecurityState.CONTINUOUES);
 		}
+
+		public SecurityResponse change_security_state_from_auction_to_continues_with_no_trade() {
+			security.changeMatchingState(SecurityState.AUCTION);
+			return security.changeMatchingState(SecurityState.CONTINUOUES);
+		}
 	}
 
 	// --------------------------------------------------------------------------------
@@ -5671,6 +5676,13 @@ public class SecurityTest {
 	public void change_security_state_from_continues_to_continues_and_check_security_response() {
 		SecurityResponse response = scenarioGenerator.change_security_state_from_continues_to_continues();
 		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.CONTINUOUES, SecurityState.CONTINUOUES);
+		assertThat(response.getStats().size()).isEqualTo(1);
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_continues_with_no_trade_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continues_with_no_trade();
+		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.AUCTION, SecurityState.CONTINUOUES);
 		assertThat(response.getStats().size()).isEqualTo(1);
 	}
 }
