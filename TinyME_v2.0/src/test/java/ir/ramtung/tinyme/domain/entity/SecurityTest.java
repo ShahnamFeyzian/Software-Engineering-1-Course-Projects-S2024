@@ -1366,6 +1366,10 @@ public class SecurityTest {
 		public SecurityResponse change_security_state_from_continues_to_auction() {
 			return security.changeMatchingState(SecurityState.AUCTION);
 		}
+
+		public SecurityResponse change_security_state_from_continues_to_continues() {
+			return security.changeMatchingState(SecurityState.CONTINUOUES);
+		}
 	}
 
 	// --------------------------------------------------------------------------------
@@ -5660,6 +5664,13 @@ public class SecurityTest {
 	public void change_security_state_from_continues_to_auction_and_check_security_response() {
 		SecurityResponse response = scenarioGenerator.change_security_state_from_continues_to_auction();
 		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.CONTINUOUES, SecurityState.AUCTION);
+		assertThat(response.getStats().size()).isEqualTo(1);
+	}
+
+	@Test
+	public void change_security_state_from_continues_to_continues_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_continues_to_continues();
+		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.CONTINUOUES, SecurityState.CONTINUOUES);
 		assertThat(response.getStats().size()).isEqualTo(1);
 	}
 }
