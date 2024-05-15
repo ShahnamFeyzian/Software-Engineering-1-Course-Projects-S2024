@@ -1,10 +1,12 @@
 package ir.ramtung.tinyme.domain.service;
 
 import ir.ramtung.tinyme.domain.entity.*;
+import ir.ramtung.tinyme.domain.entity.security_stats.AuctionStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.ExecuteStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SecurityStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStatsType;
+import ir.ramtung.tinyme.domain.entity.security_stats.StateStats;
 import ir.ramtung.tinyme.domain.exception.InvalidIcebergPeakSizeException;
 import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
 import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
@@ -14,12 +16,15 @@ import ir.ramtung.tinyme.domain.service.ApplicationServiceResponse.ApplicationSe
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.TradeDTO;
 import ir.ramtung.tinyme.messaging.event.Event;
+import ir.ramtung.tinyme.messaging.event.OpeningPriceEvent;
 import ir.ramtung.tinyme.messaging.event.OrderAcceptedEvent;
 import ir.ramtung.tinyme.messaging.event.OrderActivatedEvent;
 import ir.ramtung.tinyme.messaging.event.OrderDeletedEvent;
 import ir.ramtung.tinyme.messaging.event.OrderExecutedEvent;
 import ir.ramtung.tinyme.messaging.event.OrderRejectedEvent;
 import ir.ramtung.tinyme.messaging.event.OrderUpdatedEvent;
+import ir.ramtung.tinyme.messaging.event.SecurityStateChangedEvent;
+import ir.ramtung.tinyme.messaging.event.TradeEvent;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
@@ -136,16 +141,31 @@ public class ApplicationServices {
 		}
 	}
 
-	private List<Event> createEventsForOrderRequest(List<SecurityStats> securityStats, long requestId) {
+	private List<Event> createEventsFormSecurityStats(List<SecurityStats> securityStats, long requestId) {
 		List<Event> events = new ArrayList<>();
 		for (SecurityStats stats : securityStats) {
 			if (stats instanceof SituationalStats situationalStats) {
 				events.add(createEventFromSituationalStats(situationalStats, requestId));
 			} else if (stats instanceof ExecuteStats executeStats) {
-				events.add(createEventFromExecuteStats(executeStats, requestId));
+				events.addAll(createEventsFromExecuteStats(executeStats, requestId));
+			} else if (stats instanceof StateStats stateStats) {
+				events.add(createSecurityStateChangedEvent(stateStats));
+			} else if (stats instanceof AuctionStats auctionStats) {
+				events.add(createOpeningPriceEvent(auctionStats));
+			} else {
+				throw new UnknownError("Unknown SecurityStats");
 			}
 		}
 		return events;
+	}
+
+	private Event createOpeningPriceEvent(AuctionStats auctionStats) {
+		return new OpeningPriceEvent(security.getIsin(), auctionStats.getOpeningPrice(), auctionStats.getTradableQuantity());
+	}
+
+	private Event createSecurityStateChangedEvent(StateStats stateStats) {
+		MatchingState state = (stateStats.getTo() == SecurityState.AUCTION) ? MatchingState.AUCTION : MatchingState.CONTINUOUS;
+		return new SecurityStateChangedEvent(security.getIsin(), state);
 	}
 
 	private Event createEventFromSituationalStats(SituationalStats situationalStats, long requestId) {
@@ -162,21 +182,28 @@ public class ApplicationServices {
         }
 	}
 
-	private Event createEventFromExecuteStats(ExecuteStats executeStats, long requestId) {
+	private List<Event> createEventsFromExecuteStats(ExecuteStats executeStats, long requestId) {
 		long orderId = executeStats.getOrderId();
 		if (executeStats.isCountinues()) {
-			return new OrderExecutedEvent(requestId, orderId, executeStats.getTrades().stream().map(TradeDTO::new).collect(Collectors.toList()));
+			return List.of(new OrderExecutedEvent(requestId, orderId, executeStats.getTrades().stream().map(TradeDTO::new).collect(Collectors.toList())));
 		} else {
-			// TODO: complete this part
-			return null;
+			return createTradeEvents(executeStats);
 		}
+	}
+
+	private List<Event> createTradeEvents(ExecuteStats executeStats) {
+		List<Event> tradeEvents = new ArrayList<>();
+		for (Trade trade : executeStats.getTrades()) {
+			tradeEvents.add(new TradeEvent(trade));
+		}
+		return tradeEvents;
 	}
 
 	public ApplicationServiceResponse deleteOrder(DeleteOrderRq req) {
 		validateDeleteOrderRq(req);
 		setEntitiesByRq(req);
 		SecurityResponse response = security.deleteOrder(req.getSide(), req.getOrderId());
-		List<Event> events = createEventsForOrderRequest(response.getStats(), req.getRequestId());
+		List<Event> events = createEventsFormSecurityStats(response.getStats(), req.getRequestId());
 
 		return new ApplicationServiceResponse(ApplicationServiceType.DELETE_ORDER, events, req);
 	}
@@ -186,7 +213,7 @@ public class ApplicationServices {
 		setEntitiesByRq(req);
 		Order tempOrder = Order.createTempOrderByEnterRq(security, broker, shareholder, req);
 		SecurityResponse response = security.addNewOrder(tempOrder);
-		List<Event> events = createEventsForOrderRequest(response.getStats(), req.getRequestId());
+		List<Event> events = createEventsFormSecurityStats(response.getStats(), req.getRequestId());
 
 		return new ApplicationServiceResponse(ApplicationServiceType.ADD_LIMIT_ORDER, events, req);
 	}
@@ -197,7 +224,7 @@ public class ApplicationServices {
 		setEntitiesByRq(req);
 		Order tempOrder = Order.createTempOrderByEnterRq(security, broker, shareholder, req);
 		SecurityResponse response = security.updateOrder(tempOrder);
-		List<Event> events = createEventsForOrderRequest(response.getStats(), req.getRequestId());
+		List<Event> events = createEventsFormSecurityStats(response.getStats(), req.getRequestId());
 
 		return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_LIMIT_ORDER, events, req);
 	}
@@ -207,7 +234,7 @@ public class ApplicationServices {
 		setEntitiesByRq(req);
 		IcebergOrder tempOrder = IcebergOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
 		SecurityResponse response = security.addNewOrder(tempOrder);
-		List<Event> events = createEventsForOrderRequest(response.getStats(), req.getRequestId());
+		List<Event> events = createEventsFormSecurityStats(response.getStats(), req.getRequestId());
 
 		return new ApplicationServiceResponse(ApplicationServiceType.ADD_ICEBERG_ORDER, events, req);
 	}
@@ -218,7 +245,7 @@ public class ApplicationServices {
 		setEntitiesByRq(req);
 		IcebergOrder tempOrder = IcebergOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
 		SecurityResponse response = security.updateOrder(tempOrder);
-		List<Event> events = createEventsForOrderRequest(response.getStats(), req.getRequestId());
+		List<Event> events = createEventsFormSecurityStats(response.getStats(), req.getRequestId());
 
 		return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_ICEBERG_ORDER, events, req);
 	}
@@ -228,7 +255,7 @@ public class ApplicationServices {
 		setEntitiesByRq(req);
 		StopLimitOrder tempOrder = StopLimitOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
 		SecurityResponse response = security.addNewOrder(tempOrder);
-		List<Event> events = createEventsForOrderRequest(response.getStats(), req.getRequestId());
+		List<Event> events = createEventsFormSecurityStats(response.getStats(), req.getRequestId());
 
 		return new ApplicationServiceResponse(ApplicationServiceType.ADD_STOP_LIMIT_ORDER, events, req);
 	}
@@ -239,7 +266,7 @@ public class ApplicationServices {
 		setEntitiesByRq(req);
 		StopLimitOrder tempOrder = StopLimitOrder.createTempOrderByEnterRq(security, broker, shareholder, req);
 		SecurityResponse response = security.updateOrder(tempOrder);
-		List<Event> events = createEventsForOrderRequest(response.getStats(), req.getRequestId());
+		List<Event> events = createEventsFormSecurityStats(response.getStats(), req.getRequestId());
 
 		return new ApplicationServiceResponse(ApplicationServiceType.UPDATE_STOP_LIMIT_ORDER, events, req);
 	}
@@ -248,9 +275,10 @@ public class ApplicationServices {
 		validateChangeMatchingState(req);
 		setEntitiesByRq(req);
 		SecurityState targetSecurityState = (req.getTargetState() == MatchingState.AUCTION) ? SecurityState.AUCTION : SecurityState.CONTINUOUES;
-		security.changeMatchingState(targetSecurityState);
-		// TODO: complete this part
+		SecurityResponse response = security.changeMatchingState(targetSecurityState);
+		//FIXME: waiting for Arvin response and then change requestId below
+		List<Event> events = createEventsFormSecurityStats(response.getStats(), 0);
 
-		return new ApplicationServiceResponse(ApplicationServiceType.CHANGE_MATCHING_STATE, null, req);
+		return new ApplicationServiceResponse(ApplicationServiceType.CHANGE_MATCHING_STATE, events, req);
 	}
 }
