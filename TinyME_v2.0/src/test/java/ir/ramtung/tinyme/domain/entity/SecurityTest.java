@@ -1438,6 +1438,15 @@ public class SecurityTest {
 			change_state_to_auction_and_add_order_for_each_side();
 			return security.changeMatchingState(SecurityState.CONTINUOUES);
 		}
+
+		public SecurityResponse change_security_state_from_auction_to_auction_with_trades_and_active_some_order() {
+			add_three_stop_limit_order_both_buy_and_sell();
+			Order newSlo = new StopLimitOrder(9, security, Side.BUY, 5, 1000, buyerBroker, buyerShareholder, 900);
+			buyerBroker.increaseCreditBy(5000);
+			security.addNewOrder(newSlo);
+			change_state_to_auction_and_add_order_for_each_side();
+			return security.changeMatchingState(SecurityState.AUCTION);
+		}
 	}
 
 	// --------------------------------------------------------------------------------
@@ -5949,6 +5958,68 @@ public class SecurityTest {
 	public void change_security_state_from_auction_to_continues_with_trades_and_active_some_order_and_check_seller_position() {
 		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades_and_active_some_order();
 		assertPack.exceptedSellerPosition = 100;
+		assertPack.assertSellerPosition();
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_active_some_order_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_auction_with_trades_and_active_some_order();
+		List<SecurityStats> stats = response.getStats();
+
+		assertPack.assertAuctionExecuteStats((ExecuteStats)stats.getFirst(), 7);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(1), SituationalStatsType.ORDER_ACTIVATED, 6);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(2), SituationalStatsType.ORDER_ACTIVATED, 7);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(3), SituationalStatsType.ORDER_ACTIVATED, 8);
+		assertPack.assertSituationalStats((SituationalStats)stats.get(4), SituationalStatsType.ORDER_ACTIVATED, 9);
+		assertPack.assertStateStats((StateStats)stats.get(5), SecurityState.AUCTION, SecurityState.AUCTION);
+		assertThat(stats.size()).isEqualTo(6);
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_active_some_order_and_check_sell_queue() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades_and_active_some_order();
+		assertPack.assertOrderInQueue(Side.SELL, 0, 15, 10, 1000);
+		assertPack.assertOrderInQueue(Side.SELL, 1, 5, 35, 1000, 10, 10);
+		assertPack.assertOrderInQueue(Side.SELL, 2, 14, 15, 1100);
+		assertThat(security.getOrderBook().getSellQueue().size()).isEqualTo(3);
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_active_some_order_and_check_buy_queue() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades_and_active_some_order();
+		assertPack.assertOrderInQueue(Side.BUY, 0, 9, 5, 1000);
+		assertPack.assertOrderInQueue(Side.BUY, 1, 8, 15, 900);
+		assertPack.assertOrderInQueue(Side.BUY, 2, 7, 15, 800);
+		assertPack.assertOrderInQueue(Side.BUY, 3, 6, 15, 700);
+		assertPack.assertOrderInQueue(Side.BUY, 4, 5, 45, 500, 10, 10);
+		assertPack.assertOrderInQueue(Side.BUY, 5, 10, 15, 500);
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_active_some_order_and_check_buyer_credit() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades_and_active_some_order();
+		assertPack.exceptedBuyerCredit = 10000;
+		assertPack.assertBuyerCredit();
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_active_some_order_and_check_buyer_position() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades_and_active_some_order();
+		assertPack.exceptedBuyerPosition = 85;
+		assertPack.assertBuyerPosition();
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_active_some_order_and_check_seller_credit() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades_and_active_some_order();
+		assertPack.exceptedSellerCredit = 85_000;
+		assertPack.assertSellerCredit();
+	}
+
+	@Test
+	public void change_security_state_from_auction_to_auction_with_trades_and_active_some_order_and_check_seller_position() {
+		scenarioGenerator.change_security_state_from_auction_to_auction_with_trades_and_active_some_order();
+		assertPack.exceptedSellerPosition = 105;
 		assertPack.assertSellerPosition();
 	}
 }
