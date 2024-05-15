@@ -7,6 +7,7 @@ import ir.ramtung.tinyme.domain.entity.security_stats.AuctionStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.ExecuteStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStatsType;
+import ir.ramtung.tinyme.domain.entity.security_stats.StateStats;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 
 import java.time.LocalDateTime;
@@ -118,6 +119,14 @@ public class SecurityTest {
 
 			assertThat(actualOpeningPrice).isEqualTo(openingPrice);
 			assertThat(acutalTradableQuantity).isEqualTo(tradableQuantity);
+		}
+
+		private void assertStateStats(StateStats stateStats, SecurityState from, SecurityState to) {
+			SecurityState actualFrom = stateStats.getFrom();
+			SecurityState actualTo = stateStats.getTo();
+
+			assertThat(actualFrom).isEqualTo(from);
+			assertThat(actualTo).isEqualTo(to);
 		}
 
 		private void assertOrderInQueue(
@@ -1352,6 +1361,10 @@ public class SecurityTest {
 			Order order = new Order(4, security, Side.BUY, 5, 400, buyerBroker, buyerShareholder);
 			security.changeMatchingState(SecurityState.AUCTION);
 			return security.updateOrder(order);
+		}
+
+		public SecurityResponse change_security_state_from_continues_to_auction() {
+			return security.changeMatchingState(SecurityState.AUCTION);
 		}
 	}
 
@@ -5641,5 +5654,12 @@ public class SecurityTest {
 	public void decrease_buy_order_quantity_in_auction_state_and_check_seller_position() {
 		scenarioGenerator.decrease_buy_order_quantity_in_auction_state();
 		assertPack.assertSellerPosition();	
+	}
+
+	@Test
+	public void change_security_state_from_continues_to_auction_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_continues_to_auction();
+		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.CONTINUOUES, SecurityState.AUCTION);
+		assertThat(response.getStats().size()).isEqualTo(1);
 	}
 }
