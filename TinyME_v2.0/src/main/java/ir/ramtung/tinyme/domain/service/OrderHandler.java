@@ -29,8 +29,8 @@ public class OrderHandler {
 			ApplicationServiceResponse response = callService(baseRq);
 			publishApplicationServiceResponse(response);
 		} catch (InvalidRequestException ex) {
-			//FIXME: Add line 40 to fix line 42
 			BaseOrderRq baseOrderRq = (BaseOrderRq) baseRq;
+			//FIXME: Add line -1 to fix line +2
 			eventPublisher.publish(
 					new OrderRejectedEvent(baseOrderRq.getRequestId(), baseOrderRq.getOrderId(), ex.getReasons())
 			);

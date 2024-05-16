@@ -1247,4 +1247,30 @@ public class OrderHandlerTest {
 //		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
 //		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
 	}
+
+	@Test
+	void add_stop_limit_order_in_auction_state() {
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+
+		broker1.increaseCreditBy(600);
+		orderHandler.handleRq(
+				EnterOrderRq.createNewOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.BUY,
+						1,
+						600,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						0,
+						0,
+						400
+				)
+		);
+
+		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.STOP_PRICE_IN_AUCTION_STATE)));
+	}
+
 }
