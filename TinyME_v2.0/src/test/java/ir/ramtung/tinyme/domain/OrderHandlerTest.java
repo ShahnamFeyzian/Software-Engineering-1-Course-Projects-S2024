@@ -1384,6 +1384,7 @@ public class OrderHandlerTest {
 		);
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 1));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 30));
+		verify(eventPublisher, never()).publish(any(OrderExecutedEvent.class));
 	}
 
 	@Test
@@ -1414,5 +1415,6 @@ public class OrderHandlerTest {
 		);
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 1));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 30));
+		verify(eventPublisher, never()).publish(any(OrderExecutedEvent.class));
 	}
 }
