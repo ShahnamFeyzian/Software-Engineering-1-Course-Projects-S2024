@@ -1298,8 +1298,31 @@ public class OrderHandlerTest {
 		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE)));
 	}
 
-//	@Test
-//	void update_stop_limit_order_in_auction_state() {
-//
-//	}
+	@Test
+	void update_stop_limit_order_in_auction_state() {
+		broker1.increaseCreditBy(600);
+		StopLimitOrder order = new StopLimitOrder(1, security, Side.BUY, 1, 600, broker1, shareholder, 500);
+		security.getOrderBook().enqueue(order);
+
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+
+		orderHandler.handleRq(
+				EnterOrderRq.createUpdateOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.BUY,
+						1,
+						600,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						0,
+						0,
+						200
+				)
+		);
+
+		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.STOP_PRICE_IN_AUCTION_STATE)));
+	}
 }
