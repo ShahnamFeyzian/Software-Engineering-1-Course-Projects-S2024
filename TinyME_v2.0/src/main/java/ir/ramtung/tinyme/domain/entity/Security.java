@@ -38,7 +38,7 @@ public class Security {
 	private static Matcher matcher = new Matcher();
 
 	@Builder.Default
-	private SecurityState state = SecurityState.CONTINUOUES;
+	private SecurityState state = SecurityState.CONTINUOUS;
 
 	public SecurityResponse addNewOrder(Order newOrder) {
 		try {
@@ -53,7 +53,7 @@ public class Security {
 	}
 
 	private List<SecurityStats> handleAdd(Order newOrder) {
-		if (this.state == SecurityState.CONTINUOUES) {
+		if (this.state == SecurityState.CONTINUOUS) {
 			return handleAddInContinuesState(newOrder);
 		} else if (this.state == SecurityState.AUCTION) {
 			return handleAddInAuctionState(newOrder);
@@ -138,7 +138,7 @@ public class Security {
 		StateStats stateStats = StateStats.createStateStats(this.state, newState);
 		SecurityState prevState = this.state;
 		this.state = newState;
-		if (prevState == SecurityState.CONTINUOUES) {
+		if (prevState == SecurityState.CONTINUOUS) {
 			return new SecurityResponse(stateStats);
 		} else if (prevState == SecurityState.AUCTION) {
 			List<SecurityStats> stats = openAuction();
@@ -187,7 +187,7 @@ public class Security {
 	}
 
 	private List<SecurityStats> updateByKeepingPriority(Order tempOrder, Order mainOrder) {
-		if (this.state == SecurityState.CONTINUOUES) {
+		if (this.state == SecurityState.CONTINUOUS) {
 			return updateByKeepingPriorityInContinuesState(tempOrder, mainOrder);
 		} else if (this.state == SecurityState.AUCTION) {
 			return updateByKeepingPriorityInAuctionState(tempOrder, mainOrder);
@@ -211,7 +211,7 @@ public class Security {
 	}
 
 	private List<SecurityStats> reAddUpdatedOrder(Order updatedOrder, Order originalOrder) {
-		if (this.state == SecurityState.CONTINUOUES) {
+		if (this.state == SecurityState.CONTINUOUS) {
 			return reAddUpdatedOrderInContinuesState(updatedOrder, originalOrder);
 		} else if (this.state == SecurityState.AUCTION) {
 			return reAddUpdatedOrderInAuctionState(updatedOrder, originalOrder);
@@ -317,7 +317,7 @@ public class Security {
 		while ((slo = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
 			stats.add(SituationalStats.createOrderActivatedStats(slo.getOrderId()));
 			Order activatedOrder = new Order(slo);
-			if (this.state == SecurityState.CONTINUOUES) {
+			if (this.state == SecurityState.CONTINUOUS) {
 				stats.addAll(activateOrderInContinuesState(activatedOrder));
 			} else if (this.state == SecurityState.AUCTION) {
 				stats.addAll(activateOrderInAuctionState(activatedOrder));

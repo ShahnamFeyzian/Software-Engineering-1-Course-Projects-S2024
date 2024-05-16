@@ -1392,12 +1392,12 @@ public class SecurityTest {
 		}
 
 		public SecurityResponse change_security_state_from_continues_to_continues() {
-			return security.changeMatchingState(SecurityState.CONTINUOUES);
+			return security.changeMatchingState(SecurityState.CONTINUOUS);
 		}
 
 		public SecurityResponse change_security_state_from_auction_to_continues_with_no_trade() {
 			security.changeMatchingState(SecurityState.AUCTION);
-			return security.changeMatchingState(SecurityState.CONTINUOUES);
+			return security.changeMatchingState(SecurityState.CONTINUOUS);
 		}
 
 		public SecurityResponse change_security_state_from_auction_to_auction_with_no_trade() {
@@ -1422,7 +1422,7 @@ public class SecurityTest {
 
 		public SecurityResponse change_security_state_from_auction_to_continues_with_trades() {
 			change_state_to_auction_and_add_order_for_each_side();
-			return security.changeMatchingState(SecurityState.CONTINUOUES);
+			return security.changeMatchingState(SecurityState.CONTINUOUS);
 		}
 
 		public SecurityResponse change_security_state_from_auction_to_auction_with_trades() {
@@ -1436,7 +1436,7 @@ public class SecurityTest {
 			buyerBroker.increaseCreditBy(5000);
 			security.addNewOrder(newSlo);
 			change_state_to_auction_and_add_order_for_each_side();
-			return security.changeMatchingState(SecurityState.CONTINUOUES);
+			return security.changeMatchingState(SecurityState.CONTINUOUS);
 		}
 
 		public SecurityResponse change_security_state_from_auction_to_auction_with_trades_and_active_some_order() {
@@ -5740,21 +5740,21 @@ public class SecurityTest {
 	@Test
 	public void change_security_state_from_continues_to_auction_and_check_security_response() {
 		SecurityResponse response = scenarioGenerator.change_security_state_from_continues_to_auction();
-		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.CONTINUOUES, SecurityState.AUCTION);
+		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.CONTINUOUS, SecurityState.AUCTION);
 		assertThat(response.getStats().size()).isEqualTo(1);
 	}
 
 	@Test
 	public void change_security_state_from_continues_to_continues_and_check_security_response() {
 		SecurityResponse response = scenarioGenerator.change_security_state_from_continues_to_continues();
-		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.CONTINUOUES, SecurityState.CONTINUOUES);
+		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.CONTINUOUS, SecurityState.CONTINUOUS);
 		assertThat(response.getStats().size()).isEqualTo(1);
 	}
 
 	@Test
 	public void change_security_state_from_auction_to_continues_with_no_trade_and_check_security_response() {
 		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continues_with_no_trade();
-		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.AUCTION, SecurityState.CONTINUOUES);
+		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.AUCTION, SecurityState.CONTINUOUS);
 		assertThat(response.getStats().size()).isEqualTo(1);
 	}
 
@@ -5783,7 +5783,7 @@ public class SecurityTest {
 	@Test
 	public void change_security_state_from_auction_to_continues_with_trades_and_check_security_response() {
 		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continues_with_trades();
-		assertPack.assertStateStats((StateStats)response.getStats().getLast(), SecurityState.AUCTION, SecurityState.CONTINUOUES);
+		assertPack.assertStateStats((StateStats)response.getStats().getLast(), SecurityState.AUCTION, SecurityState.CONTINUOUS);
 		assertThat(response.getStats().size()).isEqualTo(2);
 	}
 
@@ -5905,7 +5905,7 @@ public class SecurityTest {
 		List<SecurityStats> stats = response.getStats();
 
 		assertPack.assertAuctionExecuteStats((ExecuteStats)stats.getFirst(), 7);
-		assertPack.assertStateStats((StateStats)stats.get(1), SecurityState.AUCTION, SecurityState.CONTINUOUES);
+		assertPack.assertStateStats((StateStats)stats.get(1), SecurityState.AUCTION, SecurityState.CONTINUOUS);
 		assertPack.assertSituationalStats((SituationalStats)stats.get(2), SituationalStatsType.ORDER_ACTIVATED, 6);
 		assertPack.assertSituationalStats((SituationalStats)stats.get(3), SituationalStatsType.ORDER_ACTIVATED, 7);
 		assertPack.assertSituationalStats((SituationalStats)stats.get(4), SituationalStatsType.ORDER_ACTIVATED, 8);

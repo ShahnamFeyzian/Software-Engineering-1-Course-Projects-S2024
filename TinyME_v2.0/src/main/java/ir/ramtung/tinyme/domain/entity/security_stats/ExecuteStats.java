@@ -23,7 +23,7 @@ public class ExecuteStats extends SecurityStats {
     }
 
     public static ExecuteStats createContinuesExecuteStats(List<Trade> trades, long orderId) {
-        return new ExecuteStats(orderId, trades, SecurityState.CONTINUOUES);
+        return new ExecuteStats(orderId, trades, SecurityState.CONTINUOUS);
     }
 
     public long getOrderId() {
@@ -39,6 +39,6 @@ public class ExecuteStats extends SecurityStats {
     }
 
     public boolean isCountinues() {
-        return securityState == SecurityState.CONTINUOUES;
+        return securityState == SecurityState.CONTINUOUS;
     }
 }

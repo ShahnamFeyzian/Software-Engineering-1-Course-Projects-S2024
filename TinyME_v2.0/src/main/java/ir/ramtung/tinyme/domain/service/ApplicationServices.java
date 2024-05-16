@@ -274,7 +274,7 @@ public class ApplicationServices {
 	public ApplicationServiceResponse changeMatchingState(ChangeMatchingStateRq req) {
 		validateChangeMatchingState(req);
 		setEntitiesByRq(req);
-		SecurityState targetSecurityState = (req.getTargetState() == MatchingState.AUCTION) ? SecurityState.AUCTION : SecurityState.CONTINUOUES;
+		SecurityState targetSecurityState = (req.getTargetState() == MatchingState.AUCTION) ? SecurityState.AUCTION : SecurityState.CONTINUOUS;
 		SecurityResponse response = security.changeMatchingState(targetSecurityState);
 		//FIXME: waiting for Arvin response and then change requestId below
 		List<Event> events = createEventsFormSecurityStats(response.getStats(), 0);
