@@ -1239,11 +1239,13 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 
-//		 AUCTION to AUCTION
+		reset(eventPublisher);
+
+		// AUCTION to AUCTION
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
-//
-//		 AUCTION to CONTINUOUS
+
+		// AUCTION to CONTINUOUS
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
 	}
