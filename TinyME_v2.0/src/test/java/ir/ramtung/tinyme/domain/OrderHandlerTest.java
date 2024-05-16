@@ -1521,4 +1521,36 @@ public class OrderHandlerTest {
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
 	}
+
+	@Test
+	void auction_to_continuous_makes_trades_but_does_not_activate_any_stop_limit_order() {
+		// change state to auction
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
+
+		broker1.increaseCreditBy(600);
+		// add a buy order
+		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 10, broker1, shareholder);
+		security.getOrderBook().enqueue(orderBuy);
+
+		// add slo a buy order
+		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 25, broker1, shareholder, 35);
+		security.getOrderBook().enqueue(slo);
+
+
+		shareholder.incPosition(security, 20);
+		// add a sell order
+		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 10, broker2, shareholder);
+		security.getOrderBook().enqueue(orderSell);
+		// add a slo sell order
+		slo = new StopLimitOrder(4, security, Side.SELL, 10, 5, broker1, shareholder, 8);
+		security.getOrderBook().enqueue(slo);
+
+		// change state to continuous
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
+
+		verify(eventPublisher).publish(new TradeEvent(security.getIsin(), 10, 10, 1, 3));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
+		verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
+	}
 }
