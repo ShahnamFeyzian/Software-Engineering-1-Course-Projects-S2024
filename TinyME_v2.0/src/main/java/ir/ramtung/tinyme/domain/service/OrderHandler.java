@@ -86,6 +86,7 @@ public class OrderHandler {
 
 	private void publishApplicationServiceResponse(ApplicationServiceResponse response) {
 		List<Event> events = response.getEvents();
+//		events.forEach(event -> System.out.println(event.toString()));
 		events.forEach(event -> eventPublisher.publish(event));
 	}
 }

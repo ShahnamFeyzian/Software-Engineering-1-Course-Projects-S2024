@@ -183,8 +183,8 @@ public class ApplicationServices {
 	}
 
 	private List<Event> createEventsFromExecuteStats(ExecuteStats executeStats, long requestId) {
-		long orderId = executeStats.getOrderId();
 		if (executeStats.isCountinues()) {
+			long orderId = executeStats.getOrderId();
 			return List.of(new OrderExecutedEvent(requestId, orderId, executeStats.getTrades().stream().map(TradeDTO::new).collect(Collectors.toList())));
 		} else {
 			return createTradeEvents(executeStats);
