@@ -1358,6 +1358,10 @@ public class OrderHandlerTest {
 
 	@Test
 	void add_new_order_in_auction_state() {
+		shareholder.incPosition(security, 30);
+		Order order = new Order(2, security, Side.SELL, 30, 0, 20, broker2, shareholder);
+		security.getOrderBook().enqueue(order);
+
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		broker1.increaseCreditBy(600);
@@ -1379,11 +1383,15 @@ public class OrderHandlerTest {
 				)
 		);
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 1));
-		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 0, 0));
+		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 30));
 	}
 
 	@Test
 	void add_new_iceberg_order_in_auction_state() {
+		broker1.increaseCreditBy(600);
+		Order order = new Order(1, security, Side.BUY, 30, 0, 20, broker1, shareholder);
+		security.getOrderBook().enqueue(order);
+
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		shareholder.incPosition(security, 30);
@@ -1397,7 +1405,7 @@ public class OrderHandlerTest {
 						Side.SELL,
 						30,
 						20,
-						broker1.getBrokerId(),
+						broker2.getBrokerId(),
 						shareholder.getShareholderId(),
 						5,
 						0,
@@ -1405,6 +1413,6 @@ public class OrderHandlerTest {
 				)
 		);
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 1));
-		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 0, 0));
+		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 30));
 	}
 }
