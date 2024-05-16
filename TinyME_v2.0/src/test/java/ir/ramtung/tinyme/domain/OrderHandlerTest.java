@@ -11,8 +11,10 @@ import ir.ramtung.tinyme.messaging.EventPublisher;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.TradeDTO;
 import ir.ramtung.tinyme.messaging.event.*;
+import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
+import ir.ramtung.tinyme.messaging.request.MatchingState;
 import ir.ramtung.tinyme.repository.BrokerRepository;
 import ir.ramtung.tinyme.repository.SecurityRepository;
 import ir.ramtung.tinyme.repository.ShareholderRepository;
@@ -1225,5 +1227,24 @@ public class OrderHandlerTest {
 		);
 		verify(eventPublisher).publish(new OrderAcceptedEvent(3, 6));
 		verify(eventPublisher).publish(new OrderActivatedEvent(6));
+	}
+
+	@Test
+	void change_state_without_any_trade_happens() {
+		// CONTINUOUS to CONTINUOUS
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
+
+		// CONTINUOUS to AUCTION
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
+
+		// AUCTION to AUCTION
+//		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+//		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
+//
+		// AUCTION to CONTINUOUS
+//		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
+//		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
 	}
 }
