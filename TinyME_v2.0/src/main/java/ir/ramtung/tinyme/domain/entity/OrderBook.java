@@ -22,18 +22,22 @@ public class OrderBook {
 	}
 
 	public Order getLowestPriorityActiveOrder(Side side) {
-		if (side == Side.BUY) {
-			return buyQueue.getLast();
+		var queue = (side == Side.BUY) ? buyQueue : sellQueue;
+
+		if (queue.isEmpty()) {
+			throw new NotFoundException();
 		} else {
-			return sellQueue.getLast();
+			return queue.getLast();
 		}
 	}
 
 	public Order getHighestPriorityActiveOrder(Side side) {
-		if (side == Side.BUY) {
-			return buyQueue.getFirst();
+		var queue = (side == Side.BUY) ? buyQueue : sellQueue;
+
+		if (queue.isEmpty()) {
+			throw new NotFoundException();
 		} else {
-			return sellQueue.getFirst();
+			return queue.getFirst();
 		}
 	}
 

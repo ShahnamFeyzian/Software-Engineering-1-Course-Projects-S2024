@@ -1239,13 +1239,13 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 
-		// AUCTION to AUCTION
-//		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-//		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
+//		 AUCTION to AUCTION
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 //
-		// AUCTION to CONTINUOUS
-//		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
-//		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
+//		 AUCTION to CONTINUOUS
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
 	}
 
 	@Test
@@ -1325,7 +1325,7 @@ public class OrderHandlerTest {
 
 		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.STOP_PRICE_IN_AUCTION_STATE)));
 	}
-	
+
 	@Test
 	void update_min_exec_quantity_order_in_auction_state() {
 		broker1.increaseCreditBy(600);
