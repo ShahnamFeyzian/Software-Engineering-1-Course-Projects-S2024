@@ -1417,4 +1417,38 @@ public class OrderHandlerTest {
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 30));
 		verify(eventPublisher, never()).publish(any(OrderExecutedEvent.class));
 	}
+
+	@Test
+	void update_new_order_in_auction_state() {
+		broker1.increaseCreditBy(600);
+		Order order = new Order(1, security, Side.BUY, 20, 0, 30, broker1, shareholder);
+		security.getOrderBook().enqueue(order);
+
+		shareholder.incPosition(security, 20);
+		order = new Order(2, security, Side.SELL, 10, 0, 10, broker2, shareholder);
+		security.getOrderBook().enqueue(order);
+
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+
+		orderHandler.handleRq(
+				EnterOrderRq.createUpdateOrderRq(
+						1,
+						security.getIsin(),
+						2,
+						LocalDateTime.now(),
+						Side.SELL,
+						20,
+						30,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						0,
+						0,
+						0
+				)
+		);
+
+		verify(eventPublisher).publish(new OrderUpdatedEvent(1, 2));
+		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 30, 20));
+		verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
+	}
 }
