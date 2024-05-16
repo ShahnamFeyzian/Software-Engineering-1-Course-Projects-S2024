@@ -1273,4 +1273,33 @@ public class OrderHandlerTest {
 		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.STOP_PRICE_IN_AUCTION_STATE)));
 	}
 
+	@Test
+	void add_min_exec_quantity_order_in_auction_state() {
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+
+		broker1.increaseCreditBy(600);
+		orderHandler.handleRq(
+				EnterOrderRq.createNewOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.BUY,
+						30,
+						20,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						0,
+						10,
+						0
+				)
+		);
+
+		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE)));
+	}
+
+//	@Test
+//	void update_stop_limit_order_in_auction_state() {
+//
+//	}
 }
