@@ -1419,7 +1419,7 @@ public class OrderHandlerTest {
 	}
 
 	@Test
-	void update_new_order_in_auction_state() {
+	void update_order_in_auction_state() {
 		broker1.increaseCreditBy(600);
 		Order order = new Order(1, security, Side.BUY, 20, 0, 30, broker1, shareholder);
 		security.getOrderBook().enqueue(order);
@@ -1429,6 +1429,8 @@ public class OrderHandlerTest {
 		security.getOrderBook().enqueue(order);
 
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+		// FIXME: need domain expert
+		// verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 30, 20));
 
 		orderHandler.handleRq(
 				EnterOrderRq.createUpdateOrderRq(
@@ -1449,6 +1451,40 @@ public class OrderHandlerTest {
 
 		verify(eventPublisher).publish(new OrderUpdatedEvent(1, 2));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 30, 20));
+		verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
+	}
+
+	@Test
+	void update_iceberg_order_in_auction_state() {
+		broker1.increaseCreditBy(625);
+		IcebergOrder icebergOrder = new IcebergOrder(1, security, Side.BUY, 10, 0, 20, broker1, shareholder, 10);
+		security.getOrderBook().enqueue(icebergOrder);
+
+		shareholder.incPosition(security, 25);
+		Order order = new Order(2, security, Side.SELL, 25, 0, 25, broker2, shareholder);
+		security.getOrderBook().enqueue(order);
+
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+
+		orderHandler.handleRq(
+				EnterOrderRq.createUpdateOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.BUY,
+						25,
+						25,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						5,
+						0,
+						0
+				)
+		);
+
+		verify(eventPublisher).publish(new OrderUpdatedEvent(1, 1));
+		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 25, 25));
 		verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
 	}
 }
