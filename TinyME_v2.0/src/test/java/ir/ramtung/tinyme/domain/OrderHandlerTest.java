@@ -1381,4 +1381,30 @@ public class OrderHandlerTest {
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 1));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 0, 0));
 	}
+
+	@Test
+	void add_new_iceberg_order_in_auction_state() {
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+
+		shareholder.incPosition(security, 30);
+
+		orderHandler.handleRq(
+				EnterOrderRq.createNewOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.SELL,
+						30,
+						20,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						5,
+						0,
+						0
+				)
+		);
+		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 1));
+		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 0, 0));
+	}
 }
