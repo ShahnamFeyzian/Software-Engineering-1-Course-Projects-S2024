@@ -89,6 +89,11 @@ public class ApplicationServices {
 		if (!security.isThereOrderWithId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId())) {
 			throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
 		}
+
+		if(security.getState() == SecurityState.AUCTION &&
+				security.isStopLimitOrder(deleteOrderRq.getSide(), deleteOrderRq.getOrderId())) {
+			throw new InvalidRequestException(Message.CAN_NOT_DELETE_SLO_IN_AUCTION_STATE);
+		}
 	}
 
 	private void generalEnterOrderValidation(EnterOrderRq enterOrderRq) {

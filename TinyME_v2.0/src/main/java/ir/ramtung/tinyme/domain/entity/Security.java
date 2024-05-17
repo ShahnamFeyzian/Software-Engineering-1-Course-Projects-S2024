@@ -352,6 +352,10 @@ public class Security {
 		return orderBook.isThereOrderWithId(side, orderId);
 	}
 
+	public boolean isStopLimitOrder(Side side, long orderId) {
+		Order order = orderBook.findByOrderId(side, orderId);
+		return (order instanceof StopLimitOrder);
+	}
 	private AuctionStats createAuctionStats() {
 		int openingPrice = matcher.calcOpeningAuctionPrice(orderBook, lastTradePrice);
 		int tradableQuantity = matcher.calcTradableQuantity(orderBook, openingPrice);

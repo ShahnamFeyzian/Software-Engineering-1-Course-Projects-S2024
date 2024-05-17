@@ -28,4 +28,5 @@ public class Message {
 	public static final String UNKNOWN_REQUEST_TYPE = "Unknown request type";
 	public static final String MINIMUM_EXECUTION_IN_AUCTION_STATE = "Orders can not have minimum execution quantity in auction state.";
 	public static final String STOP_PRICE_IN_AUCTION_STATE = "Orders can not have stop price in auction state.";
+	public static final String CAN_NOT_DELETE_SLO_IN_AUCTION_STATE = "Stop limit orders cn not be deleted in auction state";
 }
