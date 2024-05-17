@@ -1654,6 +1654,9 @@ public class OrderHandlerTest {
 
 	@Test
 	void delete_order_in_auction_state() {
+		// change state to auction
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+		
 		broker1.increaseCreditBy(1000);
 		// add a buy order
 		Order orderBuy = new Order(1, security, Side.BUY, 20, 0, 50, broker1, shareholder);
@@ -1667,8 +1670,6 @@ public class OrderHandlerTest {
 		IcebergOrder icebergOrderSell = new IcebergOrder(3, security, Side.SELL, 10, 0, 20, broker2, shareholder, 5);
 		security.getOrderBook().enqueue(icebergOrderSell);
 
-		// change state to auction
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		orderHandler.handleRq(new DeleteOrderRq(2, security.getIsin(), Side.SELL, 2));
 		orderHandler.handleRq(new DeleteOrderRq(3, security.getIsin(), Side.SELL, 3));
