@@ -1666,7 +1666,7 @@ public class OrderHandlerTest {
 		// add a sell order
 		Order orderSell = new Order(2, security, Side.SELL, 20, 0, 50, broker2, shareholder);
 		security.getOrderBook().enqueue(orderSell);
-		// add a slo sell order
+		// add an iceberg sell order
 		IcebergOrder icebergOrderSell = new IcebergOrder(3, security, Side.SELL, 10, 0, 20, broker2, shareholder, 5);
 		security.getOrderBook().enqueue(icebergOrderSell);
 
@@ -1676,8 +1676,7 @@ public class OrderHandlerTest {
 
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
-		// ّFIXME: output of next line does not make sense
-		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 10));
+		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 550, 0));
 		verify(eventPublisher).publish(new OrderDeletedEvent(3, 3));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 0, 0));
 		verify(eventPublisher, never()).publish(any(OrderRejectedEvent.class));

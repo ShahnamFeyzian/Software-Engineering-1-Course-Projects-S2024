@@ -28,7 +28,7 @@ public class Matcher {
 		int maxTradableQuantity = 0;
 		int openingPrice = lastTradePrice; 
 		
-		for (int price=minPrice; price<=maxPrice; price++) {
+		for (int price = minPrice; price <= maxPrice; price++) {
 			int currentTradableQuantity = calcTradableQuantity(orderBook, price);
 			if (currentTradableQuantity > maxTradableQuantity) {
 				openingPrice = price;
