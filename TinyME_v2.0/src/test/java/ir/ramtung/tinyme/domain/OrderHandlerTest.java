@@ -867,10 +867,10 @@ public class OrderHandlerTest {
 		shareholder.incPosition(security, 45);
 
 		List<TradeDTO> limitOrderTradesDto = Arrays.asList(
-			new TradeDTO("ABC", 500, 10, 5, 9),	
-			new TradeDTO("ABC", 500, 10, 5, 9),	
-			new TradeDTO("ABC", 500, 10, 5, 9),	
-			new TradeDTO("ABC", 500, 10, 5, 9),	
+			new TradeDTO("ABC", 500, 10, 5, 9),
+			new TradeDTO("ABC", 500, 10, 5, 9),
+			new TradeDTO("ABC", 500, 10, 5, 9),
+			new TradeDTO("ABC", 500, 10, 5, 9),
 			new TradeDTO("ABC", 500, 5, 5, 9)
 		);
 		Trade firstTrade = new Trade(security, 400, 10, stopLimitOrders.get(0), orders.get(3));
@@ -1256,20 +1256,20 @@ public class OrderHandlerTest {
 
 		broker1.increaseCreditBy(600);
 		orderHandler.handleRq(
-				EnterOrderRq.createNewOrderRq(
-						1,
-						security.getIsin(),
-						1,
-						LocalDateTime.now(),
-						Side.BUY,
-						1,
-						600,
-						broker1.getBrokerId(),
-						shareholder.getShareholderId(),
-						0,
-						0,
-						400
-				)
+			EnterOrderRq.createNewOrderRq(
+				1,
+				security.getIsin(),
+				1,
+				LocalDateTime.now(),
+				Side.BUY,
+				1,
+				600,
+				broker1.getBrokerId(),
+				shareholder.getShareholderId(),
+				0,
+				0,
+				400
+			)
 		);
 
 		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.STOP_PRICE_IN_AUCTION_STATE)));
@@ -1281,23 +1281,24 @@ public class OrderHandlerTest {
 
 		broker1.increaseCreditBy(600);
 		orderHandler.handleRq(
-				EnterOrderRq.createNewOrderRq(
-						1,
-						security.getIsin(),
-						1,
-						LocalDateTime.now(),
-						Side.BUY,
-						30,
-						20,
-						broker1.getBrokerId(),
-						shareholder.getShareholderId(),
-						0,
-						10,
-						0
-				)
+			EnterOrderRq.createNewOrderRq(
+				1,
+				security.getIsin(),
+				1,
+				LocalDateTime.now(),
+				Side.BUY,
+				30,
+				20,
+				broker1.getBrokerId(),
+				shareholder.getShareholderId(),
+				0,
+				10,
+				0
+			)
 		);
 
-		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE)));
+		verify(eventPublisher)
+			.publish(new OrderRejectedEvent(1, 1, List.of(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE)));
 	}
 
 	@Test
@@ -1309,20 +1310,20 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		orderHandler.handleRq(
-				EnterOrderRq.createUpdateOrderRq(
-						1,
-						security.getIsin(),
-						1,
-						LocalDateTime.now(),
-						Side.BUY,
-						1,
-						600,
-						broker1.getBrokerId(),
-						shareholder.getShareholderId(),
-						0,
-						0,
-						200
-				)
+			EnterOrderRq.createUpdateOrderRq(
+				1,
+				security.getIsin(),
+				1,
+				LocalDateTime.now(),
+				Side.BUY,
+				1,
+				600,
+				broker1.getBrokerId(),
+				shareholder.getShareholderId(),
+				0,
+				0,
+				200
+			)
 		);
 
 		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.STOP_PRICE_IN_AUCTION_STATE)));
@@ -1337,23 +1338,24 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		orderHandler.handleRq(
-				EnterOrderRq.createUpdateOrderRq(
-						1,
-						security.getIsin(),
-						1,
-						LocalDateTime.now(),
-						Side.BUY,
-						20,
-						20,
-						broker1.getBrokerId(),
-						shareholder.getShareholderId(),
-						0,
-						10,
-						0
-				)
+			EnterOrderRq.createUpdateOrderRq(
+				1,
+				security.getIsin(),
+				1,
+				LocalDateTime.now(),
+				Side.BUY,
+				20,
+				20,
+				broker1.getBrokerId(),
+				shareholder.getShareholderId(),
+				0,
+				10,
+				0
+			)
 		);
 
-		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE)));
+		verify(eventPublisher)
+			.publish(new OrderRejectedEvent(1, 1, List.of(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE)));
 	}
 
 	@Test
@@ -1367,20 +1369,20 @@ public class OrderHandlerTest {
 		broker1.increaseCreditBy(600);
 
 		orderHandler.handleRq(
-				EnterOrderRq.createNewOrderRq(
-						1,
-						security.getIsin(),
-						1,
-						LocalDateTime.now(),
-						Side.BUY,
-						30,
-						20,
-						broker1.getBrokerId(),
-						shareholder.getShareholderId(),
-						0,
-						0,
-						0
-				)
+			EnterOrderRq.createNewOrderRq(
+				1,
+				security.getIsin(),
+				1,
+				LocalDateTime.now(),
+				Side.BUY,
+				30,
+				20,
+				broker1.getBrokerId(),
+				shareholder.getShareholderId(),
+				0,
+				0,
+				0
+			)
 		);
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 1));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 30));
@@ -1398,20 +1400,20 @@ public class OrderHandlerTest {
 		shareholder.incPosition(security, 30);
 
 		orderHandler.handleRq(
-				EnterOrderRq.createNewOrderRq(
-						1,
-						security.getIsin(),
-						1,
-						LocalDateTime.now(),
-						Side.SELL,
-						30,
-						20,
-						broker2.getBrokerId(),
-						shareholder.getShareholderId(),
-						5,
-						0,
-						0
-				)
+			EnterOrderRq.createNewOrderRq(
+				1,
+				security.getIsin(),
+				1,
+				LocalDateTime.now(),
+				Side.SELL,
+				30,
+				20,
+				broker2.getBrokerId(),
+				shareholder.getShareholderId(),
+				5,
+				0,
+				0
+			)
 		);
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 1));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 30));
@@ -1431,20 +1433,20 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		orderHandler.handleRq(
-				EnterOrderRq.createUpdateOrderRq(
-						1,
-						security.getIsin(),
-						2,
-						LocalDateTime.now(),
-						Side.SELL,
-						20,
-						30,
-						broker1.getBrokerId(),
-						shareholder.getShareholderId(),
-						0,
-						0,
-						0
-				)
+			EnterOrderRq.createUpdateOrderRq(
+				1,
+				security.getIsin(),
+				2,
+				LocalDateTime.now(),
+				Side.SELL,
+				20,
+				30,
+				broker1.getBrokerId(),
+				shareholder.getShareholderId(),
+				0,
+				0,
+				0
+			)
 		);
 
 		verify(eventPublisher).publish(new OrderUpdatedEvent(1, 2));
@@ -1465,27 +1467,26 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		orderHandler.handleRq(
-				EnterOrderRq.createUpdateOrderRq(
-						1,
-						security.getIsin(),
-						1,
-						LocalDateTime.now(),
-						Side.BUY,
-						25,
-						25,
-						broker1.getBrokerId(),
-						shareholder.getShareholderId(),
-						5,
-						0,
-						0
-				)
+			EnterOrderRq.createUpdateOrderRq(
+				1,
+				security.getIsin(),
+				1,
+				LocalDateTime.now(),
+				Side.BUY,
+				25,
+				25,
+				broker1.getBrokerId(),
+				shareholder.getShareholderId(),
+				5,
+				0,
+				0
+			)
 		);
 
 		verify(eventPublisher).publish(new OrderUpdatedEvent(1, 1));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 25, 25));
 		verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
 	}
-
 
 	@Test
 	void auction_to_auction_makes_trades_but_does_not_activate_any_stop_limit_order() {
@@ -1502,7 +1503,6 @@ public class OrderHandlerTest {
 		// add slo a buy order
 		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 25, broker1, shareholder, 35);
 		security.getOrderBook().enqueue(slo);
-
 
 		shareholder.incPosition(security, 20);
 		// add a sell order
@@ -1534,7 +1534,6 @@ public class OrderHandlerTest {
 		// add slo a buy order
 		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 25, broker1, shareholder, 35);
 		security.getOrderBook().enqueue(slo);
-
 
 		shareholder.incPosition(security, 20);
 		// add a sell order
@@ -1569,7 +1568,6 @@ public class OrderHandlerTest {
 		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
 		security.getOrderBook().enqueue(slo);
 
-
 		shareholder.incPosition(security, 20);
 		// add a sell order
 		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
@@ -1577,7 +1575,6 @@ public class OrderHandlerTest {
 		// add a slo sell order
 		slo = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25);
 		security.getOrderBook().enqueue(slo);
-
 
 		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
@@ -1605,7 +1602,6 @@ public class OrderHandlerTest {
 		StopLimitOrder sloBuy = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
 		security.getOrderBook().enqueue(sloBuy);
 
-
 		shareholder.incPosition(security, 20);
 		// add a sell order
 		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
@@ -1622,13 +1618,7 @@ public class OrderHandlerTest {
 		verify(eventPublisher).publish(new OrderActivatedEvent(2));
 		verify(eventPublisher).publish(new OrderActivatedEvent(4));
 
-		Trade trade = new Trade(
-				security,
-				30,
-				10,
-				sloBuy,
-				sloSell
-		);
+		Trade trade = new Trade(security, 30, 10, sloBuy, sloSell);
 		verify(eventPublisher).publish(new OrderExecutedEvent(7, 4, List.of(new TradeDTO(trade))));
 	}
 
@@ -1647,7 +1637,8 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new DeleteOrderRq(1, security.getIsin(), Side.BUY, 1));
 
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
-		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.CAN_NOT_DELETE_SLO_IN_AUCTION_STATE)));
+		verify(eventPublisher)
+			.publish(new OrderRejectedEvent(1, 1, List.of(Message.CAN_NOT_DELETE_SLO_IN_AUCTION_STATE)));
 		verify(eventPublisher, never()).publish(any(OrderDeletedEvent.class));
 		verify(eventPublisher, never()).publish(any(OpeningPriceEvent.class));
 	}
@@ -1657,7 +1648,7 @@ public class OrderHandlerTest {
 		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
-		
+
 		broker1.increaseCreditBy(1000);
 		// add a buy order
 		Order orderBuy = new Order(1, security, Side.BUY, 20, 0, 50, broker1, shareholder);
@@ -1671,15 +1662,14 @@ public class OrderHandlerTest {
 		IcebergOrder icebergOrderSell = new IcebergOrder(3, security, Side.SELL, 10, 0, 20, broker2, shareholder, 5);
 		security.getOrderBook().enqueue(icebergOrderSell);
 
-
 		orderHandler.handleRq(new DeleteOrderRq(2, security.getIsin(), Side.SELL, 2));
 		verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 550, 0));
-		
+
 		orderHandler.handleRq(new DeleteOrderRq(3, security.getIsin(), Side.SELL, 3));
 		verify(eventPublisher).publish(new OrderDeletedEvent(3, 3));
 		verify(eventPublisher, times(2)).publish(new OpeningPriceEvent(security.getIsin(), 550, 0));
-		
+
 		verify(eventPublisher, never()).publish(any(OrderRejectedEvent.class));
 	}
 }
