@@ -1429,8 +1429,6 @@ public class OrderHandlerTest {
 		security.getOrderBook().enqueue(order);
 
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-		// FIXME: need domain expert
-		// verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 30, 20));
 
 		orderHandler.handleRq(
 				EnterOrderRq.createUpdateOrderRq(
@@ -1652,5 +1650,35 @@ public class OrderHandlerTest {
 		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.CAN_NOT_DELETE_SLO_IN_AUCTION_STATE)));
 		verify(eventPublisher, never()).publish(any(OrderDeletedEvent.class));
 		verify(eventPublisher, never()).publish(any(OpeningPriceEvent.class));
+	}
+
+	@Test
+	void delete_order_in_auction_state() {
+		broker1.increaseCreditBy(1000);
+		// add a buy order
+		Order orderBuy = new Order(1, security, Side.BUY, 20, 0, 50, broker1, shareholder);
+		security.getOrderBook().enqueue(orderBuy);
+
+		shareholder.incPosition(security, 30);
+		// add a sell order
+		Order orderSell = new Order(2, security, Side.SELL, 20, 0, 50, broker2, shareholder);
+		security.getOrderBook().enqueue(orderSell);
+		// add a slo sell order
+		IcebergOrder icebergOrderSell = new IcebergOrder(3, security, Side.SELL, 10, 0, 20, broker2, shareholder, 5);
+		security.getOrderBook().enqueue(icebergOrderSell);
+
+		// change state to auction
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+
+		orderHandler.handleRq(new DeleteOrderRq(2, security.getIsin(), Side.SELL, 2));
+		orderHandler.handleRq(new DeleteOrderRq(3, security.getIsin(), Side.SELL, 3));
+
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
+		verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
+		// ّFIXME: output of next line does not make sense
+		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 10));
+		verify(eventPublisher).publish(new OrderDeletedEvent(3, 3));
+		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 0, 0));
+		verify(eventPublisher, never()).publish(any(OrderRejectedEvent.class));
 	}
 }
