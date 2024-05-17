@@ -315,10 +315,10 @@ public class Security {
 		StopLimitOrder slo;
 
 		while ((slo = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
-			stats.add(SituationalStats.createOrderActivatedStats(slo.getOrderId()));
+			stats.add(SituationalStats.createOrderActivatedStats(slo.getOrderId(), slo.getRequestId()));
 			Order activatedOrder = new Order(slo);
 			if (this.state == SecurityState.CONTINUOUS) {
-				stats.addAll(activateOrderInContinuousState(activatedOrder));
+				stats.addAll(activateOrderInContinuousState(activatedOrder, slo.getRequestId()));
 			} else if (this.state == SecurityState.AUCTION) {
 				stats.addAll(activateOrderInAuctionState(activatedOrder));
 			} else {
@@ -329,11 +329,11 @@ public class Security {
 		return stats;
 	}
 
-	private List<SecurityStats> activateOrderInContinuousState(Order activatedOrder) {
+	private List<SecurityStats> activateOrderInContinuousState(Order activatedOrder, long requestId) {
 		MatchResult result = matcher.continuousExecuting(activatedOrder);
 		updateLastTradePrice(result.trades());
 		if(!result.trades().isEmpty()) {
-			return List.of(ExecuteStats.createContinuousExecuteStats(result.trades(), activatedOrder.getOrderId()));
+			return List.of(ExecuteStats.createContinuousExecuteStatsForActivatedOrder(result.trades(), activatedOrder.getOrderId(), requestId));
 		} else {
 			return List.of();
 		}

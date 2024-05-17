@@ -15,6 +15,7 @@ import lombok.ToString;
 public class StopLimitOrder extends Order {
 
 	private int stopPrice;
+	private long requestId;
 
 	public StopLimitOrder(
 		long orderId,
@@ -40,10 +41,28 @@ public class StopLimitOrder extends Order {
 		Shareholder shareholder,
 		LocalDateTime entryTime,
 		int stopPrice,
+		long requestId,
 		OrderStatus status
 	) {
 		super(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime, status);
 		this.stopPrice = stopPrice;
+		this.requestId =  requestId;
+	}
+
+	public StopLimitOrder(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		int stopPrice,
+		long requestId
+	) {
+		super(orderId, security, side, quantity, 0, price, broker, shareholder, LocalDateTime.now(), OrderStatus.NEW);
+		this.stopPrice = stopPrice;
+		this.requestId =  requestId;
 	}
 
 	public StopLimitOrder(
@@ -78,6 +97,7 @@ public class StopLimitOrder extends Order {
 			shareholder,
 			req.getEntryTime(),
 			req.getStopPrice(),
+			req.getRequestId(),
 			OrderStatus.NEW
 		);
 	}
@@ -123,6 +143,7 @@ public class StopLimitOrder extends Order {
 		super.updateFromTempOrder(tempOrder);
 		StopLimitOrder tempSlo = (StopLimitOrder) tempOrder;
 		this.stopPrice = tempSlo.stopPrice;
+		this.requestId = tempSlo.requestId;
 	}
 
 	@Override

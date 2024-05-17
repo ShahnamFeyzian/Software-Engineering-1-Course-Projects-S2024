@@ -190,7 +190,8 @@ public class ApplicationServices {
 	private List<Event> createEventsFromExecuteStats(ExecuteStats executeStats, long requestId) {
 		if (executeStats.isCountinues()) {
 			long orderId = executeStats.getOrderId();
-			return List.of(new OrderExecutedEvent(requestId, orderId, executeStats.getTrades().stream().map(TradeDTO::new).collect(Collectors.toList())));
+			long finalRequestId = (executeStats.isForActivatedOrder()) ? executeStats.getRequestId() : requestId;
+			return List.of(new OrderExecutedEvent(finalRequestId, orderId, executeStats.getTrades().stream().map(TradeDTO::new).collect(Collectors.toList())));
 		} else {
 			return createTradeEvents(executeStats);
 		}
@@ -281,7 +282,6 @@ public class ApplicationServices {
 		setEntitiesByRq(req);
 		SecurityState targetSecurityState = (req.getTargetState() == MatchingState.AUCTION) ? SecurityState.AUCTION : SecurityState.CONTINUOUS;
 		SecurityResponse response = security.changeMatchingState(targetSecurityState);
-		//FIXME: waiting for Arvin response and then change requestId below
 		List<Event> events = createEventsFormSecurityStats(response.getStats(), 0);
 
 		return new ApplicationServiceResponse(ApplicationServiceType.CHANGE_MATCHING_STATE, events, req);
