@@ -22,7 +22,7 @@ public class ExecuteStats extends SecurityStats {
         return new ExecuteStats(0, trades, SecurityState.AUCTION);
     }
 
-    public static ExecuteStats createContinuesExecuteStats(List<Trade> trades, long orderId) {
+    public static ExecuteStats createContinuousExecuteStats(List<Trade> trades, long orderId) {
         return new ExecuteStats(orderId, trades, SecurityState.CONTINUOUS);
     }
 

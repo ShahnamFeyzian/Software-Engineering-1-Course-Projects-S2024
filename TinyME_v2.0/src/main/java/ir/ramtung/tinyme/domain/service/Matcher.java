@@ -61,7 +61,7 @@ public class Matcher {
 		return Math.min(buysQuantity, sellsQuantity);
 	}
 
-	public List<Trade> continuesMatch(Order newOrder) {
+	public List<Trade> continuousMatch(Order newOrder) {
 		OrderBook orderBook = newOrder.getSecurity().getOrderBook();
 		LinkedList<Trade> trades = new LinkedList<>();
 		try {
@@ -114,11 +114,11 @@ public class Matcher {
 		trades.reversed().forEach(Trade::rollback);
 	}
 
-	public MatchResult continuesExecuting(Order order) {
+	public MatchResult continuousExecuting(Order order) {
 		List<Trade> trades = new LinkedList<>();
 		
 		try {
-			trades = continuesMatch(order);
+			trades = continuousMatch(order);
 			order.checkExecutionQuantity(sumOfExecutionQuantity(trades));
 			order.addYourselfToQueue();
 			return MatchResult.executed(order, trades);

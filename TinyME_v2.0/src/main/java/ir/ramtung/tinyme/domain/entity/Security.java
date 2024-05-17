@@ -54,7 +54,7 @@ public class Security {
 
 	private List<SecurityStats> handleAdd(Order newOrder) {
 		if (this.state == SecurityState.CONTINUOUS) {
-			return handleAddInContinuesState(newOrder);
+			return handleAddInContinuousState(newOrder);
 		} else if (this.state == SecurityState.AUCTION) {
 			return handleAddInAuctionState(newOrder);
 		} else {
@@ -71,12 +71,12 @@ public class Security {
 		return stats;
 	}
 
-	private List<SecurityStats> handleAddInContinuesState(Order newOrder) {
+	private List<SecurityStats> handleAddInContinuousState(Order newOrder) {
 		List<SecurityStats> stats = new ArrayList<>();
 		if (newOrder instanceof StopLimitOrder newStopLimitOrder) {
 			stats.addAll(addNewStopLimitOrder(newStopLimitOrder));
 		} else {
-			stats.addAll(addNewLimitOrderInContinuesState(newOrder));
+			stats.addAll(addNewLimitOrderInContinuousState(newOrder));
 		}
 		stats.addAll(activateStopLimitOrders());
 		return stats;
@@ -93,16 +93,16 @@ public class Security {
 		return List.of(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
 	}
 
-	private List<SecurityStats> addNewLimitOrderInContinuesState(Order newOrder) {
+	private List<SecurityStats> addNewLimitOrderInContinuousState(Order newOrder) {
 		List<SecurityStats> stats = new ArrayList<>();
 		stats.add(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
 
-		MatchResult newOrderMatchResult = matcher.continuesExecuting(newOrder);
+		MatchResult newOrderMatchResult = matcher.continuousExecuting(newOrder);
 		if (!newOrderMatchResult.isSuccessful()) {
 			stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(newOrderMatchResult, newOrder.getOrderId()));
 		}
 		if(!newOrderMatchResult.trades().isEmpty()) {
-			stats.add(ExecuteStats.createContinuesExecuteStats(newOrderMatchResult.trades(), newOrder.getOrderId()));
+			stats.add(ExecuteStats.createContinuousExecuteStats(newOrderMatchResult.trades(), newOrder.getOrderId()));
 		}
 		updateLastTradePrice(newOrderMatchResult.trades());
 		return stats;
@@ -188,7 +188,7 @@ public class Security {
 
 	private List<SecurityStats> updateByKeepingPriority(Order tempOrder, Order mainOrder) {
 		if (this.state == SecurityState.CONTINUOUS) {
-			return updateByKeepingPriorityInContinuesState(tempOrder, mainOrder);
+			return updateByKeepingPriorityInContinuousState(tempOrder, mainOrder);
 		} else if (this.state == SecurityState.AUCTION) {
 			return updateByKeepingPriorityInAuctionState(tempOrder, mainOrder);
 		} else {
@@ -196,7 +196,7 @@ public class Security {
 		}
 	}
 
-	private List<SecurityStats> updateByKeepingPriorityInContinuesState(Order tempOrder, Order mainOrder) {
+	private List<SecurityStats> updateByKeepingPriorityInContinuousState(Order tempOrder, Order mainOrder) {
 		mainOrder.updateFromTempOrder(tempOrder);
 		return List.of(SituationalStats.createUpdateOrderStats(mainOrder.getOrderId()));
 	}
@@ -212,7 +212,7 @@ public class Security {
 
 	private List<SecurityStats> reAddUpdatedOrder(Order updatedOrder, Order originalOrder) {
 		if (this.state == SecurityState.CONTINUOUS) {
-			return reAddUpdatedOrderInContinuesState(updatedOrder, originalOrder);
+			return reAddUpdatedOrderInContinuousState(updatedOrder, originalOrder);
 		} else if (this.state == SecurityState.AUCTION) {
 			return reAddUpdatedOrderInAuctionState(updatedOrder, originalOrder);
 		} else {
@@ -220,12 +220,12 @@ public class Security {
 		}
 	}
 
-	private List<SecurityStats> reAddUpdatedOrderInContinuesState(Order updatedOrder, Order originalOrder) {
+	private List<SecurityStats> reAddUpdatedOrderInContinuousState(Order updatedOrder, Order originalOrder) {
 		if (updatedOrder instanceof StopLimitOrder updatedSlo) {
 			StopLimitOrder originalSlo = (StopLimitOrder) originalOrder;
-			return reAddUpdatedSloInContinuesState(updatedSlo, originalSlo);
+			return reAddUpdatedSloInContinuousState(updatedSlo, originalSlo);
 		} else {
-			return reAddActiveOrderInContinuesState(updatedOrder, originalOrder);
+			return reAddActiveOrderInContinuousState(updatedOrder, originalOrder);
 		}
 	}
 
@@ -242,18 +242,18 @@ public class Security {
 		}
 	}
 
-	private List<SecurityStats> reAddActiveOrderInContinuesState(Order updatedOrder, Order originalOrder) {
+	private List<SecurityStats> reAddActiveOrderInContinuousState(Order updatedOrder, Order originalOrder) {
 		List<SecurityStats> stats = new LinkedList<>();
 		stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
 		
-		MatchResult updatedOrderResult = matcher.continuesExecuting(updatedOrder);
+		MatchResult updatedOrderResult = matcher.continuousExecuting(updatedOrder);
 
 		if (!updatedOrderResult.isSuccessful()) {
 			orderBook.enqueue(originalOrder);
 			stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(updatedOrderResult, originalOrder.getOrderId()));
 		} 
 		if (!updatedOrderResult.trades().isEmpty()) {
-			stats.add(ExecuteStats.createContinuesExecuteStats(updatedOrderResult.trades(), originalOrder.getOrderId()));
+			stats.add(ExecuteStats.createContinuousExecuteStats(updatedOrderResult.trades(), originalOrder.getOrderId()));
 		}
 
 		updateLastTradePrice(updatedOrderResult.trades());
@@ -261,7 +261,7 @@ public class Security {
 		return stats;
 	}
 
-	private List<SecurityStats> reAddUpdatedSloInContinuesState(StopLimitOrder updatedOrder,StopLimitOrder originalOrder) {
+	private List<SecurityStats> reAddUpdatedSloInContinuousState(StopLimitOrder updatedOrder,StopLimitOrder originalOrder) {
 		try {
 			List<SecurityStats> stats = new LinkedList<>();
 			stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
@@ -318,7 +318,7 @@ public class Security {
 			stats.add(SituationalStats.createOrderActivatedStats(slo.getOrderId()));
 			Order activatedOrder = new Order(slo);
 			if (this.state == SecurityState.CONTINUOUS) {
-				stats.addAll(activateOrderInContinuesState(activatedOrder));
+				stats.addAll(activateOrderInContinuousState(activatedOrder));
 			} else if (this.state == SecurityState.AUCTION) {
 				stats.addAll(activateOrderInAuctionState(activatedOrder));
 			} else {
@@ -329,11 +329,11 @@ public class Security {
 		return stats;
 	}
 
-	private List<SecurityStats> activateOrderInContinuesState(Order activatedOrder) {
-		MatchResult result = matcher.continuesExecuting(activatedOrder);
+	private List<SecurityStats> activateOrderInContinuousState(Order activatedOrder) {
+		MatchResult result = matcher.continuousExecuting(activatedOrder);
 		updateLastTradePrice(result.trades());
 		if(!result.trades().isEmpty()) {
-			return List.of(ExecuteStats.createContinuesExecuteStats(result.trades(), activatedOrder.getOrderId()));
+			return List.of(ExecuteStats.createContinuousExecuteStats(result.trades(), activatedOrder.getOrderId()));
 		} else {
 			return List.of();
 		}

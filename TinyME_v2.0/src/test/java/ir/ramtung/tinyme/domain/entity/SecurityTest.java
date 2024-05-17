@@ -111,7 +111,7 @@ public class SecurityTest {
 			assertThat(actualNumOfTrades).isEqualTo(numOfTrades);
 		}
 
-		private void assertContinuesExecuteStats(ExecuteStats stats, long orderId, int numOfTrades) {
+		private void assertContinuousExecuteStats(ExecuteStats stats, long orderId, int numOfTrades) {
 			long actualOrderId = stats.getOrderId();
 			assertThat(actualOrderId).isEqualTo(orderId);
 			assertAuctionExecuteStats(stats, numOfTrades);	
@@ -1387,15 +1387,15 @@ public class SecurityTest {
 			return security.updateOrder(order);
 		}
 
-		public SecurityResponse change_security_state_from_continues_to_auction() {
+		public SecurityResponse change_security_state_from_continuous_to_auction() {
 			return security.changeMatchingState(SecurityState.AUCTION);
 		}
 
-		public SecurityResponse change_security_state_from_continues_to_continues() {
+		public SecurityResponse change_security_state_from_continuous_to_continuous() {
 			return security.changeMatchingState(SecurityState.CONTINUOUS);
 		}
 
-		public SecurityResponse change_security_state_from_auction_to_continues_with_no_trade() {
+		public SecurityResponse change_security_state_from_auction_to_continuous_with_no_trade() {
 			security.changeMatchingState(SecurityState.AUCTION);
 			return security.changeMatchingState(SecurityState.CONTINUOUS);
 		}
@@ -1420,7 +1420,7 @@ public class SecurityTest {
 			orders.forEach(order -> security.addNewOrder(order));
 		}
 
-		public SecurityResponse change_security_state_from_auction_to_continues_with_trades() {
+		public SecurityResponse change_security_state_from_auction_to_continuous_with_trades() {
 			change_state_to_auction_and_add_order_for_each_side();
 			return security.changeMatchingState(SecurityState.CONTINUOUS);
 		}
@@ -1430,7 +1430,7 @@ public class SecurityTest {
 			return security.changeMatchingState(SecurityState.AUCTION);
 		}
 
-		public SecurityResponse change_security_state_from_auction_to_continues_with_trades_and_active_some_order() {
+		public SecurityResponse change_security_state_from_auction_to_continuous_with_trades_and_active_some_order() {
 			add_three_stop_limit_order_both_buy_and_sell();
 			Order newSlo = new StopLimitOrder(9, security, Side.BUY, 5, 1000, buyerBroker, buyerShareholder, 900);
 			buyerBroker.increaseCreditBy(5000);
@@ -4894,7 +4894,7 @@ public class SecurityTest {
 
 		assertThat(((SituationalStats) response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.ADD_ORDER);
 		assertThat(((SituationalStats) response.getStats().get(1)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(2), 6, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(2), 6, 1);
 	}
 
 	@Test
@@ -4910,7 +4910,7 @@ public class SecurityTest {
 
 		assertThat(((SituationalStats) response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.ADD_ORDER);
 		assertThat(((SituationalStats) response.getStats().get(1)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(2), 6, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(2), 6, 1);
 	}
 
 	@Test
@@ -4986,13 +4986,13 @@ public class SecurityTest {
 		SecurityResponse response = scenarioGenerator.new_sell_order_activate_all_sell_stop_limit_orders();
 
 		assertThat(((SituationalStats) response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.ADD_ORDER);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(1), 9, 5);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(1), 9, 5);
 		assertThat(((SituationalStats) response.getStats().get(2)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(3), 6, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(3), 6, 1);
 		assertThat(((SituationalStats) response.getStats().get(4)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(5), 7, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(5), 7, 1);
 		assertThat(((SituationalStats) response.getStats().get(6)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(7), 8, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(7), 8, 1);
 	}
 
 	@Test
@@ -5057,13 +5057,13 @@ public class SecurityTest {
 		SecurityResponse response = scenarioGenerator.new_buy_order_activate_all_buy_stop_limit_orders();
 
 		assertThat(((SituationalStats) response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.ADD_ORDER);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(1), 9, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(1), 9, 1);
 		assertThat(((SituationalStats) response.getStats().get(2)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(3), 6, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(3), 6, 1);
 		assertThat(((SituationalStats) response.getStats().get(4)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(5), 7, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(5), 7, 1);
 		assertThat(((SituationalStats) response.getStats().get(6)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(7), 8, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(7), 8, 1);
 	}
 
 	@Test
@@ -5199,7 +5199,7 @@ public class SecurityTest {
 		
 		assertThat(((SituationalStats) response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.UPDATE_ORDER);
 		assertThat(((SituationalStats) response.getStats().get(1)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(2), 6, 2);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(2), 6, 2);
 	}
 
 	@Test
@@ -5291,11 +5291,11 @@ public class SecurityTest {
 
 		assertThat(((SituationalStats) response.getStats().getFirst()).getType()).isEqualTo(SituationalStatsType.UPDATE_ORDER);
 		assertThat(((SituationalStats) response.getStats().get(1)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(2), 6, 2);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(2), 6, 2);
 		assertThat(((SituationalStats) response.getStats().get(3)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(4), 7, 2);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(4), 7, 2);
 		assertThat(((SituationalStats) response.getStats().get(5)).getType()).isEqualTo(SituationalStatsType.ORDER_ACTIVATED);
-		assertPack.assertContinuesExecuteStats((ExecuteStats) response.getStats().get(6), 8, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats) response.getStats().get(6), 8, 1);
 	}
 
 	@Test
@@ -5738,22 +5738,22 @@ public class SecurityTest {
 	}
 
 	@Test
-	public void change_security_state_from_continues_to_auction_and_check_security_response() {
-		SecurityResponse response = scenarioGenerator.change_security_state_from_continues_to_auction();
+	public void change_security_state_from_continuous_to_auction_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_continuous_to_auction();
 		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.CONTINUOUS, SecurityState.AUCTION);
 		assertThat(response.getStats().size()).isEqualTo(1);
 	}
 
 	@Test
-	public void change_security_state_from_continues_to_continues_and_check_security_response() {
-		SecurityResponse response = scenarioGenerator.change_security_state_from_continues_to_continues();
+	public void change_security_state_from_continuous_to_continuous_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_continuous_to_continuous();
 		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.CONTINUOUS, SecurityState.CONTINUOUS);
 		assertThat(response.getStats().size()).isEqualTo(1);
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_no_trade_and_check_security_response() {
-		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continues_with_no_trade();
+	public void change_security_state_from_auction_to_continuous_with_no_trade_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continuous_with_no_trade();
 		assertPack.assertStateStats((StateStats)response.getStats().getFirst(), SecurityState.AUCTION, SecurityState.CONTINUOUS);
 		assertThat(response.getStats().size()).isEqualTo(1);
 	}
@@ -5766,8 +5766,8 @@ public class SecurityTest {
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_check_trades() {
-		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continues_with_trades();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_check_trades() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades();
 		List<Trade> trades = ((ExecuteStats)response.getStats().getFirst()).getTrades();
 
 		assertPack.assertTrade(trades.get(0), 13, 12, 1000, 30);
@@ -5781,15 +5781,15 @@ public class SecurityTest {
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_check_security_response() {
-		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continues_with_trades();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades();
 		assertPack.assertStateStats((StateStats)response.getStats().getLast(), SecurityState.AUCTION, SecurityState.CONTINUOUS);
 		assertThat(response.getStats().size()).isEqualTo(2);
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_check_sell_queue() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_check_sell_queue() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades();
 		assertPack.assertOrderInQueue(Side.SELL, 0, 15, 10, 1000);
 		assertPack.assertOrderInQueue(Side.SELL, 1, 5, 35, 1000, 10, 10);
 		assertPack.assertOrderInQueue(Side.SELL, 2, 14, 15, 1100);
@@ -5797,37 +5797,37 @@ public class SecurityTest {
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_check_buy_queue() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_check_buy_queue() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades();
 		assertPack.assertOrderInQueue(Side.BUY, 0, 5, 45, 500, 10, 10);
 		assertPack.assertOrderInQueue(Side.BUY, 1, 10, 15, 500);
 		assertThat(security.getOrderBook().getBuyQueue().size()).isEqualTo(6);
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_check_buyer_credit() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_check_buyer_credit() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades();
 		assertPack.exceptedBuyerCredit = 10000;
 		assertPack.assertBuyerCredit();
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_check_buyer_position() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_check_buyer_position() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades();
 		assertPack.exceptedBuyerPosition = 85;
 		assertPack.assertBuyerPosition();
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_check_seller_credit() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_check_seller_credit() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades();
 		assertPack.exceptedSellerCredit = 85_000;
 		assertPack.assertSellerCredit();
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_check_seller_position() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_check_seller_position() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades();
 		assertPack.exceptedSellerPosition = 60;
 		assertPack.assertSellerPosition();
 	}
@@ -5900,8 +5900,8 @@ public class SecurityTest {
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_active_some_order_and_check_security_response() {
-		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continues_with_trades_and_active_some_order();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_active_some_order_and_check_security_response() {
+		SecurityResponse response = scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades_and_active_some_order();
 		List<SecurityStats> stats = response.getStats();
 
 		assertPack.assertAuctionExecuteStats((ExecuteStats)stats.getFirst(), 7);
@@ -5910,13 +5910,13 @@ public class SecurityTest {
 		assertPack.assertSituationalStats((SituationalStats)stats.get(3), SituationalStatsType.ORDER_ACTIVATED, 7);
 		assertPack.assertSituationalStats((SituationalStats)stats.get(4), SituationalStatsType.ORDER_ACTIVATED, 8);
 		assertPack.assertSituationalStats((SituationalStats)stats.get(5), SituationalStatsType.ORDER_ACTIVATED, 9);
-		assertPack.assertContinuesExecuteStats((ExecuteStats)stats.get(6), 9, 1);
+		assertPack.assertContinuousExecuteStats((ExecuteStats)stats.get(6), 9, 1);
 		assertThat(stats.size()).isEqualTo(7);
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_active_some_order_and_check_sell_queue() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades_and_active_some_order();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_active_some_order_and_check_sell_queue() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades_and_active_some_order();
 		assertPack.assertOrderInQueue(Side.SELL, 0, 15, 5, 1000);
 		assertPack.assertOrderInQueue(Side.SELL, 1, 5, 35, 1000, 10, 10);
 		assertPack.assertOrderInQueue(Side.SELL, 2, 14, 15, 1100);
@@ -5924,8 +5924,8 @@ public class SecurityTest {
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_active_some_order_and_check_buy_queue() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades_and_active_some_order();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_active_some_order_and_check_buy_queue() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades_and_active_some_order();
 		assertPack.assertOrderInQueue(Side.BUY, 0, 8, 15, 900);
 		assertPack.assertOrderInQueue(Side.BUY, 1, 7, 15, 800);
 		assertPack.assertOrderInQueue(Side.BUY, 2, 6, 15, 700);
@@ -5934,29 +5934,29 @@ public class SecurityTest {
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_active_some_order_and_check_buyer_credit() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades_and_active_some_order();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_active_some_order_and_check_buyer_credit() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades_and_active_some_order();
 		assertPack.exceptedBuyerCredit = 10000;
 		assertPack.assertBuyerCredit();
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_active_some_order_and_check_buyer_position() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades_and_active_some_order();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_active_some_order_and_check_buyer_position() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades_and_active_some_order();
 		assertPack.exceptedBuyerPosition = 90;
 		assertPack.assertBuyerPosition();
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_active_some_order_and_check_seller_credit() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades_and_active_some_order();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_active_some_order_and_check_seller_credit() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades_and_active_some_order();
 		assertPack.exceptedSellerCredit = 90_000;
 		assertPack.assertSellerCredit();
 	}
 
 	@Test
-	public void change_security_state_from_auction_to_continues_with_trades_and_active_some_order_and_check_seller_position() {
-		scenarioGenerator.change_security_state_from_auction_to_continues_with_trades_and_active_some_order();
+	public void change_security_state_from_auction_to_continuous_with_trades_and_active_some_order_and_check_seller_position() {
+		scenarioGenerator.change_security_state_from_auction_to_continuous_with_trades_and_active_some_order();
 		assertPack.exceptedSellerPosition = 100;
 		assertPack.assertSellerPosition();
 	}
