@@ -1633,4 +1633,24 @@ public class OrderHandlerTest {
 		);
 		verify(eventPublisher).publish(new OrderExecutedEvent(0, 4, List.of(new TradeDTO(trade))));
 	}
+
+	@Test
+	void delete_stop_limit_order_in_auction_state() {
+		broker1.increaseCreditBy(600);
+
+		// add slo a buy order
+		StopLimitOrder sloBuy = new StopLimitOrder(1, security, Side.BUY, 10, 30, broker1, shareholder, 15);
+		security.getOrderBook().enqueue(sloBuy);
+
+		// change state to auction
+		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+
+		// delete order
+		orderHandler.handleRq(new DeleteOrderRq(1, security.getIsin(), Side.BUY, 1));
+
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
+		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.CAN_NOT_DELETE_SLO_IN_AUCTION_STATE)));
+		verify(eventPublisher, never()).publish(any(OrderDeletedEvent.class));
+		verify(eventPublisher, never()).publish(any(OpeningPriceEvent.class));
+	}
 }
