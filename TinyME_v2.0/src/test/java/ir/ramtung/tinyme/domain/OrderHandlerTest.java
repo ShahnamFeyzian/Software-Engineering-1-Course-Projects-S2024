@@ -1,7 +1,6 @@
 package ir.ramtung.tinyme.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import ir.ramtung.tinyme.config.MockedJMSTestConfig;
@@ -868,10 +867,10 @@ public class OrderHandlerTest {
 		shareholder.incPosition(security, 45);
 
 		List<TradeDTO> limitOrderTradesDto = Arrays.asList(
-			new TradeDTO("ABC", 500, 10, 5, 9),
-			new TradeDTO("ABC", 500, 10, 5, 9),
-			new TradeDTO("ABC", 500, 10, 5, 9),
-			new TradeDTO("ABC", 500, 10, 5, 9),
+			new TradeDTO("ABC", 500, 10, 5, 9),	
+			new TradeDTO("ABC", 500, 10, 5, 9),	
+			new TradeDTO("ABC", 500, 10, 5, 9),	
+			new TradeDTO("ABC", 500, 10, 5, 9),	
 			new TradeDTO("ABC", 500, 5, 5, 9)
 		);
 		Trade firstTrade = new Trade(security, 400, 10, stopLimitOrders.get(0), orders.get(3));
@@ -1231,75 +1230,78 @@ public class OrderHandlerTest {
 	}
 
 	@Test
-	void changing_state_without_any_trade_happening() {
+	void change_state_without_any_trade_happens() {
+		// CONTINUOUS to CONTINUOUS
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
 
+		// CONTINUOUS to AUCTION
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 
 		reset(eventPublisher);
 
+		// AUCTION to AUCTION
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 
+		// AUCTION to CONTINUOUS
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
 	}
 
 	@Test
-	void add_stop_limit_order_in_auction_state_rejected() {
+	void add_stop_limit_order_in_auction_state() {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		broker1.increaseCreditBy(600);
 		orderHandler.handleRq(
-			EnterOrderRq.createNewOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.BUY,
-				1,
-				600,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				0,
-				0,
-				400
-			)
+				EnterOrderRq.createNewOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.BUY,
+						1,
+						600,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						0,
+						0,
+						400
+				)
 		);
 
 		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.STOP_PRICE_IN_AUCTION_STATE)));
 	}
 
 	@Test
-	void add_min_exec_quantity_order_in_auction_state_rejected() {
+	void add_min_exec_quantity_order_in_auction_state() {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		broker1.increaseCreditBy(600);
 		orderHandler.handleRq(
-			EnterOrderRq.createNewOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.BUY,
-				30,
-				20,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				0,
-				10,
-				0
-			)
+				EnterOrderRq.createNewOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.BUY,
+						30,
+						20,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						0,
+						10,
+						0
+				)
 		);
 
-		verify(eventPublisher)
-			.publish(new OrderRejectedEvent(1, 1, List.of(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE)));
+		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE)));
 	}
 
 	@Test
-	void update_stop_limit_order_in_auction_state_rejected() {
+	void update_stop_limit_order_in_auction_state() {
 		broker1.increaseCreditBy(600);
 		StopLimitOrder order = new StopLimitOrder(1, security, Side.BUY, 1, 600, broker1, shareholder, 500);
 		security.getOrderBook().enqueue(order);
@@ -1307,27 +1309,27 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		orderHandler.handleRq(
-			EnterOrderRq.createUpdateOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.BUY,
-				1,
-				600,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				0,
-				0,
-				200
-			)
+				EnterOrderRq.createUpdateOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.BUY,
+						1,
+						600,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						0,
+						0,
+						200
+				)
 		);
 
 		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.STOP_PRICE_IN_AUCTION_STATE)));
 	}
 
 	@Test
-	void update_min_exec_quantity_order_in_auction_state_rejected() {
+	void update_min_exec_quantity_order_in_auction_state() {
 		broker1.increaseCreditBy(600);
 		Order order = new Order(1, security, Side.BUY, 20, 10, 30, broker1, shareholder);
 		security.getOrderBook().enqueue(order);
@@ -1335,28 +1337,27 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		orderHandler.handleRq(
-			EnterOrderRq.createUpdateOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.BUY,
-				20,
-				20,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				0,
-				10,
-				0
-			)
+				EnterOrderRq.createUpdateOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.BUY,
+						20,
+						20,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						0,
+						10,
+						0
+				)
 		);
 
-		verify(eventPublisher)
-			.publish(new OrderRejectedEvent(1, 1, List.of(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE)));
+		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE)));
 	}
 
 	@Test
-	void add_new_order_in_auction_state_verify_accepted() {
+	void add_new_order_in_auction_state() {
 		shareholder.incPosition(security, 30);
 		Order order = new Order(2, security, Side.SELL, 30, 0, 20, broker2, shareholder);
 		security.getOrderBook().enqueue(order);
@@ -1366,87 +1367,28 @@ public class OrderHandlerTest {
 		broker1.increaseCreditBy(600);
 
 		orderHandler.handleRq(
-			EnterOrderRq.createNewOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.BUY,
-				30,
-				20,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				0,
-				0,
-				0
-			)
+				EnterOrderRq.createNewOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.BUY,
+						30,
+						20,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						0,
+						0,
+						0
+				)
 		);
-
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 1));
-	}
-
-	@Test
-	void add_new_order_in_auction_state_verify_opening_price() {
-		shareholder.incPosition(security, 30);
-		Order order = new Order(2, security, Side.SELL, 30, 0, 20, broker2, shareholder);
-		security.getOrderBook().enqueue(order);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		broker1.increaseCreditBy(600);
-
-		orderHandler.handleRq(
-			EnterOrderRq.createNewOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.BUY,
-				30,
-				20,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				0,
-				0,
-				0
-			)
-		);
-
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 30));
-	}
-
-	@Test
-	void add_new_order_in_auction_state_verify_no_execute() {
-		shareholder.incPosition(security, 30);
-		Order order = new Order(2, security, Side.SELL, 30, 0, 20, broker2, shareholder);
-		security.getOrderBook().enqueue(order);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		broker1.increaseCreditBy(600);
-
-		orderHandler.handleRq(
-			EnterOrderRq.createNewOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.BUY,
-				30,
-				20,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				0,
-				0,
-				0
-			)
-		);
-
 		verify(eventPublisher, never()).publish(any(OrderExecutedEvent.class));
 	}
 
 	@Test
-	void add_new_iceberg_order_in_auction_state_verify_accepted() {
+	void add_new_iceberg_order_in_auction_state() {
 		broker1.increaseCreditBy(600);
 		Order order = new Order(1, security, Side.BUY, 30, 0, 20, broker1, shareholder);
 		security.getOrderBook().enqueue(order);
@@ -1456,86 +1398,28 @@ public class OrderHandlerTest {
 		shareholder.incPosition(security, 30);
 
 		orderHandler.handleRq(
-			EnterOrderRq.createNewOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.SELL,
-				30,
-				20,
-				broker2.getBrokerId(),
-				shareholder.getShareholderId(),
-				5,
-				0,
-				0
-			)
+				EnterOrderRq.createNewOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.SELL,
+						30,
+						20,
+						broker2.getBrokerId(),
+						shareholder.getShareholderId(),
+						5,
+						0,
+						0
+				)
 		);
 		verify(eventPublisher).publish(new OrderAcceptedEvent(1, 1));
-	}
-
-	@Test
-	void add_new_iceberg_order_in_auction_state_verify_opening_price() {
-		broker1.increaseCreditBy(600);
-		Order order = new Order(1, security, Side.BUY, 30, 0, 20, broker1, shareholder);
-		security.getOrderBook().enqueue(order);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		shareholder.incPosition(security, 30);
-
-		orderHandler.handleRq(
-			EnterOrderRq.createNewOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.SELL,
-				30,
-				20,
-				broker2.getBrokerId(),
-				shareholder.getShareholderId(),
-				5,
-				0,
-				0
-			)
-		);
-
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 20, 30));
-	}
-
-	@Test
-	void add_new_iceberg_order_in_auction_state_verify_no_execute() {
-		broker1.increaseCreditBy(600);
-		Order order = new Order(1, security, Side.BUY, 30, 0, 20, broker1, shareholder);
-		security.getOrderBook().enqueue(order);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		shareholder.incPosition(security, 30);
-
-		orderHandler.handleRq(
-			EnterOrderRq.createNewOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.SELL,
-				30,
-				20,
-				broker2.getBrokerId(),
-				shareholder.getShareholderId(),
-				5,
-				0,
-				0
-			)
-		);
-
 		verify(eventPublisher, never()).publish(any(OrderExecutedEvent.class));
 	}
 
 	@Test
-	void update_order_in_auction_state_verify_update() {
+	void update_order_in_auction_state() {
 		broker1.increaseCreditBy(600);
 		Order order = new Order(1, security, Side.BUY, 20, 0, 30, broker1, shareholder);
 		security.getOrderBook().enqueue(order);
@@ -1547,91 +1431,29 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		orderHandler.handleRq(
-			EnterOrderRq.createUpdateOrderRq(
-				1,
-				security.getIsin(),
-				2,
-				LocalDateTime.now(),
-				Side.SELL,
-				20,
-				30,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				0,
-				0,
-				0
-			)
+				EnterOrderRq.createUpdateOrderRq(
+						1,
+						security.getIsin(),
+						2,
+						LocalDateTime.now(),
+						Side.SELL,
+						20,
+						30,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						0,
+						0,
+						0
+				)
 		);
 
 		verify(eventPublisher).publish(new OrderUpdatedEvent(1, 2));
-	}
-
-	@Test
-	void update_order_in_auction_state_verify_opening_price() {
-		broker1.increaseCreditBy(600);
-		Order order = new Order(1, security, Side.BUY, 20, 0, 30, broker1, shareholder);
-		security.getOrderBook().enqueue(order);
-
-		shareholder.incPosition(security, 20);
-		order = new Order(2, security, Side.SELL, 10, 0, 10, broker2, shareholder);
-		security.getOrderBook().enqueue(order);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		orderHandler.handleRq(
-			EnterOrderRq.createUpdateOrderRq(
-				1,
-				security.getIsin(),
-				2,
-				LocalDateTime.now(),
-				Side.SELL,
-				20,
-				30,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				0,
-				0,
-				0
-			)
-		);
-
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 30, 20));
-	}
-
-	@Test
-	void update_order_in_auction_state_verify_no_trade() {
-		broker1.increaseCreditBy(600);
-		Order order = new Order(1, security, Side.BUY, 20, 0, 30, broker1, shareholder);
-		security.getOrderBook().enqueue(order);
-
-		shareholder.incPosition(security, 20);
-		order = new Order(2, security, Side.SELL, 10, 0, 10, broker2, shareholder);
-		security.getOrderBook().enqueue(order);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		orderHandler.handleRq(
-			EnterOrderRq.createUpdateOrderRq(
-				1,
-				security.getIsin(),
-				2,
-				LocalDateTime.now(),
-				Side.SELL,
-				20,
-				30,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				0,
-				0,
-				0
-			)
-		);
-
 		verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
 	}
 
 	@Test
-	void update_iceberg_order_in_auction_state_verify_update() {
+	void update_iceberg_order_in_auction_state() {
 		broker1.increaseCreditBy(625);
 		IcebergOrder icebergOrder = new IcebergOrder(1, security, Side.BUY, 10, 0, 20, broker1, shareholder, 10);
 		security.getOrderBook().enqueue(icebergOrder);
@@ -1643,407 +1465,162 @@ public class OrderHandlerTest {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		orderHandler.handleRq(
-			EnterOrderRq.createUpdateOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.BUY,
-				25,
-				25,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				5,
-				0,
-				0
-			)
+				EnterOrderRq.createUpdateOrderRq(
+						1,
+						security.getIsin(),
+						1,
+						LocalDateTime.now(),
+						Side.BUY,
+						25,
+						25,
+						broker1.getBrokerId(),
+						shareholder.getShareholderId(),
+						5,
+						0,
+						0
+				)
 		);
 
 		verify(eventPublisher).publish(new OrderUpdatedEvent(1, 1));
-	}
-
-	@Test
-	void update_iceberg_order_in_auction_state_verify_opening_price() {
-		broker1.increaseCreditBy(625);
-		IcebergOrder icebergOrder = new IcebergOrder(1, security, Side.BUY, 10, 0, 20, broker1, shareholder, 10);
-		security.getOrderBook().enqueue(icebergOrder);
-
-		shareholder.incPosition(security, 25);
-		Order order = new Order(2, security, Side.SELL, 25, 0, 25, broker2, shareholder);
-		security.getOrderBook().enqueue(order);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		orderHandler.handleRq(
-			EnterOrderRq.createUpdateOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.BUY,
-				25,
-				25,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				5,
-				0,
-				0
-			)
-		);
-
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 25, 25));
-	}
-
-	@Test
-	void update_iceberg_order_in_auction_state_verify_no_trade() {
-		broker1.increaseCreditBy(625);
-		IcebergOrder icebergOrder = new IcebergOrder(1, security, Side.BUY, 10, 0, 20, broker1, shareholder, 10);
-		security.getOrderBook().enqueue(icebergOrder);
-
-		shareholder.incPosition(security, 25);
-		Order order = new Order(2, security, Side.SELL, 25, 0, 25, broker2, shareholder);
-		security.getOrderBook().enqueue(order);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		orderHandler.handleRq(
-			EnterOrderRq.createUpdateOrderRq(
-				1,
-				security.getIsin(),
-				1,
-				LocalDateTime.now(),
-				Side.BUY,
-				25,
-				25,
-				broker1.getBrokerId(),
-				shareholder.getShareholderId(),
-				5,
-				0,
-				0
-			)
-		);
-
 		verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
 	}
 
-	@Test
-	void auction_to_auction_makes_trades_but_does_not_activate_any_stop_limit_order_verify_trade() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-		reset(eventPublisher);
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 10, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 25, broker1, shareholder, 35);
-		security.getOrderBook().enqueue(slo);
-
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 10, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		slo = new StopLimitOrder(4, security, Side.SELL, 10, 5, broker1, shareholder, 8);
-		security.getOrderBook().enqueue(slo);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		verify(eventPublisher).publish(new TradeEvent(security.getIsin(), 10, 10, 1, 3));
-	}
 
 	@Test
-	void auction_to_auction_makes_trades_but_does_not_activate_any_stop_limit_order_verify_security_state() {
+	void auction_to_auction_makes_trades_but_does_not_activate_any_stop_limit_order() {
+		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-		reset(eventPublisher);
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 10, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 25, broker1, shareholder, 35);
-		security.getOrderBook().enqueue(slo);
-
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 10, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		slo = new StopLimitOrder(4, security, Side.SELL, 10, 5, broker1, shareholder, 8);
-		security.getOrderBook().enqueue(slo);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
-	}
-
-	@Test
-	void auction_to_auction_makes_trades_but_does_not_activate_any_stop_limit_order_verify_no_order_activated() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 		reset(eventPublisher);
 
 		broker1.increaseCreditBy(600);
+		// add a buy order
 		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 10, broker1, shareholder);
 		security.getOrderBook().enqueue(orderBuy);
 
+		// add slo a buy order
 		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 25, broker1, shareholder, 35);
 		security.getOrderBook().enqueue(slo);
 
+
 		shareholder.incPosition(security, 20);
+		// add a sell order
 		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 10, broker2, shareholder);
 		security.getOrderBook().enqueue(orderSell);
+		// add a slo sell order
 		slo = new StopLimitOrder(4, security, Side.SELL, 10, 5, broker1, shareholder, 8);
 		security.getOrderBook().enqueue(slo);
 
+		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
+		verify(eventPublisher).publish(new TradeEvent(security.getIsin(), 10, 10, 1, 3));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
 	}
 
 	@Test
-	void auction_to_continuous_makes_trades_but_does_not_activate_any_stop_limit_order_verify_trade() {
+	void auction_to_continuous_makes_trades_but_does_not_activate_any_stop_limit_order() {
+		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 
 		broker1.increaseCreditBy(600);
+		// add a buy order
 		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 10, broker1, shareholder);
 		security.getOrderBook().enqueue(orderBuy);
 
+		// add slo a buy order
 		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 25, broker1, shareholder, 35);
 		security.getOrderBook().enqueue(slo);
 
+
 		shareholder.incPosition(security, 20);
+		// add a sell order
 		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 10, broker2, shareholder);
 		security.getOrderBook().enqueue(orderSell);
+		// add a slo sell order
 		slo = new StopLimitOrder(4, security, Side.SELL, 10, 5, broker1, shareholder, 8);
 		security.getOrderBook().enqueue(slo);
 
+		// change state to continuous
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
 
 		verify(eventPublisher).publish(new TradeEvent(security.getIsin(), 10, 10, 1, 3));
-	}
-
-	@Test
-	void auction_to_continuous_makes_trades_but_does_not_activate_any_stop_limit_order_verify_security_state() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 10, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 25, broker1, shareholder, 35);
-		security.getOrderBook().enqueue(slo);
-
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 10, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		slo = new StopLimitOrder(4, security, Side.SELL, 10, 5, broker1, shareholder, 8);
-		security.getOrderBook().enqueue(slo);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
-
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
-	}
-
-	@Test
-	void auction_to_continuous_makes_trades_but_does_not_activate_any_stop_limit_order_verify_no_order_activated() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 10, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 25, broker1, shareholder, 35);
-		security.getOrderBook().enqueue(slo);
-
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 10, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		slo = new StopLimitOrder(4, security, Side.SELL, 10, 5, broker1, shareholder, 8);
-		security.getOrderBook().enqueue(slo);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
-
 		verify(eventPublisher, never()).publish(any(OrderActivatedEvent.class));
-	}
-
-	@Test
-	void auction_to_continuous_makes_trades_but_does_not_activate_any_stop_limit_order_no_order_executed() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 10, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 25, broker1, shareholder, 35);
-		security.getOrderBook().enqueue(slo);
-
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 10, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		slo = new StopLimitOrder(4, security, Side.SELL, 10, 5, broker1, shareholder, 8);
-		security.getOrderBook().enqueue(slo);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
-
 		verify(eventPublisher, never()).publish(any(OrderExecutedEvent.class));
 	}
 
 	@Test
-	void auction_to_auction_makes_trades_and_activate_any_stop_limit_order_verify_trade() {
+	void auction_to_auction_makes_trades_and_activate_any_stop_limit_order() {
+		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 		reset(eventPublisher);
 
 		broker1.increaseCreditBy(600);
+		// add a buy order
 		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 20, broker1, shareholder);
 		security.getOrderBook().enqueue(orderBuy);
 
+		// add slo a buy order
 		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
 		security.getOrderBook().enqueue(slo);
 
+
 		shareholder.incPosition(security, 20);
+		// add a sell order
 		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
 		security.getOrderBook().enqueue(orderSell);
+		// add a slo sell order
 		slo = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25);
 		security.getOrderBook().enqueue(slo);
 
+
+		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
 		verify(eventPublisher).publish(new TradeEvent(security.getIsin(), 20, 10, 1, 3));
-	}
-
-	@Test
-	void auction_to_auction_makes_trades_and_activate_any_stop_limit_order_verify_security_state() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-		reset(eventPublisher);
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 20, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
-		security.getOrderBook().enqueue(slo);
-
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		slo = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25);
-		security.getOrderBook().enqueue(slo);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
-	}
-
-	@Test
-	void auction_to_auction_makes_trades_and_activate_any_stop_limit_order_verify_order_activated() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-		reset(eventPublisher);
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 20, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
-		security.getOrderBook().enqueue(slo);
-
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		slo = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25);
-		security.getOrderBook().enqueue(slo);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
 		verify(eventPublisher).publish(new OrderActivatedEvent(2));
 		verify(eventPublisher).publish(new OrderActivatedEvent(4));
-	}
-
-	@Test
-	void auction_to_auction_makes_trades_and_activate_any_stop_limit_order_verify_no_order_executed() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-		reset(eventPublisher);
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 20, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder slo = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
-		security.getOrderBook().enqueue(slo);
-
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		slo = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25);
-		security.getOrderBook().enqueue(slo);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
 		verify(eventPublisher, never()).publish(any(OrderExecutedEvent.class));
 	}
 
 	@Test
-	void auction_to_continuous_makes_trades_and_activate_any_stop_limit_order_verify_trade() {
+	void auction_to_continuous_makes_trades_and_activate_any_stop_limit_order() {
+		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 		reset(eventPublisher);
 
 		broker1.increaseCreditBy(600);
+		// add a buy order
 		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 20, broker1, shareholder);
 		security.getOrderBook().enqueue(orderBuy);
 
+		// add slo a buy order
 		StopLimitOrder sloBuy = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
 		security.getOrderBook().enqueue(sloBuy);
 
+
 		shareholder.incPosition(security, 20);
+		// add a sell order
 		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
 		security.getOrderBook().enqueue(orderSell);
 		// add a slo sell order
 		StopLimitOrder sloSell = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25, 7);
 		security.getOrderBook().enqueue(sloSell);
 
+		// change state to continuous
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
 
 		verify(eventPublisher).publish(new TradeEvent(security.getIsin(), 20, 10, 1, 3));
-	}
-
-	@Test
-	void auction_to_continuous_makes_trades_and_activate_any_stop_limit_order_verify_security_state() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-		reset(eventPublisher);
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 20, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder sloBuy = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
-		security.getOrderBook().enqueue(sloBuy);
-
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		StopLimitOrder sloSell = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25);
-		security.getOrderBook().enqueue(sloSell);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
-
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.CONTINUOUS));
-	}
-
-	@Test
-	void auction_to_continuous_makes_trades_and_activate_any_stop_limit_order_verify_order_activated() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
-		reset(eventPublisher);
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 20, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder sloBuy = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
-		security.getOrderBook().enqueue(sloBuy);
-
-
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		StopLimitOrder sloSell = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25, 7);
-		security.getOrderBook().enqueue(sloSell);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
+		verify(eventPublisher).publish(new OrderActivatedEvent(2));
+		verify(eventPublisher).publish(new OrderActivatedEvent(4));
 
 		Trade trade = new Trade(
 				security,
@@ -2056,76 +1633,44 @@ public class OrderHandlerTest {
 	}
 
 	@Test
-	void delete_stop_limit_order_in_auction_state_verify_rejected() {
+	void delete_stop_limit_order_in_auction_state() {
 		broker1.increaseCreditBy(600);
 
+		// add slo a buy order
 		StopLimitOrder sloBuy = new StopLimitOrder(1, security, Side.BUY, 10, 30, broker1, shareholder, 15);
 		security.getOrderBook().enqueue(sloBuy);
 
+		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 
-		orderHandler.handleRq(new DeleteOrderRq(1, security.getIsin(), Side.BUY, 1));
-
-		verify(eventPublisher)
-			.publish(new OrderRejectedEvent(1, 1, List.of(Message.CAN_NOT_DELETE_SLO_IN_AUCTION_STATE)));
-	}
-
-	@Test
-	void delete_stop_limit_order_in_auction_state_verify_security_state() {
-		broker1.increaseCreditBy(600);
-
-		StopLimitOrder sloBuy = new StopLimitOrder(1, security, Side.BUY, 10, 30, broker1, shareholder, 15);
-		security.getOrderBook().enqueue(sloBuy);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
+		// delete order
 		orderHandler.handleRq(new DeleteOrderRq(1, security.getIsin(), Side.BUY, 1));
 
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
-	}
-
-	@Test
-	void delete_stop_limit_order_in_auction_state_verify_no_order_deleted() {
-		broker1.increaseCreditBy(600);
-
-		StopLimitOrder sloBuy = new StopLimitOrder(1, security, Side.BUY, 10, 30, broker1, shareholder, 15);
-		security.getOrderBook().enqueue(sloBuy);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		orderHandler.handleRq(new DeleteOrderRq(1, security.getIsin(), Side.BUY, 1));
-
+		verify(eventPublisher).publish(new OrderRejectedEvent(1, 1, List.of(Message.CAN_NOT_DELETE_SLO_IN_AUCTION_STATE)));
 		verify(eventPublisher, never()).publish(any(OrderDeletedEvent.class));
-	}
-
-	@Test
-	void delete_stop_limit_order_in_auction_state_verify_no_opening_price() {
-		broker1.increaseCreditBy(600);
-
-		StopLimitOrder sloBuy = new StopLimitOrder(1, security, Side.BUY, 10, 30, broker1, shareholder, 15);
-		security.getOrderBook().enqueue(sloBuy);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		orderHandler.handleRq(new DeleteOrderRq(1, security.getIsin(), Side.BUY, 1));
-
 		verify(eventPublisher, never()).publish(any(OpeningPriceEvent.class));
 	}
 
 	@Test
-	void delete_order_in_auction_state_verify_security_state() {
+	void delete_order_in_auction_state() {
+		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 		
 		broker1.increaseCreditBy(1000);
+		// add a buy order
 		Order orderBuy = new Order(1, security, Side.BUY, 20, 0, 50, broker1, shareholder);
 		security.getOrderBook().enqueue(orderBuy);
 
 		shareholder.incPosition(security, 30);
+		// add a sell order
 		Order orderSell = new Order(2, security, Side.SELL, 20, 0, 50, broker2, shareholder);
 		security.getOrderBook().enqueue(orderSell);
+		// add an iceberg sell order
 		IcebergOrder icebergOrderSell = new IcebergOrder(3, security, Side.SELL, 10, 0, 20, broker2, shareholder, 5);
 		security.getOrderBook().enqueue(icebergOrderSell);
+
 
 		orderHandler.handleRq(new DeleteOrderRq(2, security.getIsin(), Side.SELL, 2));
 		verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
