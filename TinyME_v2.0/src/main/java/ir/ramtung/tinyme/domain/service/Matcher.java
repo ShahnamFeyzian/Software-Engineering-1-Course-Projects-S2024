@@ -13,14 +13,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class Matcher {
 
-	private boolean hesOrderForAuction(OrderBook orderBook) {
+	private boolean hasOrderForAuction(OrderBook orderBook) {
 		return orderBook.hasOrderOfType(Side.BUY) &&
 				orderBook.hasOrderOfType(Side.SELL);
 	}
 
 	public int calcOpeningAuctionPrice(OrderBook orderBook, int lastTradePrice) {
-		if(!hesOrderForAuction(orderBook))
-			return 0;
+		if(!hasOrderForAuction(orderBook))
+			return lastTradePrice;
 
 		int minPrice = orderBook.getLowestPriorityActiveOrder(Side.BUY).getPrice();
 		int maxPrice = orderBook.getLowestPriorityActiveOrder(Side.SELL).getPrice();
@@ -84,7 +84,7 @@ public class Matcher {
 
 	private List<Trade> auctionMatch(OrderBook orderBook, int openingPrice) {
 		List<Trade> trades = new ArrayList<>();
-		if(!hesOrderForAuction(orderBook)) {
+		if(!hasOrderForAuction(orderBook)) {
 			return trades;
 		}
 		Order sellOrder = orderBook.getHighestPriorityActiveOrder(Side.SELL);
@@ -92,7 +92,7 @@ public class Matcher {
 		while(sellOrder.canTradeWithPrice(openingPrice) && buyOrder.canTradeWithPrice(openingPrice)) {
 			trades.add(createTrade(sellOrder, buyOrder, openingPrice));
 			// FIXME: maybe more clear?
-			if(!hesOrderForAuction(orderBook))
+			if(!hasOrderForAuction(orderBook))
 				break;
 			sellOrder = orderBook.getHighestPriorityActiveOrder(Side.SELL);
 			buyOrder = orderBook.getHighestPriorityActiveOrder(Side.BUY);

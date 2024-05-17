@@ -1656,6 +1656,7 @@ public class OrderHandlerTest {
 	void delete_order_in_auction_state() {
 		// change state to auction
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 		
 		broker1.increaseCreditBy(1000);
 		// add a buy order
@@ -1672,13 +1673,13 @@ public class OrderHandlerTest {
 
 
 		orderHandler.handleRq(new DeleteOrderRq(2, security.getIsin(), Side.SELL, 2));
-		orderHandler.handleRq(new DeleteOrderRq(3, security.getIsin(), Side.SELL, 3));
-
-		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 		verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 550, 0));
+		
+		orderHandler.handleRq(new DeleteOrderRq(3, security.getIsin(), Side.SELL, 3));
 		verify(eventPublisher).publish(new OrderDeletedEvent(3, 3));
-		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 0, 0));
+		verify(eventPublisher, times(2)).publish(new OpeningPriceEvent(security.getIsin(), 550, 0));
+		
 		verify(eventPublisher, never()).publish(any(OrderRejectedEvent.class));
 	}
 }
