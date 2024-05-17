@@ -8,6 +8,7 @@ import lombok.Getter;
 public class SituationalStats extends SecurityStats {
 
     private long orderId;
+    private long requestId;
     private SituationalStatsType type;
 
     private SituationalStats (long orderId, SituationalStatsType type) {
@@ -15,32 +16,37 @@ public class SituationalStats extends SecurityStats {
         this.type = type;
     }
 
-	public static SecurityStats createAddOrderStats(long OrderId) {
-		return new SituationalStats(OrderId, SituationalStatsType.ADD_ORDER);
-	}
-
-	public static SituationalStats createDeleteOrderStats(long OrderId) {
-		return new SituationalStats(OrderId, SituationalStatsType.DELETE_ORDER);
-	}
-
-	public static SituationalStats createUpdateOrderStats(long OrderId) {
-		return new SituationalStats(OrderId, SituationalStatsType.UPDATE_ORDER);
-	}
-
-    public static SituationalStats createNotEnoughCreditStats(long OrderId) {
-        return new SituationalStats(OrderId, SituationalStatsType.NOT_ENOUGH_CREDIT);
+    private SituationalStats (long orderId, long requestId, SituationalStatsType type) {
+        this(orderId, type);
+        this.requestId = requestId;
     }
 
-    public static SituationalStats createNotEnoughPositionsStats(long OrderId) {
-        return new SituationalStats(OrderId, SituationalStatsType.NOT_ENOUGH_POSITIONS);
+	public static SecurityStats createAddOrderStats(long orderId) {
+		return new SituationalStats(orderId, SituationalStatsType.ADD_ORDER);
+	}
+
+	public static SituationalStats createDeleteOrderStats(long orderId) {
+		return new SituationalStats(orderId, SituationalStatsType.DELETE_ORDER);
+	}
+
+	public static SituationalStats createUpdateOrderStats(long orderId) {
+		return new SituationalStats(orderId, SituationalStatsType.UPDATE_ORDER);
+	}
+
+    public static SituationalStats createNotEnoughCreditStats(long orderId) {
+        return new SituationalStats(orderId, SituationalStatsType.NOT_ENOUGH_CREDIT);
     }
 
-    public static SituationalStats createNotEnoughExecutionStats(long OrderId) {
-        return new SituationalStats(OrderId, SituationalStatsType.NOT_ENOUGH_EXECUTION);
+    public static SituationalStats createNotEnoughPositionsStats(long orderId) {
+        return new SituationalStats(orderId, SituationalStatsType.NOT_ENOUGH_POSITIONS);
     }
 
-    public static SituationalStats createOrderActivatedStats(long OrderId) {
-        return new SituationalStats(OrderId, SituationalStatsType.ORDER_ACTIVATED);
+    public static SituationalStats createNotEnoughExecutionStats(long orderId) {
+        return new SituationalStats(orderId, SituationalStatsType.NOT_ENOUGH_EXECUTION);
+    }
+
+    public static SituationalStats createOrderActivatedStats(long orderId, long requestId) {
+        return new SituationalStats(orderId, requestId, SituationalStatsType.ORDER_ACTIVATED);
     }
 
     public static SituationalStats createExecutionStatsFromUnsuccessfulMatchResult(MatchResult matchResult, long orderId) {
@@ -50,5 +56,12 @@ public class SituationalStats extends SecurityStats {
             case MatchingOutcome.NOT_ENOUGH_EXECUTION: return createNotEnoughExecutionStats(orderId);
             default: throw new IllegalArgumentException("Unknown unsuccessful match result");
         }
+    }
+
+    public long getRequestId() {
+        if (this.type != SituationalStatsType.ORDER_ACTIVATED) {
+            throw new IllegalStateException("Only order activated stats has requestId.");
+        }
+        return this.requestId;
     }
 }

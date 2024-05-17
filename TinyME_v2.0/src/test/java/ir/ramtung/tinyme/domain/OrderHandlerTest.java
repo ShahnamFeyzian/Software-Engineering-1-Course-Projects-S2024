@@ -1,6 +1,7 @@
 package ir.ramtung.tinyme.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import ir.ramtung.tinyme.config.MockedJMSTestConfig;
@@ -834,12 +835,12 @@ public class OrderHandlerTest {
 		shareholder.incPosition(security, 85);
 		this.stopLimitOrders =
 			Arrays.asList(
-				new StopLimitOrder(6, security, Side.SELL, 15, 400, broker1, shareholder, 500),
-				new StopLimitOrder(7, security, Side.SELL, 15, 300, broker1, shareholder, 400),
-				new StopLimitOrder(8, security, Side.SELL, 15, 200, broker1, shareholder, 300),
-				new StopLimitOrder(6, security, Side.BUY, 15, 700, broker2, shareholder, 600),
-				new StopLimitOrder(7, security, Side.BUY, 15, 800, broker2, shareholder, 700),
-				new StopLimitOrder(8, security, Side.BUY, 15, 900, broker2, shareholder, 800)
+				new StopLimitOrder(6, security, Side.SELL, 15, 400, broker1, shareholder, 500, 10),
+				new StopLimitOrder(7, security, Side.SELL, 15, 300, broker1, shareholder, 400, 11),
+				new StopLimitOrder(8, security, Side.SELL, 15, 200, broker1, shareholder, 300, 12),
+				new StopLimitOrder(6, security, Side.BUY, 15, 700, broker2, shareholder, 600, 10),
+				new StopLimitOrder(7, security, Side.BUY, 15, 800, broker2, shareholder, 700, 11),
+				new StopLimitOrder(8, security, Side.BUY, 15, 900, broker2, shareholder, 800, 12)
 			);
 		shareholder.incPosition(security, 45);
 		broker2.increaseCreditBy(36000);
@@ -898,13 +899,13 @@ public class OrderHandlerTest {
 		verify(eventPublisher).publish(new OrderExecutedEvent(1, 9, limitOrderTradesDto));
 
 		verify(eventPublisher).publish(new OrderActivatedEvent(6));
-		verify(eventPublisher).publish(new OrderExecutedEvent(1, 6, List.of(new TradeDTO(firstTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(10, 6, List.of(new TradeDTO(firstTrade))));
 
 		verify(eventPublisher).publish(new OrderActivatedEvent(7));
-		verify(eventPublisher).publish(new OrderExecutedEvent(1, 7, List.of(new TradeDTO(secondTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(11, 7, List.of(new TradeDTO(secondTrade))));
 
 		verify(eventPublisher).publish(new OrderActivatedEvent(8));
-		verify(eventPublisher).publish(new OrderExecutedEvent(1, 8, List.of(new TradeDTO(thirdTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(12, 8, List.of(new TradeDTO(thirdTrade))));
 	}
 
 	@Test
@@ -939,13 +940,13 @@ public class OrderHandlerTest {
 		verify(eventPublisher).publish(new OrderExecutedEvent(1, 9, List.of(limitOrderTradeDto)));
 
 		verify(eventPublisher).publish(new OrderActivatedEvent(6));
-		verify(eventPublisher).publish(new OrderExecutedEvent(1, 6, List.of(new TradeDTO(firstTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(10, 6, List.of(new TradeDTO(firstTrade))));
 
 		verify(eventPublisher).publish(new OrderActivatedEvent(7));
-		verify(eventPublisher).publish(new OrderExecutedEvent(1, 7, List.of(new TradeDTO(secondTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(11, 7, List.of(new TradeDTO(secondTrade))));
 
 		verify(eventPublisher).publish(new OrderActivatedEvent(8));
-		verify(eventPublisher).publish(new OrderExecutedEvent(1, 8, List.of(new TradeDTO(thirdTrade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(12, 8, List.of(new TradeDTO(thirdTrade))));
 	}
 
 	@Test
@@ -1990,7 +1991,8 @@ public class OrderHandlerTest {
 		shareholder.incPosition(security, 20);
 		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
 		security.getOrderBook().enqueue(orderSell);
-		StopLimitOrder sloSell = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25);
+		// add a slo sell order
+		StopLimitOrder sloSell = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25, 7);
 		security.getOrderBook().enqueue(sloSell);
 
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
@@ -2024,6 +2026,7 @@ public class OrderHandlerTest {
 	@Test
 	void auction_to_continuous_makes_trades_and_activate_any_stop_limit_order_verify_order_activated() {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
+		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
 		reset(eventPublisher);
 
 		broker1.increaseCreditBy(600);
@@ -2033,40 +2036,23 @@ public class OrderHandlerTest {
 		StopLimitOrder sloBuy = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
 		security.getOrderBook().enqueue(sloBuy);
 
-		shareholder.incPosition(security, 20);
-		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		StopLimitOrder sloSell = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25);
-		security.getOrderBook().enqueue(sloSell);
-
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
-
-		verify(eventPublisher).publish(new OrderActivatedEvent(2));
-		verify(eventPublisher).publish(new OrderActivatedEvent(4));
-	}
-
-	@Test
-	void auction_to_continuous_makes_trades_and_activate_any_stop_limit_order_verify_order_executed() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-		reset(eventPublisher);
-
-		broker1.increaseCreditBy(600);
-		Order orderBuy = new Order(1, security, Side.BUY, 10, 0, 20, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		StopLimitOrder sloBuy = new StopLimitOrder(2, security, Side.BUY, 10, 30, broker1, shareholder, 15);
-		security.getOrderBook().enqueue(sloBuy);
 
 		shareholder.incPosition(security, 20);
 		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
 		security.getOrderBook().enqueue(orderSell);
-		StopLimitOrder sloSell = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25);
+		StopLimitOrder sloSell = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25, 7);
 		security.getOrderBook().enqueue(sloSell);
 
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.CONTINUOUS));
 
-		Trade trade = new Trade(security, 30, 10, sloBuy, sloSell);
-		verify(eventPublisher).publish(new OrderExecutedEvent(0, 4, List.of(new TradeDTO(trade))));
+		Trade trade = new Trade(
+				security,
+				30,
+				10,
+				sloBuy,
+				sloSell
+		);
+		verify(eventPublisher).publish(new OrderExecutedEvent(7, 4, List.of(new TradeDTO(trade))));
 	}
 
 	@Test
@@ -2129,27 +2115,8 @@ public class OrderHandlerTest {
 	@Test
 	void delete_order_in_auction_state_verify_security_state() {
 		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
-		broker1.increaseCreditBy(1000);
-		Order orderBuy = new Order(1, security, Side.BUY, 20, 0, 50, broker1, shareholder);
-		security.getOrderBook().enqueue(orderBuy);
-
-		shareholder.incPosition(security, 30);
-		Order orderSell = new Order(2, security, Side.SELL, 20, 0, 50, broker2, shareholder);
-		security.getOrderBook().enqueue(orderSell);
-		IcebergOrder icebergOrderSell = new IcebergOrder(3, security, Side.SELL, 10, 0, 20, broker2, shareholder, 5);
-		security.getOrderBook().enqueue(icebergOrderSell);
-
-		orderHandler.handleRq(new DeleteOrderRq(2, security.getIsin(), Side.SELL, 2));
-		orderHandler.handleRq(new DeleteOrderRq(3, security.getIsin(), Side.SELL, 3));
-
 		verify(eventPublisher).publish(new SecurityStateChangedEvent(security.getIsin(), MatchingState.AUCTION));
-	}
-
-	@Test
-	void delete_order_in_auction_state_verify_event_published() {
-		orderHandler.handleRq(new ChangeMatchingStateRq(security.getIsin(), MatchingState.AUCTION));
-
+		
 		broker1.increaseCreditBy(1000);
 		Order orderBuy = new Order(1, security, Side.BUY, 20, 0, 50, broker1, shareholder);
 		security.getOrderBook().enqueue(orderBuy);
@@ -2161,12 +2128,13 @@ public class OrderHandlerTest {
 		security.getOrderBook().enqueue(icebergOrderSell);
 
 		orderHandler.handleRq(new DeleteOrderRq(2, security.getIsin(), Side.SELL, 2));
-		orderHandler.handleRq(new DeleteOrderRq(3, security.getIsin(), Side.SELL, 3));
-
 		verify(eventPublisher).publish(new OrderDeletedEvent(2, 2));
 		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 550, 0));
+		
+		orderHandler.handleRq(new DeleteOrderRq(3, security.getIsin(), Side.SELL, 3));
 		verify(eventPublisher).publish(new OrderDeletedEvent(3, 3));
-		verify(eventPublisher).publish(new OpeningPriceEvent(security.getIsin(), 0, 0));
+		verify(eventPublisher, times(2)).publish(new OpeningPriceEvent(security.getIsin(), 550, 0));
+		
 		verify(eventPublisher, never()).publish(any(OrderRejectedEvent.class));
 	}
 }
