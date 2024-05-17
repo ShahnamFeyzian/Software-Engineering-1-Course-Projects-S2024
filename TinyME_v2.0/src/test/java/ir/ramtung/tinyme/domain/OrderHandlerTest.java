@@ -1611,7 +1611,7 @@ public class OrderHandlerTest {
 		Order orderSell = new Order(3, security, Side.SELL, 10, 0, 20, broker2, shareholder);
 		security.getOrderBook().enqueue(orderSell);
 		// add a slo sell order
-		StopLimitOrder sloSell = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25);
+		StopLimitOrder sloSell = new StopLimitOrder(4, security, Side.SELL, 10, 20, broker1, shareholder, 25, 7);
 		security.getOrderBook().enqueue(sloSell);
 
 		// change state to continuous
@@ -1629,7 +1629,7 @@ public class OrderHandlerTest {
 				sloBuy,
 				sloSell
 		);
-		verify(eventPublisher).publish(new OrderExecutedEvent(0, 4, List.of(new TradeDTO(trade))));
+		verify(eventPublisher).publish(new OrderExecutedEvent(7, 4, List.of(new TradeDTO(trade))));
 	}
 
 	@Test
