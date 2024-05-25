@@ -157,7 +157,7 @@ public class Security {
 	public SecurityResponse updateOrder(Order tempOrder) {
 		try {
 			Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
-			checkPositionForUpdateOrder(mainOrder, tempOrder);
+			// checkPositionForUpdateOrder(mainOrder, tempOrder);
 			List<SecurityStats> stats = handleUpdate(tempOrder, mainOrder);
 			return new SecurityResponse(stats);
 		} catch (NotEnoughPositionException exp) {
@@ -202,6 +202,11 @@ public class Security {
 	}
 
 	private List<SecurityStats> reAddUpdatedOrder(Order updatedOrder, Order originalOrder) {
+		if (positionControl.checkPositionForOrder(updatedOrder, orderBook) != ControlResult.OK) {
+			orderBook.enqueue(originalOrder);
+			return List.of(SituationalStats.createNotEnoughPositionsStats(originalOrder.getOrderId()));
+		}
+		
 		if (this.state == SecurityState.CONTINUOUS) {
 			return reAddUpdatedOrderInContinuousState(updatedOrder, originalOrder);
 		} else if (this.state == SecurityState.AUCTION) {
@@ -262,20 +267,6 @@ public class Security {
 		} catch (NotEnoughCreditException exp) {
 			orderBook.enqueue(originalOrder);
 			return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
-		}
-	}
-
-	private void checkPositionForUpdateOrder(Order mainOrder, Order tempOrder) {
-		if (mainOrder.getSide() == Side.BUY) return;
-
-		Shareholder shareholder = mainOrder.getShareholder();
-		int pervSalesAmount = mainOrder.getTotalQuantity();
-		int newSalesAmount = tempOrder.getTotalQuantity();
-		int queuedPositionAmount = orderBook.totalSellQuantityByShareholder(shareholder);
-		int totalNeededPosition = newSalesAmount + queuedPositionAmount - pervSalesAmount;
-
-		if (!shareholder.hasEnoughPositionsOn(this, totalNeededPosition)) {
-			throw new NotEnoughPositionException();
 		}
 	}
 
