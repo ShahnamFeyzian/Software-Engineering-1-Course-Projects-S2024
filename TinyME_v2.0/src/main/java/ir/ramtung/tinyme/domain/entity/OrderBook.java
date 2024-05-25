@@ -115,12 +115,15 @@ public class OrderBook {
 
 	public Order findOrderToMatchWith(Order newOrder) {
 		var queue = getQueue(newOrder.getSide().opposite());
+		if (queue.isEmpty()) {
+			return null;
+		}
 
 		if (newOrder.matches(queue.getFirst())) {
 			return queue.getFirst();
 		}
 
-		throw new NotFoundException();
+		return null;
 	}
 
 	public void putBack(Order order) {

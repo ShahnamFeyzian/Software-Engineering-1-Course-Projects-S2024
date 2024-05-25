@@ -9,6 +9,7 @@ import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.UnknownSecurityStateException;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.domain.service.controls.ControlResult;
+import ir.ramtung.tinyme.domain.service.controls.CreditControl;
 import ir.ramtung.tinyme.domain.service.controls.MatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.PositionControl;
 import ir.ramtung.tinyme.messaging.Message;
@@ -40,7 +41,7 @@ public class Security {
 	private static PositionControl positionControl = new PositionControl();
 
 	//FIXME: this is turning to something really ugly
-	private static Matcher matcher = new Matcher(new MatchingControl(positionControl));
+	private static Matcher matcher = new Matcher(new MatchingControl(positionControl, new CreditControl()));
 
 	@Builder.Default
 	private SecurityState state = SecurityState.CONTINUOUS;

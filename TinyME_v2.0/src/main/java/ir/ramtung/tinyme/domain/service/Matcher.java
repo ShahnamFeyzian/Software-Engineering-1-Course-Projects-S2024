@@ -122,15 +122,26 @@ public class Matcher {
 	}
 
 	public MatchResult continuousExecuting(Order order, OrderBook orderBook) {
-		ControlResult controlResult;
-		
-		if ((controlResult = matchingControl.startContinuousExecuting(order, orderBook)) != ControlResult.OK) {
+		ControlResult controlResult = matchingControl.startContinuousExecuting(order, orderBook);
+		if (controlResult!= ControlResult.OK) {
 			return MatchResult.createFromControlResult(controlResult);
 		}
+
 		List<Trade> trades = new LinkedList<>();
 		
 		try {
-			trades = continuousMatch(order);
+			// trades = continuousMatch(order);
+			while (true) {
+				Order matchingOrder = orderBook.findOrderToMatchWith(order);
+				if (order.getQuantity() == 0 || matchingOrder == null) break;
+
+				controlResult = matchingControl.beforeTradeAtContinuousExecuting(order, matchingOrder);
+				if (controlResult != ControlResult.OK) {
+					rollbackTrades(trades);
+					return MatchResult.createFromControlResult(controlResult);
+				}
+				trades.add(createTradeForContinuousMatching(order, matchingOrder));
+			}
 			order.checkExecutionQuantity(sumOfExecutionQuantity(trades));
 			order.addYourselfToQueue();
 			return MatchResult.executed(order, trades);
@@ -140,6 +151,15 @@ public class Matcher {
 		} catch (NotEnoughExecutionException exp) {
 			rollbackTrades(trades);
 			return MatchResult.notEnoughExecution();
+		}
+	}
+
+	private Trade createTradeForContinuousMatching(Order newOrder, Order matchingOrder) {
+		if (newOrder.isSell()) {
+			return createTrade(newOrder, matchingOrder, matchingOrder.getPrice());
+		} 
+		else {
+			return createTrade(matchingOrder, newOrder, matchingOrder.getPrice());
 		}
 	}
 
