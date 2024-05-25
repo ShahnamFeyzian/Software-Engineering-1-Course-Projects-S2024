@@ -3,7 +3,6 @@ package ir.ramtung.tinyme.domain.service;
 import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
-import ir.ramtung.tinyme.domain.exception.NotFoundException;
 import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.MatchingControl;
 
@@ -74,14 +73,14 @@ public class Matcher {
 		try {
 			while (hasOrderToMatch(newOrder, orderBook)) {
 				Order matchingOrder = orderBook.findOrderToMatchWith(newOrder);
+				if (matchingOrder == null) return trades;
+
 				if (newOrder.getSide() == Side.SELL) {
 					trades.add(createTrade(newOrder, matchingOrder, matchingOrder.getPrice()));
 				} else {
 					trades.add(createTrade(matchingOrder, newOrder, matchingOrder.getPrice()));
 				}
 			}
-			return trades;
-		} catch (NotFoundException exp) {
 			return trades;
 		} catch (NotEnoughCreditException exp) {
 			rollbackTrades(trades);
