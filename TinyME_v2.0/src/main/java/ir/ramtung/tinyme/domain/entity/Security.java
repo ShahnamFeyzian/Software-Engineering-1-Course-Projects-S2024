@@ -9,6 +9,7 @@ import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughPositionException;
 import ir.ramtung.tinyme.domain.exception.UnknownSecurityStateException;
 import ir.ramtung.tinyme.domain.service.Matcher;
+import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.MatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.PositionControl;
 import ir.ramtung.tinyme.messaging.Message;
@@ -37,19 +38,21 @@ public class Security {
 
 	private int lastTradePrice;
 
+	private static PositionControl positionControl = new PositionControl();
+
 	//FIXME: this is turning to something really ugly
-	private static Matcher matcher = new Matcher(new MatchingControl(new PositionControl()));
+	private static Matcher matcher = new Matcher(new MatchingControl(positionControl));
 
 	@Builder.Default
 	private SecurityState state = SecurityState.CONTINUOUS;
 
 	public SecurityResponse addNewOrder(Order newOrder) {
 		try {
-			checkPositionForNewOrder(newOrder);
+			if (positionControl.checkPositionForOrder(newOrder, orderBook) != ControlResult.OK) {
+				return new SecurityResponse(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId()));
+			}
 			List<SecurityStats> stats = handleAdd(newOrder);
 			return new SecurityResponse(stats);
-		} catch (NotEnoughPositionException exp) {
-			return new SecurityResponse(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId()));
 		} catch (NotEnoughCreditException exp) {
 			return new SecurityResponse(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
 		}
@@ -109,21 +112,6 @@ public class Security {
 		}
 		updateLastTradePrice(newOrderMatchResult.trades());
 		return stats;
-	}
-
-	private void checkPositionForNewOrder(Order newOrder) {
-		if (newOrder.getSide() == Side.BUY) {
-			return;
-		}
-
-		Shareholder shareholder = newOrder.getShareholder();
-		int salesAmount = newOrder.getQuantity();
-		int queuedPositionAmount = orderBook.totalSellQuantityByShareholder(shareholder);
-		int totalNeededPosition = salesAmount + queuedPositionAmount;
-
-		if (!shareholder.hasEnoughPositionsOn(this, totalNeededPosition)) {
-			throw new NotEnoughPositionException();
-		}
 	}
 
 	public SecurityResponse deleteOrder(Side side, long orderId) {
