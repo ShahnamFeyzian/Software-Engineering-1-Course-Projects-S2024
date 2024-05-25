@@ -4,6 +4,8 @@ import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
+import ir.ramtung.tinyme.domain.service.controls.ControlResult;
+import ir.ramtung.tinyme.domain.service.controls.MatchingControl;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -12,6 +14,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class Matcher {
+	private MatchingControl matchingControl;
+
+	public Matcher(MatchingControl matchingControl) {
+		this.matchingControl = matchingControl;
+	}
 
 	private boolean hasOrderForAuction(OrderBook orderBook) {
 		return orderBook.hasOrderOfType(Side.BUY) &&
@@ -114,7 +121,12 @@ public class Matcher {
 		trades.reversed().forEach(Trade::rollback);
 	}
 
-	public MatchResult continuousExecuting(Order order) {
+	public MatchResult continuousExecuting(Order order, OrderBook orderBook) {
+		ControlResult controlResult;
+		
+		if ((controlResult = matchingControl.startContinuousExecuting(order, orderBook)) != ControlResult.OK) {
+			return MatchResult.createFromControlResult(controlResult);
+		}
 		List<Trade> trades = new LinkedList<>();
 		
 		try {

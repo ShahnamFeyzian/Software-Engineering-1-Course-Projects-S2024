@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import ir.ramtung.tinyme.domain.service.controls.ControlResult;
+
 public final class MatchResult {
 
 	private final MatchingOutcome outcome;
@@ -24,6 +26,13 @@ public final class MatchResult {
 
 	public static MatchResult notEnoughExecution() {
 		return new MatchResult(MatchingOutcome.NOT_ENOUGH_EXECUTION, null, new LinkedList<>());
+	}
+
+	public static MatchResult createFromControlResult(ControlResult controlResult) {
+		switch (controlResult) {
+			case NOT_ENOUGH_POSITION : return notEnoughPositions();
+			default : throw new UnknownError("Unknown Control Result");
+		}
 	}
 
 	private MatchResult(MatchingOutcome outcome, Order remainder, LinkedList<Trade> trades) {

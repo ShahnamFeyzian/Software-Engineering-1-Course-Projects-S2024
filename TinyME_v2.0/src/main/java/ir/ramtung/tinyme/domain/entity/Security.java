@@ -9,6 +9,8 @@ import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.NotEnoughPositionException;
 import ir.ramtung.tinyme.domain.exception.UnknownSecurityStateException;
 import ir.ramtung.tinyme.domain.service.Matcher;
+import ir.ramtung.tinyme.domain.service.controls.MatchingControl;
+import ir.ramtung.tinyme.domain.service.controls.PositionControl;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.util.ArrayList;
@@ -35,7 +37,8 @@ public class Security {
 
 	private int lastTradePrice;
 
-	private static Matcher matcher = new Matcher();
+	//FIXME: this is turning to something really ugly
+	private static Matcher matcher = new Matcher(new MatchingControl(new PositionControl()));
 
 	@Builder.Default
 	private SecurityState state = SecurityState.CONTINUOUS;
@@ -97,7 +100,7 @@ public class Security {
 		List<SecurityStats> stats = new ArrayList<>();
 		stats.add(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
 
-		MatchResult newOrderMatchResult = matcher.continuousExecuting(newOrder);
+		MatchResult newOrderMatchResult = matcher.continuousExecuting(newOrder, orderBook);
 		if (!newOrderMatchResult.isSuccessful()) {
 			stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(newOrderMatchResult, newOrder.getOrderId()));
 		}
@@ -246,7 +249,7 @@ public class Security {
 		List<SecurityStats> stats = new LinkedList<>();
 		stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
 		
-		MatchResult updatedOrderResult = matcher.continuousExecuting(updatedOrder);
+		MatchResult updatedOrderResult = matcher.continuousExecuting(updatedOrder, orderBook);
 
 		if (!updatedOrderResult.isSuccessful()) {
 			orderBook.enqueue(originalOrder);
@@ -330,7 +333,7 @@ public class Security {
 	}
 
 	private List<SecurityStats> activateOrderInContinuousState(Order activatedOrder, long requestId) {
-		MatchResult result = matcher.continuousExecuting(activatedOrder);
+		MatchResult result = matcher.continuousExecuting(activatedOrder, orderBook);
 		updateLastTradePrice(result.trades());
 		if(!result.trades().isEmpty()) {
 			return List.of(ExecuteStats.createContinuousExecuteStatsForActivatedOrder(result.trades(), activatedOrder.getOrderId(), requestId));

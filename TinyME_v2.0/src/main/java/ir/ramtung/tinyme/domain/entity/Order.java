@@ -363,4 +363,12 @@ public class Order {
 	public boolean willPriorityLostInUpdate(Order tempOrder) {
 		return (this.quantity < tempOrder.quantity) || (this.price != tempOrder.price);
 	}
+
+	public boolean isBuy() {
+		return this.side == Side.BUY;
+	}
+
+	public boolean isSell() {
+		return this.side == Side.SELL;
+	}
 }
