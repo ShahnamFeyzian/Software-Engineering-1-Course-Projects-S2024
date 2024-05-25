@@ -23,4 +23,20 @@ public class CreditControl {
             return ControlResult.NOT_ENOUGH_CREDIT;
         }
     }
+
+    public ControlResult checkCreditForBeQueued(Order order) {
+        if (order.isSell()) {
+            return ControlResult.OK;
+        }
+
+        long value = order.getValue();
+        Broker broker = order.getBroker();
+
+        if(broker.hasEnoughCredit(value)) {
+            return ControlResult.OK;
+        }
+        else {
+            return ControlResult.NOT_ENOUGH_CREDIT;
+        }
+    }
 }

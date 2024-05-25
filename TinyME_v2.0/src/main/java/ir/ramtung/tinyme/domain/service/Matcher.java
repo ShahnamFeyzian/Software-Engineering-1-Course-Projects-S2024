@@ -141,12 +141,15 @@ public class Matcher {
 				}
 				trades.add(createTradeForContinuousMatching(order, matchingOrder));
 			}
+
+			controlResult = matchingControl.endContinuousExecuting(order, trades);
+			if (controlResult != ControlResult.OK) {
+				rollbackTrades(trades);
+				return MatchResult.createFromControlResult(controlResult);
+			}
 			order.checkExecutionQuantity(sumOfExecutionQuantity(trades));
 			order.addYourselfToQueue();
 			return MatchResult.executed(order, trades);
-		} catch (NotEnoughCreditException exp) {
-			rollbackTrades(trades);
-			return MatchResult.notEnoughCredit();
 		} catch (NotEnoughExecutionException exp) {
 			rollbackTrades(trades);
 			return MatchResult.notEnoughExecution();
