@@ -6,7 +6,6 @@ import ir.ramtung.tinyme.domain.entity.security_stats.SecurityStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStats;
 import ir.ramtung.tinyme.domain.entity.security_stats.StateStats;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
-import ir.ramtung.tinyme.domain.exception.NotEnoughPositionException;
 import ir.ramtung.tinyme.domain.exception.UnknownSecurityStateException;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.domain.service.controls.ControlResult;
@@ -155,14 +154,9 @@ public class Security {
 	}
 
 	public SecurityResponse updateOrder(Order tempOrder) {
-		try {
-			Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
-			// checkPositionForUpdateOrder(mainOrder, tempOrder);
-			List<SecurityStats> stats = handleUpdate(tempOrder, mainOrder);
-			return new SecurityResponse(stats);
-		} catch (NotEnoughPositionException exp) {
-			return new SecurityResponse(SituationalStats.createNotEnoughPositionsStats(tempOrder.getOrderId()));
-		}
+		Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
+		List<SecurityStats> stats = handleUpdate(tempOrder, mainOrder);
+		return new SecurityResponse(stats);
 	}
 
 	private List<SecurityStats> handleUpdate(Order tempOrder, Order mainOrder) {
