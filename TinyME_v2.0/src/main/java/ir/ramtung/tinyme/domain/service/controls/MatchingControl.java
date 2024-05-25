@@ -12,21 +12,28 @@ import ir.ramtung.tinyme.domain.entity.Trade;
 public class MatchingControl {
     private PositionControl positionControl;
     private CreditControl creditControl;
+    private ExecutionControl executionControl;
 
-    public MatchingControl(PositionControl positionControl, CreditControl creditControl) {
+    public MatchingControl(PositionControl positionControl, CreditControl creditControl, ExecutionControl executionControl) {
         this.positionControl = positionControl;
         this.creditControl = creditControl;
+        this.executionControl = executionControl;
     }
 
-    public ControlResult startContinuousExecuting(Order newOrder, OrderBook orderBook) {
-        return positionControl.checkPositionForOrder(newOrder, orderBook);
+    public ControlResult startContinuousExecuting(Order targetOrder, OrderBook orderBook) {
+        return positionControl.checkPositionForOrder(targetOrder, orderBook);
     }
 
-    public ControlResult beforeTradeAtContinuousExecuting(Order newOrder, Order matchingOrder) {
-        return creditControl.chekCreditForContinousMatching(newOrder, matchingOrder);
+    public ControlResult beforeTradeAtContinuousExecuting(Order targetOrder, Order matchingOrder) {
+        return creditControl.chekCreditForContinousMatching(targetOrder, matchingOrder);
     }
 
-    public ControlResult endContinuousExecuting(Order newOrder, List<Trade> trades) {
-        return creditControl.checkCreditForBeQueued(newOrder);
+    public ControlResult endContinuousExecuting(Order targetOrder, List<Trade> trades) {
+        ControlResult controlResult = executionControl.checkMinimumExecutionQuantity(targetOrder, trades);
+        if (controlResult != ControlResult.OK) {
+            return controlResult;
+        }
+
+        return creditControl.checkCreditForBeQueued(targetOrder);
     }
 }

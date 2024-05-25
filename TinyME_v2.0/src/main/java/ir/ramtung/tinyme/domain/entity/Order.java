@@ -3,7 +3,6 @@ package ir.ramtung.tinyme.domain.entity;
 import ir.ramtung.tinyme.domain.exception.CantQueueOrderException;
 import ir.ramtung.tinyme.domain.exception.InvalidPeakSizeException;
 import ir.ramtung.tinyme.domain.exception.InvalidStopLimitPriceException;
-import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.exception.UpdateMinimumExecutionQuantityException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.time.LocalDateTime;
@@ -342,10 +341,12 @@ public class Order {
 		} 
 	}
 
-	public void checkExecutionQuantity(int quantitySome) {
-		if (!(this.status != OrderStatus.NEW) && (quantitySome < this.minimumExecutionQuantity)) {
-			throw new NotEnoughExecutionException();
-		}
+	public boolean isNew() {
+		return this.status == OrderStatus.NEW;
+	}
+
+	public boolean isMinimumExecuteQuantitySatisfied(int executedQuantity) {
+		return this.minimumExecutionQuantity <= executedQuantity;
 	}
 
 	public void addYourselfToQueue() {

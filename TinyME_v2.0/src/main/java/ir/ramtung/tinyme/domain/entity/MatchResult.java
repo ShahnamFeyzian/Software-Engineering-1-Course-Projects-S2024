@@ -30,8 +30,9 @@ public final class MatchResult {
 
 	public static MatchResult createFromControlResult(ControlResult controlResult) {
 		switch (controlResult) {
-			case NOT_ENOUGH_POSITION : return notEnoughPositions();
-			case NOT_ENOUGH_CREDIT   : return notEnoughCredit();
+			case NOT_ENOUGH_POSITION  : return notEnoughPositions();
+			case NOT_ENOUGH_CREDIT    : return notEnoughCredit();
+			case NOT_ENOUGH_EXECUTION : return notEnoughExecution();
 			default : throw new UnknownError("Unknown Control Result");
 		}
 	}

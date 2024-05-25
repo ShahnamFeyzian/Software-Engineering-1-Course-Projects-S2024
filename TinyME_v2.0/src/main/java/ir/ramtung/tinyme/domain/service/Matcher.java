@@ -2,7 +2,6 @@ package ir.ramtung.tinyme.domain.service;
 
 import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
-import ir.ramtung.tinyme.domain.exception.NotEnoughExecutionException;
 import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.MatchingControl;
 
@@ -127,33 +126,26 @@ public class Matcher {
 		}
 
 		List<Trade> trades = new LinkedList<>();
-		
-		try {
-			// trades = continuousMatch(order);
-			while (true) {
-				Order matchingOrder = orderBook.findOrderToMatchWith(order);
-				if (order.getQuantity() == 0 || matchingOrder == null) break;
+		while (true) {
+			Order matchingOrder = orderBook.findOrderToMatchWith(order);
+			if (order.getQuantity() == 0 || matchingOrder == null) break;
 
-				controlResult = matchingControl.beforeTradeAtContinuousExecuting(order, matchingOrder);
-				if (controlResult != ControlResult.OK) {
-					rollbackTrades(trades);
-					return MatchResult.createFromControlResult(controlResult);
-				}
-				trades.add(createTradeForContinuousMatching(order, matchingOrder));
-			}
-
-			controlResult = matchingControl.endContinuousExecuting(order, trades);
+			controlResult = matchingControl.beforeTradeAtContinuousExecuting(order, matchingOrder);
 			if (controlResult != ControlResult.OK) {
 				rollbackTrades(trades);
 				return MatchResult.createFromControlResult(controlResult);
 			}
-			order.checkExecutionQuantity(sumOfExecutionQuantity(trades));
-			order.addYourselfToQueue();
-			return MatchResult.executed(order, trades);
-		} catch (NotEnoughExecutionException exp) {
-			rollbackTrades(trades);
-			return MatchResult.notEnoughExecution();
+			trades.add(createTradeForContinuousMatching(order, matchingOrder));
 		}
+
+		controlResult = matchingControl.endContinuousExecuting(order, trades);
+		if (controlResult != ControlResult.OK) {
+			rollbackTrades(trades);
+			return MatchResult.createFromControlResult(controlResult);
+		}
+
+		order.addYourselfToQueue();
+		return MatchResult.executed(order, trades);
 	}
 
 	private Trade createTradeForContinuousMatching(Order newOrder, Order matchingOrder) {
@@ -168,11 +160,5 @@ public class Matcher {
 	public List<Trade> auctionExecuting(OrderBook orderBook, int lastTradePrice) {
 		int openingPrice = calcOpeningAuctionPrice(orderBook, lastTradePrice);
 		return auctionMatch(orderBook, openingPrice);
-	}
-
-	private int sumOfExecutionQuantity(List<Trade> trades) {
-		int quantitySum = 0;
-		for (Trade trade : trades) quantitySum += trade.getQuantity();
-		return quantitySum;
 	}
 }
