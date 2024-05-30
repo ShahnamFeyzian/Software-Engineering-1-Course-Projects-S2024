@@ -30,10 +30,10 @@ public class Matcher {
 		if(!hasOrderForAuction(orderBook))
 			return lastTradePrice;
 
-			int maxTradableQuantity = 0;
-			int openingPrice = lastTradePrice; 
-			int minPrice = orderBook.getLowestPriorityActiveOrder(Side.BUY).getPrice();
-			int maxPrice = orderBook.getLowestPriorityActiveOrder(Side.SELL).getPrice();
+		int maxTradableQuantity = 0;
+		int openingPrice = lastTradePrice; 
+		int minPrice = orderBook.getLowestPriorityActiveOrder(Side.BUY).getPrice();
+		int maxPrice = orderBook.getLowestPriorityActiveOrder(Side.SELL).getPrice();
 		
 		for (int price = minPrice; price <= maxPrice; price++) {
 			int currentTradableQuantity = calcTradableQuantity(orderBook, price);
@@ -50,22 +50,19 @@ public class Matcher {
 	}
 
 	public int calcTradableQuantity(OrderBook orderBook, int openingPrice) {
-		int buysQuantity = 0;
-		int sellsQuantity = 0;
-
-		for (Order order : orderBook.getBuyQueue()) {
-			if (order.canTradeWithPrice(openingPrice)) {
-				buysQuantity += order.getTotalQuantity();
-			} 
-		}
-
-		for (Order order : orderBook.getSellQueue()) {
-			if (order.canTradeWithPrice(openingPrice)) {
-				sellsQuantity += order.getTotalQuantity();
-			} 
-		}
-
+		int buysQuantity = calcTradableQuantityInQueue(orderBook.getBuyQueue(), openingPrice);
+		int sellsQuantity = calcTradableQuantityInQueue(orderBook.getSellQueue(), openingPrice);;
 		return Math.min(buysQuantity, sellsQuantity);
+	}
+
+	public int calcTradableQuantityInQueue(List<Order> queue, int price) {
+		int quantity = 0;
+		for (Order order : queue) {
+			if (order.canTradeWithPrice(price)) {
+				quantity += order.getTotalQuantity();
+			}
+		}
+		return quantity;
 	}
 
 	public MatchResult continuousMatch(Order order, OrderBook orderBook) {
@@ -136,43 +133,33 @@ public class Matcher {
 		}
 	}
 
-	private Trade createTrade(Order sellOrder, Order buyOrder, int price) {
-		Trade trade = new Trade(sellOrder, buyOrder, price);
-		trade.confirm();
-		return trade;
-	}
-
-	private boolean hasOrderToMatch(Order newOrder, OrderBook orderBook) {
-		return (orderBook.hasOrderOfType(newOrder.getSide().opposite())) && (newOrder.getQuantity() > 0);
-	}
-
-	private void rollbackTrades(List<Trade> trades) {
-		trades.reversed().forEach(Trade::rollback);
-	}
-
-	public MatchResult continuousExecuting(Order order, OrderBook orderBook) {
-		ControlResult controlResult = continuousMatchingControl.checkBeforeMatching(order, orderBook);
-		if (controlResult == ControlResult.OK) {
-			continuousMatchingControl.actionAtBeforeMatching(order, orderBook);
-		} else {
-			continuousMatchingControl.actionAtFailedBeforeMatching(order, orderBook);
+	public MatchResult continuousExecuting(Order targetOrder, OrderBook orderBook) {
+		ControlResult controlResult = startingExecution(continuousMatchingControl, targetOrder, orderBook);
+		if (controlResult != ControlResult.OK) {
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
-		return continuousMatch(order, orderBook);
+		return continuousMatch(targetOrder, orderBook);
 	}
 
 	public MatchResult auctionExecuting(OrderBook orderBook, int lastTradePrice) {
-		ControlResult controlResult = auctionMatchingControl.checkBeforeMatching(null, orderBook);
-		if (controlResult == ControlResult.OK) {
-			auctionMatchingControl.actionAtBeforeMatching(null, orderBook);
-		} else {
-			auctionMatchingControl.actionAtFailedBeforeMatching(null, orderBook);
+		ControlResult controlResult = startingExecution(auctionMatchingControl, null, orderBook);
+		if (controlResult != ControlResult.OK) {
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
 		int openingPrice = calcOpeningAuctionPrice(orderBook, lastTradePrice);
 		return auctionMatch(orderBook, openingPrice);
+	}
+
+	private ControlResult startingExecution(MatchingControl control, Order targetOrder, OrderBook orderBook) {
+		ControlResult controlResult = control.checkBeforeMatching(targetOrder, orderBook);
+		if (controlResult == ControlResult.OK) {
+			control.actionAtBeforeMatching(targetOrder, orderBook);
+		} else {
+			control.actionAtFailedBeforeMatching(targetOrder, orderBook);
+		}
+		return controlResult;
 	}
 
 	private Order getMatchingOrder(Order targetOrder, OrderBook orderBook) {
