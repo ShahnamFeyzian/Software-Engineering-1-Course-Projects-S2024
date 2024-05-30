@@ -136,8 +136,7 @@ public class Matcher {
 			if (controlResult == ControlResult.OK) {
 				matchingControl.actionAtBeforeMatchInContinuousMatching(order, matchingOrder, trades, orderBook);
 			} else {
-				// matchingControl.failedAtBeforeMatchInContinuousMatching(order, matchingOrder, trades, orderBook);
-				rollbackTrades(trades);	
+				matchingControl.failedAtBeforeMatchInContinuousMatching(trades, orderBook);
 				return MatchResult.createFromControlResult(controlResult);
 			}
 		}

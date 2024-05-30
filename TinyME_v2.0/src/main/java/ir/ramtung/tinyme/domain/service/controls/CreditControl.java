@@ -1,5 +1,7 @@
 package ir.ramtung.tinyme.domain.service.controls;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import ir.ramtung.tinyme.domain.entity.Broker;
@@ -46,6 +48,11 @@ public class CreditControl {
         updateSellerCreditAtTrade(trade);
     }
 
+    public void updateCreditsAtRollbackTrade(Trade trade) {
+        updateBuyerCreditAtRollbackTrade(trade);
+        updateSellerCreditAtRollbackTrade(trade);
+    }
+
     private void updateBuyerCreditAtTrade(Trade trade) {
         Order buyOrder = trade.getBuy();
         Broker buyerBroker = buyOrder.getBroker();
@@ -68,5 +75,24 @@ public class CreditControl {
         long tradeValue = trade.getTradedValue();
 
         sellerBroker.increaseCreditBy(tradeValue);
+    }
+
+    private void updateBuyerCreditAtRollbackTrade(Trade trade) {
+        Order buyOrder = trade.getBuy();
+        Broker buyerBroker = buyOrder.getBroker();
+        long tradeValue = trade.getTradedValue();
+
+        // FIXME: need refactoring
+        if (!buyOrder.isQueued() || buyOrder.isDone()) {
+            buyerBroker.increaseCreditBy(tradeValue);
+        }
+    }
+
+    private void updateSellerCreditAtRollbackTrade(Trade trade) {
+        Order sellOrder = trade.getSell();
+        Broker sellerBroker = sellOrder.getBroker();
+        long tradeValue = trade.getTradedValue();
+
+        sellerBroker.decreaseCreditBy(tradeValue);
     }
 }

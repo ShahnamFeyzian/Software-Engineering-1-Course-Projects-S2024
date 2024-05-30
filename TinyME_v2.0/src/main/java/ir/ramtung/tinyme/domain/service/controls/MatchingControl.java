@@ -44,8 +44,12 @@ public class MatchingControl {
         trades.add(trade);
     }
 
-    public void failedAtBeforeMatchInContinuousMatching(Order targetOrder, Order matchingOrder, List<Trade> trades, OrderBook orderBook) {
-        
+    public void failedAtBeforeMatchInContinuousMatching(List<Trade> trades, OrderBook orderBook) {
+        for (Trade trade : trades) {
+            creditControl.updateCreditsAtRollbackTrade(trade);
+            quantityControl.updateQuantitiesAtRollbackTrade(trade);
+            positionControl.updatePositionsAtRollbackTrade(trade);
+        }
     }
 
     public ControlResult checkAfterContinuousMatching(Order targetOrder, List<Trade> trades) {

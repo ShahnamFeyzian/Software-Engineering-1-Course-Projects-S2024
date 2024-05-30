@@ -24,8 +24,13 @@ public class QuantityControl {
     }
 
     public void updateQuantitiesAtTrade(Trade trade) {
-        updateBuyerQuantityAtTrade(trade);
-        updateSellerQuantityAtTrade(trade);
+        updateBuyQuantityAtTrade(trade);
+        updateSellQuantityAtTrade(trade);
+    }
+
+    public void updateQuantitiesAtRollbackTrade(Trade trade) {
+        updateBuyQuantityAtRollbackTrade(trade);
+        updateSellQuantityAtRollbackTrade(trade);
     }
 
     private int calcExecutedQuantity(List<Trade> trades) {
@@ -34,17 +39,35 @@ public class QuantityControl {
 		return executedQuantity;
 	}
 
-    private void updateBuyerQuantityAtTrade(Trade trade) {
+    private void updateBuyQuantityAtTrade(Trade trade) {
+        // FIXME: need refactoring
         Order buyOrder = trade.getBuy();
         int tradeQuantity = trade.getQuantity();
 
         buyOrder.decreaseQuantity(tradeQuantity);
     }
 
-    private void updateSellerQuantityAtTrade(Trade trade) {
+    private void updateSellQuantityAtTrade(Trade trade) {
+        // FIXME: need refactoring
         Order sellOrder = trade.getSell();
         int tradeQuantity = trade.getQuantity();
 
         sellOrder.decreaseQuantity(tradeQuantity);
+    }
+
+    private void updateBuyQuantityAtRollbackTrade(Trade trade) {
+        // FIXME: need refactoring
+        Order buyOrder = trade.getBuy();
+        Order orginalBuyOrder = trade.getBuyFirstVersion();
+
+        buyOrder.rollback(orginalBuyOrder);
+    }
+
+    private void updateSellQuantityAtRollbackTrade(Trade trade) {
+        // FIXME: need refactoring
+        Order sellOrder = trade.getSell();
+        Order originalSellOrder = trade.getSellFirstVersion();
+        
+        sellOrder.rollback(originalSellOrder);
     }
 }

@@ -35,6 +35,11 @@ public class PositionControl {
 		updateSellerPositionAtTrade(trade);
 	}
 
+	public void updatePositionsAtRollbackTrade(Trade trade) {
+		updateBuyerPositionAtRollbackTrade(trade);
+		updateSellerPositionAtRollbackTrade(trade);
+	}
+
 	private void updateBuyerPositionAtTrade(Trade trade) {
 		Order buyOrder = trade.getBuy();
 		Shareholder buyerShareholder = buyOrder.getShareholder();
@@ -51,5 +56,23 @@ public class PositionControl {
 		Security security = trade.getSecurity();
 
 		sellerShareholder.decPosition(security, tradeQuantity);
+	}
+
+	private void updateBuyerPositionAtRollbackTrade(Trade trade) {
+		Order buyOrder = trade.getBuy();
+		Shareholder buyerShareholder = buyOrder.getShareholder();
+		Security security = buyOrder.getSecurity();
+		int tradeQuantity = trade.getQuantity();
+
+		buyerShareholder.decPosition(security, tradeQuantity);
+	}
+
+	private void updateSellerPositionAtRollbackTrade(Trade trade) {
+		Order sellOrder = trade.getSell();
+		Shareholder sellerShareholder = sellOrder.getShareholder();
+		Security security = sellOrder.getSecurity();
+		int tradeQuantity = trade.getQuantity();
+		
+		sellerShareholder.incPosition(security, tradeQuantity);
 	}
 }
