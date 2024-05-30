@@ -2,6 +2,7 @@ package ir.ramtung.tinyme.domain.service;
 
 import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
+import ir.ramtung.tinyme.domain.service.controls.ContinuousMatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.MatchingControl;
 
@@ -12,10 +13,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class Matcher {
-	private MatchingControl matchingControl;
+	private MatchingControl continuousMatchingControl;
 
-	public Matcher(MatchingControl matchingControl) {
-		this.matchingControl = matchingControl;
+	public Matcher(ContinuousMatchingControl continuousMatchingControl) {
+		this.continuousMatchingControl = continuousMatchingControl;
 	}
 
 	private boolean hasOrderForAuction(OrderBook orderBook) {
@@ -72,22 +73,22 @@ public class Matcher {
 		Order matchingOrder;
 
 		while ((matchingOrder = getMatchingOrderInContinuousMatching(order, orderBook)) != null) {
-			controlResult = matchingControl.checkBeforeMatchInContinuousMatching(order, matchingOrder);
+			controlResult = continuousMatchingControl.checkBeforeMatch(order, matchingOrder);
 			if (controlResult == ControlResult.OK) {
 				Trade trade = createTradeForContinuousMatching(order, matchingOrder);
-				matchingControl.actionAtMatchingInContinuousMatching(trade, orderBook);
+				continuousMatchingControl.actionAtMatch(trade, orderBook);
 				trades.add(trade);
 			} else {
-				matchingControl.failedAtBeforeMatchInContinuousMatching(trades, orderBook);
+				continuousMatchingControl.actionAtFailedBeforeMatch(trades, orderBook);
 				return MatchResult.createFromControlResult(controlResult);
 			}
 		}
 
-		controlResult = matchingControl.checkAfterContinuousMatching(order, trades);
+		controlResult = continuousMatchingControl.checkAfterMatching(order, trades);
 		if (controlResult == ControlResult.OK) {
-			matchingControl.actionAtAfterContinuousMatching(order, orderBook);	
+			continuousMatchingControl.actionAtAfterMatching(order, orderBook);	
 		} else {
-			matchingControl.failedAtAfterContinuousMatching(trades, orderBook);
+			continuousMatchingControl.actionAtfailedAfterMatching(trades, orderBook);
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
@@ -128,11 +129,11 @@ public class Matcher {
 
 	// TODO: adding controls was successful, now clean this shit
 	public MatchResult continuousExecuting(Order order, OrderBook orderBook) {
-		ControlResult controlResult = matchingControl.checkBeforeContinuousMatching(order, orderBook);
+		ControlResult controlResult = continuousMatchingControl.checkBeforeMatching(order, orderBook);
 		if (controlResult == ControlResult.OK) {
-			matchingControl.actionAtBeforeContinuousMatching(order, orderBook);
+			continuousMatchingControl.actionAtBeforeMatching(order, orderBook);
 		} else {
-			matchingControl.failedAtBeforContinuousMatching(order, orderBook);
+			continuousMatchingControl.actionAtFailedBeforMatching(order, orderBook);
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
