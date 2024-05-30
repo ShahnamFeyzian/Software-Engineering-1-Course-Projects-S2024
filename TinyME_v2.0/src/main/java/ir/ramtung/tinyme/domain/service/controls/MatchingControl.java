@@ -20,15 +20,23 @@ public class MatchingControl {
         this.executionControl = executionControl;
     }
 
-    public ControlResult startContinuousExecuting(Order targetOrder, OrderBook orderBook) {
+    public ControlResult checkBeforeContinuousMatching(Order targetOrder, OrderBook orderBook) {
         return positionControl.checkPositionForOrder(targetOrder, orderBook);
     }
 
-    public ControlResult beforeTradeAtContinuousExecuting(Order targetOrder, Order matchingOrder) {
+    public void actionAtBeforeContinuousMatching(Order targetOrder, OrderBook orderBook) {
+
+    }
+
+    public void failedAtBeforContinuousMatching(Order targetOrder, OrderBook orderBook) {
+        
+    }
+
+    public ControlResult checkBeforeTradeAtContinuousMatching(Order targetOrder, Order matchingOrder) {
         return creditControl.chekCreditForContinousMatching(targetOrder, matchingOrder);
     }
 
-    public ControlResult endContinuousExecuting(Order targetOrder, List<Trade> trades) {
+    public ControlResult checkAfterContinuousMatching(Order targetOrder, List<Trade> trades) {
         ControlResult controlResult = executionControl.checkMinimumExecutionQuantity(targetOrder, trades);
         if (controlResult != ControlResult.OK) {
             return controlResult;

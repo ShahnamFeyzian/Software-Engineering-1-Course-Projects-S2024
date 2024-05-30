@@ -119,18 +119,20 @@ public class Matcher {
 		trades.reversed().forEach(Trade::rollback);
 	}
 
+	// TODO: adding controls was successful, now clean this shit
 	public MatchResult continuousExecuting(Order order, OrderBook orderBook) {
-		ControlResult controlResult = matchingControl.startContinuousExecuting(order, orderBook);
-		if (controlResult!= ControlResult.OK) {
+		ControlResult controlResult = matchingControl.checkBeforeContinuousMatching(order, orderBook);
+		if (controlResult == ControlResult.OK) {
+			matchingControl.actionAtBeforeContinuousMatching(order, orderBook);
+		} else {
+			matchingControl.failedAtBeforContinuousMatching(order, orderBook);
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
 		List<Trade> trades = new LinkedList<>();
-		while (true) {
-			Order matchingOrder = orderBook.findOrderToMatchWith(order);
-			if (order.getQuantity() == 0 || matchingOrder == null) break;
-
-			controlResult = matchingControl.beforeTradeAtContinuousExecuting(order, matchingOrder);
+		Order matchingOrder;
+		while ((matchingOrder = getMatchingOrderInContinuousMatching(order, orderBook)) != null) {
+			controlResult = matchingControl.checkBeforeTradeAtContinuousMatching(order, matchingOrder);
 			if (controlResult != ControlResult.OK) {
 				rollbackTrades(trades);
 				return MatchResult.createFromControlResult(controlResult);
@@ -138,7 +140,7 @@ public class Matcher {
 			trades.add(createTradeForContinuousMatching(order, matchingOrder));
 		}
 
-		controlResult = matchingControl.endContinuousExecuting(order, trades);
+		controlResult = matchingControl.checkAfterContinuousMatching(order, trades);
 		if (controlResult != ControlResult.OK) {
 			rollbackTrades(trades);
 			return MatchResult.createFromControlResult(controlResult);
@@ -146,6 +148,14 @@ public class Matcher {
 
 		order.addYourselfToQueue();
 		return MatchResult.executed(order, trades);
+	}
+
+	private Order getMatchingOrderInContinuousMatching(Order targetOrder, OrderBook orderBook) {
+		if (targetOrder.getQuantity() == 0) {
+			return null;
+		}
+
+		return orderBook.findOrderToMatchWith(targetOrder);
 	}
 
 	private Trade createTradeForContinuousMatching(Order newOrder, Order matchingOrder) {
