@@ -55,7 +55,7 @@ public class MatcherTest {
 	void new_sell_order_matches_completely_with_part_of_the_first_buy() {
 		Order order = new Order(11, security, Side.SELL, 100, 15600, broker, shareholder);
 		Trade trade = new Trade(security, 15700, 100, orders.get(0), order);
-		List<Trade> trades = matcher.continuousMatch(order);
+		List<Trade> trades = matcher.continuousMatch(order, orderBook).trades();
 		assertThat(order.getQuantity()).isEqualTo(0);
 		assertThat(trades).containsExactly(trade);
 		assertThat(security.getOrderBook().getBuyQueue().getFirst().getQuantity()).isEqualTo(204);
@@ -65,7 +65,7 @@ public class MatcherTest {
 	void new_sell_order_matches_partially_with_the_first_buy() {
 		Order order = new Order(11, security, Side.SELL, 500, 15600, broker, shareholder);
 		Trade trade = new Trade(security, 15700, 304, orders.get(0), order);
-		List<Trade> trades = matcher.continuousMatch(order);
+		List<Trade> trades = matcher.continuousMatch(order, orderBook).trades();
 		assertThat(order.getQuantity()).isEqualTo(196);
 		assertThat(trades).containsExactly(trade);
 		assertThat(security.getOrderBook().getBuyQueue().getFirst().getOrderId()).isEqualTo(2);
@@ -74,7 +74,7 @@ public class MatcherTest {
 	@Test
 	void new_buy_order_does_not_match() {
 		Order order = new Order(11, security, Side.BUY, 2000, 15500, broker, shareholder);
-		List<Trade> trades = matcher.continuousMatch(order);
+		List<Trade> trades = matcher.continuousMatch(order, orderBook).trades();
 		assertThat(order).isEqualTo(order);
 		assertThat(trades).isEmpty();
 	}

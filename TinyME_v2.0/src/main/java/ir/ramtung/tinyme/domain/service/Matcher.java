@@ -66,25 +66,32 @@ public class Matcher {
 		return Math.min(buysQuantity, sellsQuantity);
 	}
 
-	public List<Trade> continuousMatch(Order newOrder) {
-		OrderBook orderBook = newOrder.getSecurity().getOrderBook();
-		LinkedList<Trade> trades = new LinkedList<>();
-		try {
-			while (hasOrderToMatch(newOrder, orderBook)) {
-				Order matchingOrder = orderBook.findOrderToMatchWith(newOrder);
-				if (matchingOrder == null) return trades;
+	public MatchResult continuousMatch(Order order, OrderBook orderBook) {
+		List<Trade> trades = new LinkedList<>();
+		ControlResult controlResult;
+		Order matchingOrder;
 
-				if (newOrder.getSide() == Side.SELL) {
-					trades.add(createTrade(newOrder, matchingOrder, matchingOrder.getPrice()));
-				} else {
-					trades.add(createTrade(matchingOrder, newOrder, matchingOrder.getPrice()));
-				}
+		while ((matchingOrder = getMatchingOrderInContinuousMatching(order, orderBook)) != null) {
+			controlResult = matchingControl.checkBeforeMatchInContinuousMatching(order, matchingOrder);
+			if (controlResult == ControlResult.OK) {
+				Trade trade = createTradeForContinuousMatching(order, matchingOrder);
+				matchingControl.actionAtMatchingInContinuousMatching(trade, orderBook);
+				trades.add(trade);
+			} else {
+				matchingControl.failedAtBeforeMatchInContinuousMatching(trades, orderBook);
+				return MatchResult.createFromControlResult(controlResult);
 			}
-			return trades;
-		} catch (NotEnoughCreditException exp) {
-			rollbackTrades(trades);
-			throw exp;
 		}
+
+		controlResult = matchingControl.checkAfterContinuousMatching(order, trades);
+		if (controlResult == ControlResult.OK) {
+			matchingControl.actionAtAfterContinuousMatching(order, orderBook);	
+		} else {
+			matchingControl.failedAtAfterContinuousMatching(trades, orderBook);
+			return MatchResult.createFromControlResult(controlResult);
+		}
+
+		return MatchResult.executed(order, trades);
 	}
 
 	private List<Trade> auctionMatch(OrderBook orderBook, int openingPrice) {
@@ -129,29 +136,7 @@ public class Matcher {
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
-		List<Trade> trades = new LinkedList<>();
-		Order matchingOrder;
-		while ((matchingOrder = getMatchingOrderInContinuousMatching(order, orderBook)) != null) {
-			controlResult = matchingControl.checkBeforeMatchInContinuousMatching(order, matchingOrder);
-			if (controlResult == ControlResult.OK) {
-				Trade trade = createTradeForContinuousMatching(order, matchingOrder);
-				matchingControl.actionAtMatchingInContinuousMatching(trade, orderBook);
-				trades.add(trade);
-			} else {
-				matchingControl.failedAtBeforeMatchInContinuousMatching(trades, orderBook);
-				return MatchResult.createFromControlResult(controlResult);
-			}
-		}
-
-		controlResult = matchingControl.checkAfterContinuousMatching(order, trades);
-		if (controlResult == ControlResult.OK) {
-			matchingControl.actionAtAfterContinuousMatching(order, orderBook);	
-		} else {
-			matchingControl.failedAtAfterContinuousMatching(trades, orderBook);
-			return MatchResult.createFromControlResult(controlResult);
-		}
-
-		return MatchResult.executed(order, trades);
+		return continuousMatch(order, orderBook);
 	}
 
 	private Order getMatchingOrderInContinuousMatching(Order targetOrder, OrderBook orderBook) {
