@@ -142,12 +142,13 @@ public class Matcher {
 		}
 
 		controlResult = matchingControl.checkAfterContinuousMatching(order, trades);
-		if (controlResult != ControlResult.OK) {
+		if (controlResult == ControlResult.OK) {
+			matchingControl.actionAtAfterContinuousMatching(order, orderBook);	
+		} else {
 			rollbackTrades(trades);
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
-		order.addYourselfToQueue();
 		return MatchResult.executed(order, trades);
 	}
 

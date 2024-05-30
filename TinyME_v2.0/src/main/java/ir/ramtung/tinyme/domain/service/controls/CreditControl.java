@@ -53,6 +53,15 @@ public class CreditControl {
         updateSellerCreditAtRollbackTrade(trade);
     }
 
+    public void updateCreditAfterContinuousMatching(Order targetOrder) {
+        // FIXME: need refactoring
+        // if (targetOrder.isBuy()) {
+        //     Broker buyerBroker = targetOrder.getBroker();
+        //     long remainderValue = targetOrder.getValue();
+        //     buyerBroker.decreaseCreditBy(remainderValue);
+        // }
+    }
+
     private void updateBuyerCreditAtTrade(Trade trade) {
         Order buyOrder = trade.getBuy();
         Broker buyerBroker = buyOrder.getBroker();

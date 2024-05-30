@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import ir.ramtung.tinyme.domain.entity.Order;
+import ir.ramtung.tinyme.domain.entity.OrderBook;
 import ir.ramtung.tinyme.domain.entity.Trade;
 
 @Service
@@ -31,6 +32,12 @@ public class QuantityControl {
     public void updateQuantitiesAtRollbackTrade(Trade trade) {
         updateBuyQuantityAtRollbackTrade(trade);
         updateSellQuantityAtRollbackTrade(trade);
+    }
+
+    public void updateQuantityAfterContinuousMatching(Order targetOrder, OrderBook orderBook) {
+        if (targetOrder.getQuantity() != 0) {
+            orderBook.enqueue(targetOrder);
+        }
     }
 
     private int calcExecutedQuantity(List<Trade> trades) {

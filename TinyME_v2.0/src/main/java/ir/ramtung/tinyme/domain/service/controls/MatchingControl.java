@@ -61,6 +61,11 @@ public class MatchingControl {
         return creditControl.checkCreditForBeQueued(targetOrder);
     }
 
+    public void actionAtAfterContinuousMatching(Order targetOrder, OrderBook orderBook) {
+        creditControl.updateCreditAfterContinuousMatching(targetOrder);
+        quantityControl.updateQuantityAfterContinuousMatching(targetOrder, orderBook);
+    }
+
     private Trade createTradeForContinuousMatching(Order targetOrder, Order matchingOrder) {
         if (targetOrder.isSell()) {
 			return new Trade(targetOrder, matchingOrder, matchingOrder.getPrice());
