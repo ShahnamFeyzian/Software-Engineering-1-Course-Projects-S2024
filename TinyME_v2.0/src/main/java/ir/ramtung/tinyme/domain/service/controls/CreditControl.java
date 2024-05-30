@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import ir.ramtung.tinyme.domain.entity.Broker;
 import ir.ramtung.tinyme.domain.entity.Order;
+import ir.ramtung.tinyme.domain.entity.Trade;
 
 @Service
 public class CreditControl {
@@ -38,5 +39,34 @@ public class CreditControl {
         else {
             return ControlResult.NOT_ENOUGH_CREDIT;
         }
+    }
+
+    public void updateCreditsAtTrade(Trade trade) {
+        updateBuyerCreditAtTrade(trade);
+        updateSellerCreditAtTrade(trade);
+    }
+
+    private void updateBuyerCreditAtTrade(Trade trade) {
+        Order buyOrder = trade.getBuy();
+        Broker buyerBroker = buyOrder.getBroker();
+        boolean isBuyOrderQueued = buyOrder.isQueued();
+        long buyOrderValue = buyOrder.getValue();
+        long tradeValue = trade.getTradedValue();
+
+        // FIXME: need refactoring
+        if (!isBuyOrderQueued) {
+            buyerBroker.decreaseCreditBy(tradeValue);
+        } else if (trade.getPrice() < buyOrder.getPrice()) {
+            long backCredit = (long) ((buyOrder.getPrice() - trade.getPrice()) * trade.getQuantity());
+			buyOrder.getBroker().increaseCreditBy(backCredit);
+        }
+    }
+
+    private void updateSellerCreditAtTrade(Trade trade) {
+        Order sellOrder = trade.getSell();
+        Broker sellerBroker = sellOrder.getBroker();
+        long tradeValue = trade.getTradedValue();
+
+        sellerBroker.increaseCreditBy(tradeValue);
     }
 }

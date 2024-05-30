@@ -345,6 +345,10 @@ public class Order {
 		return this.status == OrderStatus.NEW;
 	}
 
+	public boolean isQueued() {
+		return this.status == OrderStatus.QUEUED;
+	}
+
 	public boolean isMinimumExecuteQuantitySatisfied(int executedQuantity) {
 		return this.minimumExecutionQuantity <= executedQuantity;
 	}

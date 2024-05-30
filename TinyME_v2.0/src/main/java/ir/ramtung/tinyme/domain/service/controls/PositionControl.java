@@ -7,6 +7,7 @@ import ir.ramtung.tinyme.domain.entity.Order;
 import ir.ramtung.tinyme.domain.entity.OrderBook;
 import ir.ramtung.tinyme.domain.entity.Security;
 import ir.ramtung.tinyme.domain.entity.Shareholder;
+import ir.ramtung.tinyme.domain.entity.Trade;
 
 @Service
 public class PositionControl {
@@ -28,4 +29,27 @@ public class PositionControl {
             return ControlResult.NOT_ENOUGH_POSITION;
         }
     }
+
+	public void updatePositionsAtTrade(Trade trade) {
+		updateBuyerPositionAtTrade(trade);
+		updateSellerPositionAtTrade(trade);
+	}
+
+	private void updateBuyerPositionAtTrade(Trade trade) {
+		Order buyOrder = trade.getBuy();
+		Shareholder buyerShareholder = buyOrder.getShareholder();
+		int tradeQuantity = trade.getQuantity();
+		Security security = trade.getSecurity();
+
+		buyerShareholder.incPosition(security, tradeQuantity);
+	}
+
+	private void updateSellerPositionAtTrade(Trade trade) {
+		Order sellOrder = trade.getSell();
+		Shareholder sellerShareholder = sellOrder.getShareholder();
+		int tradeQuantity = trade.getQuantity();
+		Security security = trade.getSecurity();
+
+		sellerShareholder.decPosition(security, tradeQuantity);
+	}
 }

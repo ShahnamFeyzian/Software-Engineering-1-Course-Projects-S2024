@@ -10,9 +10,9 @@ import ir.ramtung.tinyme.domain.exception.UnknownSecurityStateException;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.CreditControl;
-import ir.ramtung.tinyme.domain.service.controls.ExecutionControl;
 import ir.ramtung.tinyme.domain.service.controls.MatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.PositionControl;
+import ir.ramtung.tinyme.domain.service.controls.QuantityControl;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class Security {
 	private static PositionControl positionControl = new PositionControl();
 
 	//FIXME: this is turning to something really ugly
-	private static Matcher matcher = new Matcher(new MatchingControl(positionControl, new CreditControl(), new ExecutionControl()));
+	private static Matcher matcher = new Matcher(new MatchingControl(positionControl, new CreditControl(), new QuantityControl()));
 
 	@Builder.Default
 	private SecurityState state = SecurityState.CONTINUOUS;

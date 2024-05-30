@@ -132,12 +132,14 @@ public class Matcher {
 		List<Trade> trades = new LinkedList<>();
 		Order matchingOrder;
 		while ((matchingOrder = getMatchingOrderInContinuousMatching(order, orderBook)) != null) {
-			controlResult = matchingControl.checkBeforeTradeAtContinuousMatching(order, matchingOrder);
-			if (controlResult != ControlResult.OK) {
-				rollbackTrades(trades);
+			controlResult = matchingControl.checkBeforeMatchInContinuousMatching(order, matchingOrder);
+			if (controlResult == ControlResult.OK) {
+				matchingControl.actionAtBeforeMatchInContinuousMatching(order, matchingOrder, trades, orderBook);
+			} else {
+				// matchingControl.failedAtBeforeMatchInContinuousMatching(order, matchingOrder, trades, orderBook);
+				rollbackTrades(trades);	
 				return MatchResult.createFromControlResult(controlResult);
 			}
-			trades.add(createTradeForContinuousMatching(order, matchingOrder));
 		}
 
 		controlResult = matchingControl.checkAfterContinuousMatching(order, trades);
@@ -156,15 +158,6 @@ public class Matcher {
 		}
 
 		return orderBook.findOrderToMatchWith(targetOrder);
-	}
-
-	private Trade createTradeForContinuousMatching(Order newOrder, Order matchingOrder) {
-		if (newOrder.isSell()) {
-			return createTrade(newOrder, matchingOrder, matchingOrder.getPrice());
-		} 
-		else {
-			return createTrade(matchingOrder, newOrder, matchingOrder.getPrice());
-		}
 	}
 
 	public List<Trade> auctionExecuting(OrderBook orderBook, int lastTradePrice) {
