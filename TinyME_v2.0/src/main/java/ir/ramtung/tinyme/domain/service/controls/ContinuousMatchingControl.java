@@ -9,7 +9,7 @@ import ir.ramtung.tinyme.domain.entity.OrderBook;
 import ir.ramtung.tinyme.domain.entity.Trade;
 
 @Service
-public class ContinuousMatchingControl extends MatchingControl{
+public class ContinuousMatchingControl extends MatchingControl {
     public ContinuousMatchingControl(PositionControl positionControl, CreditControl creditControl, QuantityControl quantityControl) {
         super(positionControl, creditControl, quantityControl);
     }
@@ -20,15 +20,8 @@ public class ContinuousMatchingControl extends MatchingControl{
     }
 
     @Override
-    public ControlResult checkBeforeMatch(Order targetOrder, Order matchingOrder) {
-        return creditControl.chekCreditForContinousMatching(targetOrder, matchingOrder);
-    }
-
-    @Override
-    public void actionAtMatch(Trade trade, OrderBook orderBook) {
-        creditControl.updateCreditsAtTrade(trade);
-        quantityControl.updateQuantitiesAtTrade(trade);
-        positionControl.updatePositionsAtTrade(trade);
+    public ControlResult checkBeforeMatch(Trade trade) {
+        return creditControl.chekCreditForContinousMatching(trade);
     }
 
     @Override

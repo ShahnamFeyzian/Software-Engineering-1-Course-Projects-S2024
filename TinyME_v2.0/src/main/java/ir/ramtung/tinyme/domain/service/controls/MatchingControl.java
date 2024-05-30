@@ -25,16 +25,18 @@ public abstract class MatchingControl {
 
     }
 
-    public void actionAtFailedBeforMatching(Order targetOrder, OrderBook orderBook) {
+    public void actionAtFailedBeforeMatching(Order targetOrder, OrderBook orderBook) {
         
     }
 
-    public ControlResult checkBeforeMatch(Order targetOrder, Order matchingOrder) {
+    public ControlResult checkBeforeMatch(Trade trade) {
         return ControlResult.OK;
     }
 
     public void actionAtMatch(Trade trade, OrderBook orderBook) {
-        
+        creditControl.updateCreditsAtTrade(trade);
+        quantityControl.updateQuantitiesAtTrade(trade);
+        positionControl.updatePositionsAtTrade(trade);
     }
 
     public void actionAtFailedBeforeMatch(List<Trade> trades, OrderBook orderBook) {

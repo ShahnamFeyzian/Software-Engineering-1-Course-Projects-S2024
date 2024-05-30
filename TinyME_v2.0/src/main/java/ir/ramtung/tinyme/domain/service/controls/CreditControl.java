@@ -1,7 +1,5 @@
 package ir.ramtung.tinyme.domain.service.controls;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 
 import ir.ramtung.tinyme.domain.entity.Broker;
@@ -10,14 +8,14 @@ import ir.ramtung.tinyme.domain.entity.Trade;
 
 @Service
 public class CreditControl {
-    public ControlResult chekCreditForContinousMatching(Order newOrder, Order matchingOrder) {
-        if (newOrder.isSell()) {
+    public ControlResult chekCreditForContinousMatching(Trade trade) {
+        if (trade.isBuyQueued()) {
             return ControlResult.OK;
         }
         
-        int quantity = Math.min(newOrder.getQuantity(), matchingOrder.getQuantity());
-        int value = quantity * matchingOrder.getPrice();
-        Broker broker = newOrder.getBroker();
+        Order targetOrder = trade.getBuy();
+        long value = trade.getTradedValue();
+        Broker broker = targetOrder.getBroker();
         
         if (broker.hasEnoughCredit(value)) {
             return ControlResult.OK;

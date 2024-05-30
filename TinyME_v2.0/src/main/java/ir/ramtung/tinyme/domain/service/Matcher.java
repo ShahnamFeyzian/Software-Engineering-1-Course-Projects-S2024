@@ -1,7 +1,7 @@
 package ir.ramtung.tinyme.domain.service;
 
 import ir.ramtung.tinyme.domain.entity.*;
-import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
+import ir.ramtung.tinyme.domain.service.controls.AuctionMatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.ContinuousMatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.MatchingControl;
@@ -14,9 +14,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class Matcher {
 	private MatchingControl continuousMatchingControl;
+	private MatchingControl auctionMatchingControl;
 
-	public Matcher(ContinuousMatchingControl continuousMatchingControl) {
+	public Matcher(ContinuousMatchingControl continuousMatchingControl, AuctionMatchingControl auctionMatchingControl) {
 		this.continuousMatchingControl = continuousMatchingControl;
+		this.auctionMatchingControl = auctionMatchingControl;
 	}
 
 	private boolean hasOrderForAuction(OrderBook orderBook) {
@@ -28,11 +30,10 @@ public class Matcher {
 		if(!hasOrderForAuction(orderBook))
 			return lastTradePrice;
 
-		int minPrice = orderBook.getLowestPriorityActiveOrder(Side.BUY).getPrice();
-		int maxPrice = orderBook.getLowestPriorityActiveOrder(Side.SELL).getPrice();
-
-		int maxTradableQuantity = 0;
-		int openingPrice = lastTradePrice; 
+			int maxTradableQuantity = 0;
+			int openingPrice = lastTradePrice; 
+			int minPrice = orderBook.getLowestPriorityActiveOrder(Side.BUY).getPrice();
+			int maxPrice = orderBook.getLowestPriorityActiveOrder(Side.SELL).getPrice();
 		
 		for (int price = minPrice; price <= maxPrice; price++) {
 			int currentTradableQuantity = calcTradableQuantity(orderBook, price);
@@ -72,10 +73,10 @@ public class Matcher {
 		ControlResult controlResult;
 		Order matchingOrder;
 
-		while ((matchingOrder = getMatchingOrderInContinuousMatching(order, orderBook)) != null) {
-			controlResult = continuousMatchingControl.checkBeforeMatch(order, matchingOrder);
+		while ((matchingOrder = getMatchingOrder(order, orderBook)) != null) {
+			Trade trade = createTradeForContinuousMatching(order, matchingOrder);
+			controlResult = continuousMatchingControl.checkBeforeMatch(trade);
 			if (controlResult == ControlResult.OK) {
-				Trade trade = createTradeForContinuousMatching(order, matchingOrder);
 				continuousMatchingControl.actionAtMatch(trade, orderBook);
 				trades.add(trade);
 			} else {
@@ -95,22 +96,44 @@ public class Matcher {
 		return MatchResult.executed(order, trades);
 	}
 
-	private List<Trade> auctionMatch(OrderBook orderBook, int openingPrice) {
+	private MatchResult auctionMatch(OrderBook orderBook, int openingPrice) {
+		ControlResult controlResult;
 		List<Trade> trades = new ArrayList<>();
-		if(!hasOrderForAuction(orderBook)) {
-			return trades;
+		Trade currentTrade;
+		while((currentTrade = createTradeForAuctionMatching(orderBook, openingPrice)) != null) {
+			controlResult = auctionMatchingControl.checkBeforeMatch(currentTrade);
+			if (controlResult == ControlResult.OK) {
+				auctionMatchingControl.actionAtMatch(currentTrade, orderBook);
+				trades.add(currentTrade);
+			} else {
+				auctionMatchingControl.actionAtFailedBeforeMatch(trades, orderBook);
+				return MatchResult.createFromControlResult(controlResult);
+			}
 		}
+		
+		controlResult = auctionMatchingControl.checkAfterMatching(null, trades);
+		if (controlResult == ControlResult.OK) {
+			auctionMatchingControl.actionAtAfterMatching(null, orderBook);	
+		} else {
+			auctionMatchingControl.actionAtfailedAfterMatching(trades, orderBook);
+			return MatchResult.createFromControlResult(controlResult);
+		}
+
+		return MatchResult.executed(null, trades);
+	}
+
+	private Trade createTradeForAuctionMatching(OrderBook orderBook, int openingPrice) {
+		if (!hasOrderForAuction(orderBook)){
+			return null;
+		}
+
 		Order sellOrder = orderBook.getHighestPriorityActiveOrder(Side.SELL);
 		Order buyOrder = orderBook.getHighestPriorityActiveOrder(Side.BUY);
-		while(sellOrder.canTradeWithPrice(openingPrice) && buyOrder.canTradeWithPrice(openingPrice)) {
-			trades.add(createTrade(sellOrder, buyOrder, openingPrice));
-			// FIXME: maybe more clear?
-			if(!hasOrderForAuction(orderBook))
-				break;
-			sellOrder = orderBook.getHighestPriorityActiveOrder(Side.SELL);
-			buyOrder = orderBook.getHighestPriorityActiveOrder(Side.BUY);
+		if (sellOrder.canTradeWithPrice(openingPrice) && buyOrder.canTradeWithPrice(openingPrice)) {
+			return new Trade(sellOrder, buyOrder, openingPrice);
+		} else {
+			return null;
 		}
-		return trades;
 	}
 
 	private Trade createTrade(Order sellOrder, Order buyOrder, int price) {
@@ -127,20 +150,32 @@ public class Matcher {
 		trades.reversed().forEach(Trade::rollback);
 	}
 
-	// TODO: adding controls was successful, now clean this shit
 	public MatchResult continuousExecuting(Order order, OrderBook orderBook) {
 		ControlResult controlResult = continuousMatchingControl.checkBeforeMatching(order, orderBook);
 		if (controlResult == ControlResult.OK) {
 			continuousMatchingControl.actionAtBeforeMatching(order, orderBook);
 		} else {
-			continuousMatchingControl.actionAtFailedBeforMatching(order, orderBook);
+			continuousMatchingControl.actionAtFailedBeforeMatching(order, orderBook);
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
 		return continuousMatch(order, orderBook);
 	}
 
-	private Order getMatchingOrderInContinuousMatching(Order targetOrder, OrderBook orderBook) {
+	public MatchResult auctionExecuting(OrderBook orderBook, int lastTradePrice) {
+		ControlResult controlResult = auctionMatchingControl.checkBeforeMatching(null, orderBook);
+		if (controlResult == ControlResult.OK) {
+			auctionMatchingControl.actionAtBeforeMatching(null, orderBook);
+		} else {
+			auctionMatchingControl.actionAtFailedBeforeMatching(null, orderBook);
+			return MatchResult.createFromControlResult(controlResult);
+		}
+
+		int openingPrice = calcOpeningAuctionPrice(orderBook, lastTradePrice);
+		return auctionMatch(orderBook, openingPrice);
+	}
+
+	private Order getMatchingOrder(Order targetOrder, OrderBook orderBook) {
 		if (targetOrder.getQuantity() == 0) {
 			return null;
 		}
@@ -155,9 +190,4 @@ public class Matcher {
 			return new Trade(matchingOrder, targetOrder, matchingOrder.getPrice());
 		}
     }
-
-	public List<Trade> auctionExecuting(OrderBook orderBook, int lastTradePrice) {
-		int openingPrice = calcOpeningAuctionPrice(orderBook, lastTradePrice);
-		return auctionMatch(orderBook, openingPrice);
-	}
 }

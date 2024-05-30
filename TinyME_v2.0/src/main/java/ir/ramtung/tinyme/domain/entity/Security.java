@@ -8,10 +8,10 @@ import ir.ramtung.tinyme.domain.entity.security_stats.StateStats;
 import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.UnknownSecurityStateException;
 import ir.ramtung.tinyme.domain.service.Matcher;
+import ir.ramtung.tinyme.domain.service.controls.AuctionMatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.ContinuousMatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.CreditControl;
-import ir.ramtung.tinyme.domain.service.controls.MatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.PositionControl;
 import ir.ramtung.tinyme.domain.service.controls.QuantityControl;
 import ir.ramtung.tinyme.messaging.Message;
@@ -40,10 +40,11 @@ public class Security {
 
 	private int lastTradePrice;
 
-	private static PositionControl positionControl = new PositionControl();
-
 	//FIXME: this is turning to something really ugly
-	private static Matcher matcher = new Matcher(new ContinuousMatchingControl(positionControl, new CreditControl(), new QuantityControl()));
+	private static PositionControl positionControl = new PositionControl();
+	private static CreditControl creditControl = new CreditControl();
+	private static QuantityControl quantityControl = new QuantityControl();
+	private static Matcher matcher = new Matcher(new ContinuousMatchingControl(positionControl, creditControl, quantityControl), new AuctionMatchingControl(positionControl, creditControl, quantityControl));
 
 	@Builder.Default
 	private SecurityState state = SecurityState.CONTINUOUS;
@@ -146,7 +147,7 @@ public class Security {
 	private List<SecurityStats> openAuction() {
 		List<SecurityStats> stats = new ArrayList<>();
 
-		List<Trade> trades = matcher.auctionExecuting(orderBook, lastTradePrice);
+		List<Trade> trades = matcher.auctionExecuting(orderBook, lastTradePrice).trades();
 		if (!trades.isEmpty()) {
 			stats.add(ExecuteStats.createAuctionExecuteStats(trades));
 		}
