@@ -134,7 +134,9 @@ public class Matcher {
 		while ((matchingOrder = getMatchingOrderInContinuousMatching(order, orderBook)) != null) {
 			controlResult = matchingControl.checkBeforeMatchInContinuousMatching(order, matchingOrder);
 			if (controlResult == ControlResult.OK) {
-				matchingControl.actionAtBeforeMatchInContinuousMatching(order, matchingOrder, trades, orderBook);
+				Trade trade = createTradeForContinuousMatching(order, matchingOrder);
+				matchingControl.actionAtMatchingInContinuousMatching(trade, orderBook);
+				trades.add(trade);
 			} else {
 				matchingControl.failedAtBeforeMatchInContinuousMatching(trades, orderBook);
 				return MatchResult.createFromControlResult(controlResult);
@@ -159,6 +161,14 @@ public class Matcher {
 
 		return orderBook.findOrderToMatchWith(targetOrder);
 	}
+
+	private Trade createTradeForContinuousMatching(Order targetOrder, Order matchingOrder) {
+        if (targetOrder.isSell()) {
+			return new Trade(targetOrder, matchingOrder, matchingOrder.getPrice());
+		} else {
+			return new Trade(matchingOrder, targetOrder, matchingOrder.getPrice());
+		}
+    }
 
 	public List<Trade> auctionExecuting(OrderBook orderBook, int lastTradePrice) {
 		int openingPrice = calcOpeningAuctionPrice(orderBook, lastTradePrice);

@@ -36,12 +36,10 @@ public class MatchingControl {
         return creditControl.chekCreditForContinousMatching(targetOrder, matchingOrder);
     }
 
-    public void actionAtBeforeMatchInContinuousMatching(Order targetOrder, Order matchingOrder, List<Trade> trades, OrderBook orderBook) {
-        Trade trade = createTradeForContinuousMatching(targetOrder, matchingOrder);
+    public void actionAtMatchingInContinuousMatching(Trade trade, OrderBook orderBook) {
         creditControl.updateCreditsAtTrade(trade);
         quantityControl.updateQuantitiesAtTrade(trade);
         positionControl.updatePositionsAtTrade(trade);
-        trades.add(trade);
     }
 
     public void failedAtBeforeMatchInContinuousMatching(List<Trade> trades, OrderBook orderBook) {
@@ -72,13 +70,5 @@ public class MatchingControl {
             quantityControl.updateQuantitiesAtRollbackTrade(trade);
             positionControl.updatePositionsAtRollbackTrade(trade);
         }
-    }
-
-    private Trade createTradeForContinuousMatching(Order targetOrder, Order matchingOrder) {
-        if (targetOrder.isSell()) {
-			return new Trade(targetOrder, matchingOrder, matchingOrder.getPrice());
-		} else {
-			return new Trade(matchingOrder, targetOrder, matchingOrder.getPrice());
-		}
     }
 }
