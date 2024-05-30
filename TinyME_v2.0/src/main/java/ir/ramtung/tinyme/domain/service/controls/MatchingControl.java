@@ -45,11 +45,7 @@ public class MatchingControl {
     }
 
     public void failedAtBeforeMatchInContinuousMatching(List<Trade> trades, OrderBook orderBook) {
-        for (Trade trade : trades) {
-            creditControl.updateCreditsAtRollbackTrade(trade);
-            quantityControl.updateQuantitiesAtRollbackTrade(trade);
-            positionControl.updatePositionsAtRollbackTrade(trade);
-        }
+        rollbackTrades(trades, orderBook);
     }
 
     public ControlResult checkAfterContinuousMatching(Order targetOrder, List<Trade> trades) {
@@ -64,6 +60,18 @@ public class MatchingControl {
     public void actionAtAfterContinuousMatching(Order targetOrder, OrderBook orderBook) {
         creditControl.updateCreditAfterContinuousMatching(targetOrder);
         quantityControl.updateQuantityAfterContinuousMatching(targetOrder, orderBook);
+    }
+
+    public void failedAtAfterContinuousMatching(List<Trade> trades, OrderBook orerrBook) {
+        rollbackTrades(trades, orerrBook);
+    }
+
+    private void rollbackTrades(List<Trade> trades, OrderBook orderBook) {
+        for (Trade trade : trades.reversed()) {
+            creditControl.updateCreditsAtRollbackTrade(trade);
+            quantityControl.updateQuantitiesAtRollbackTrade(trade);
+            positionControl.updatePositionsAtRollbackTrade(trade);
+        }
     }
 
     private Trade createTradeForContinuousMatching(Order targetOrder, Order matchingOrder) {

@@ -145,7 +145,7 @@ public class Matcher {
 		if (controlResult == ControlResult.OK) {
 			matchingControl.actionAtAfterContinuousMatching(order, orderBook);	
 		} else {
-			rollbackTrades(trades);
+			matchingControl.failedAtAfterContinuousMatching(trades, orderBook);
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
