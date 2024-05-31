@@ -24,14 +24,14 @@ public class QuantityControl {
         }
     }
 
-    public void updateQuantitiesAtTrade(Trade trade) {
-        updateBuyQuantityAtTrade(trade);
-        updateSellQuantityAtTrade(trade);
+    public void updateQuantitiesAtTrade(Trade trade, OrderBook orderBook) {
+        updateBuyQuantityAtTrade(trade, orderBook);
+        updateSellQuantityAtTrade(trade, orderBook);
     }
 
-    public void updateQuantitiesAtRollbackTrade(Trade trade) {
-        updateBuyQuantityAtRollbackTrade(trade);
-        updateSellQuantityAtRollbackTrade(trade);
+    public void updateQuantitiesAtRollbackTrade(Trade trade, OrderBook orderBook) {
+        updateBuyQuantityAtRollbackTrade(trade, orderBook);
+        updateSellQuantityAtRollbackTrade(trade, orderBook);
     }
 
     public void enqueueOrderToOrderBook(Order targetOrder, OrderBook orderBook) {
@@ -46,35 +46,47 @@ public class QuantityControl {
 		return executedQuantity;
 	}
 
-    private void updateBuyQuantityAtTrade(Trade trade) {
-        // FIXME: need refactoring
+    private void updateBuyQuantityAtTrade(Trade trade, OrderBook orderBook) {
         Order buyOrder = trade.getBuy();
         int tradeQuantity = trade.getQuantity();
 
         buyOrder.decreaseQuantity(tradeQuantity);
+        checkQuantityForUnqueue(buyOrder, orderBook);
     }
 
-    private void updateSellQuantityAtTrade(Trade trade) {
-        // FIXME: need refactoring
+    private void updateSellQuantityAtTrade(Trade trade, OrderBook orderBook) {
         Order sellOrder = trade.getSell();
         int tradeQuantity = trade.getQuantity();
 
         sellOrder.decreaseQuantity(tradeQuantity);
+        checkQuantityForUnqueue(sellOrder, orderBook);
     }
 
-    private void updateBuyQuantityAtRollbackTrade(Trade trade) {
-        // FIXME: need refactoring
+    private void checkQuantityForUnqueue(Order order, OrderBook orderBook) {
+        if (order.isDone()) {
+            orderBook.removeOrder(order);
+        }
+    }
+
+    private void updateBuyQuantityAtRollbackTrade(Trade trade, OrderBook orderBook) {
         Order buyOrder = trade.getBuy();
         Order orginalBuyOrder = trade.getBuyFirstVersion();
 
+        checkQuantityForEnqueue(buyOrder, orderBook);
         buyOrder.rollback(orginalBuyOrder);
     }
 
-    private void updateSellQuantityAtRollbackTrade(Trade trade) {
-        // FIXME: need refactoring
+    private void updateSellQuantityAtRollbackTrade(Trade trade, OrderBook orderBook) {
         Order sellOrder = trade.getSell();
         Order originalSellOrder = trade.getSellFirstVersion();
         
+        checkQuantityForEnqueue(sellOrder, orderBook);
         sellOrder.rollback(originalSellOrder);
+    }
+
+    private void checkQuantityForEnqueue(Order order, OrderBook orderBook) {
+        if (order.isDone()) {
+            orderBook.enqueue(order);
+        }
     }
 }

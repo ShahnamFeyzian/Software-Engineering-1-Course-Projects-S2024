@@ -35,7 +35,7 @@ public abstract class MatchingControl {
 
     public void actionAtMatch(Trade trade, OrderBook orderBook) {
         creditControl.updateCreditsAtTrade(trade);
-        quantityControl.updateQuantitiesAtTrade(trade);
+        quantityControl.updateQuantitiesAtTrade(trade, orderBook);
         positionControl.updatePositionsAtTrade(trade);
     }
 

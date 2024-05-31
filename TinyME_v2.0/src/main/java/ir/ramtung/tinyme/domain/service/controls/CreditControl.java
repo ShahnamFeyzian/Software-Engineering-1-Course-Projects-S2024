@@ -88,8 +88,7 @@ public class CreditControl {
         Broker buyerBroker = buyOrder.getBroker();
         long tradeValue = trade.getTradedValue();
 
-        // FIXME: need refactoring
-        if (!buyOrder.isQueued() || buyOrder.isDone()) {
+        if (!buyOrder.isQueued()) {
             buyerBroker.increaseCreditBy(tradeValue);
         }
     }

@@ -261,7 +261,6 @@ public class Order {
 		quantity -= amount;
 		if (quantity == 0 && status == OrderStatus.QUEUED) {
 			status = OrderStatus.DONE;
-			security.deleteOrder(side, orderId);
 		}
 	}
 

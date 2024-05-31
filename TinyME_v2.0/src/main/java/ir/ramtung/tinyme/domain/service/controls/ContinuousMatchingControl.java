@@ -53,7 +53,7 @@ public class ContinuousMatchingControl extends MatchingControl {
     private void rollbackTrades(List<Trade> trades, OrderBook orderBook) {
         for (Trade trade : trades.reversed()) {
             creditControl.updateCreditsAtRollbackTrade(trade);
-            quantityControl.updateQuantitiesAtRollbackTrade(trade);
+            quantityControl.updateQuantitiesAtRollbackTrade(trade, orderBook);
             positionControl.updatePositionsAtRollbackTrade(trade);
         }
     }
