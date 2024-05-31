@@ -5,7 +5,6 @@ import ir.ramtung.tinyme.domain.entity.stats.ExecuteStats;
 import ir.ramtung.tinyme.domain.entity.stats.SecurityStats;
 import ir.ramtung.tinyme.domain.entity.stats.SituationalStats;
 import ir.ramtung.tinyme.domain.entity.stats.StateStats;
-import ir.ramtung.tinyme.domain.exception.NotEnoughCreditException;
 import ir.ramtung.tinyme.domain.exception.UnknownSecurityStateException;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.domain.service.controls.AuctionMatchingControl;

@@ -6,9 +6,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.boot.autoconfigure.jms.artemis.ArtemisAutoConfiguration;
-
-import io.netty.channel.local.LocalAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

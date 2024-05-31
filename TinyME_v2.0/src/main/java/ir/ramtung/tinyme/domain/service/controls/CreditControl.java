@@ -1,111 +1,108 @@
 package ir.ramtung.tinyme.domain.service.controls;
 
-import org.springframework.stereotype.Service;
-
 import ir.ramtung.tinyme.domain.entity.Broker;
 import ir.ramtung.tinyme.domain.entity.Order;
 import ir.ramtung.tinyme.domain.entity.Trade;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CreditControl {
-    public ControlResult chekCreditForTrade(Trade trade) {
-        if (trade.isBuyQueued()) {
-            return ControlResult.OK;
-        }
-        
-        Order targetOrder = trade.getBuy();
-        long value = trade.getTradedValue();
-        Broker broker = targetOrder.getBroker();
-        
-        if (broker.hasEnoughCredit(value)) {
-            return ControlResult.OK;
-        }
-        else {
-            return ControlResult.NOT_ENOUGH_CREDIT;
-        }
-    }
 
-    public ControlResult checkCreditForBeingQueued(Order order) {
-        if (order.isSell()) {
-            return ControlResult.OK;
-        }
+	public ControlResult checkCreditForTrade(Trade trade) {
+		if (trade.isBuyQueued()) {
+			return ControlResult.OK;
+		}
 
-        long value = order.getValue();
-        Broker broker = order.getBroker();
+		Order targetOrder = trade.getBuy();
+		long value = trade.getTradedValue();
+		Broker broker = targetOrder.getBroker();
 
-        if(broker.hasEnoughCredit(value)) {
-            return ControlResult.OK;
-        }
-        else {
-            return ControlResult.NOT_ENOUGH_CREDIT;
-        }
-    }
+		if (broker.hasEnoughCredit(value)) {
+			return ControlResult.OK;
+		} else {
+			return ControlResult.NOT_ENOUGH_CREDIT;
+		}
+	}
 
-    public void updateCreditsAtTrade(Trade trade) {
-        updateBuyerCreditAtTrade(trade);
-        updateSellerCreditAtTrade(trade);
-    }
+	public ControlResult checkCreditForBeingQueued(Order order) {
+		if (order.isSell()) {
+			return ControlResult.OK;
+		}
 
-    public void updateCreditsAtRollbackTrade(Trade trade) {
-        updateBuyerCreditAtRollbackTrade(trade);
-        updateSellerCreditAtRollbackTrade(trade);
-    }
+		long value = order.getValue();
+		Broker broker = order.getBroker();
 
-    public void updateCreditForBeingQueued(Order targetOrder) {
-        if (targetOrder.isBuy()) {
-            Broker buyerBroker = targetOrder.getBroker();
-            long remainderValue = targetOrder.getValue();
-            buyerBroker.decreaseCreditBy(remainderValue);
-        }
-    }
+		if (broker.hasEnoughCredit(value)) {
+			return ControlResult.OK;
+		} else {
+			return ControlResult.NOT_ENOUGH_CREDIT;
+		}
+	}
 
-    public void updateCreditAtDelete(Order order) {
-        if (order.isBuy()) {
-            Broker buyerBroker = order.getBroker();
-            long orderValue = order.getValue();
-            buyerBroker.increaseCreditBy(orderValue);
-        }
-    }
+	public void updateCreditsAtTrade(Trade trade) {
+		updateBuyerCreditAtTrade(trade);
+		updateSellerCreditAtTrade(trade);
+	}
 
-    private void updateBuyerCreditAtTrade(Trade trade) {
-        Order buyOrder = trade.getBuy();
-        Broker buyerBroker = buyOrder.getBroker();
-        boolean isBuyOrderQueued = buyOrder.isQueued();
-        long buyOrderValue = buyOrder.getValue();
-        long tradeValue = trade.getTradedValue();
+	public void updateCreditsAtRollbackTrade(Trade trade) {
+		updateBuyerCreditAtRollbackTrade(trade);
+		updateSellerCreditAtRollbackTrade(trade);
+	}
 
-        // FIXME: need refactoring
-        if (!isBuyOrderQueued) {
-            buyerBroker.decreaseCreditBy(tradeValue);
-        } else if (trade.getPrice() < buyOrder.getPrice()) {
-            long backCredit = (long) ((buyOrder.getPrice() - trade.getPrice()) * trade.getQuantity());
+	public void updateCreditForBeingQueued(Order targetOrder) {
+		if (targetOrder.isBuy()) {
+			Broker buyerBroker = targetOrder.getBroker();
+			long remainderValue = targetOrder.getValue();
+			buyerBroker.decreaseCreditBy(remainderValue);
+		}
+	}
+
+	public void updateCreditAtDelete(Order order) {
+		if (order.isBuy()) {
+			Broker buyerBroker = order.getBroker();
+			long orderValue = order.getValue();
+			buyerBroker.increaseCreditBy(orderValue);
+		}
+	}
+
+	private void updateBuyerCreditAtTrade(Trade trade) {
+		Order buyOrder = trade.getBuy();
+		Broker buyerBroker = buyOrder.getBroker();
+		boolean isBuyOrderQueued = buyOrder.isQueued();
+		long tradeValue = trade.getTradedValue();
+
+		// FIXME: need refactoring
+		if (!isBuyOrderQueued) {
+			buyerBroker.decreaseCreditBy(tradeValue);
+		} else if (trade.getPrice() < buyOrder.getPrice()) {
+			long backCredit = (long) ((buyOrder.getPrice() - trade.getPrice()) * trade.getQuantity());
 			buyOrder.getBroker().increaseCreditBy(backCredit);
-        }
-    }
+		}
+	}
 
-    private void updateSellerCreditAtTrade(Trade trade) {
-        Order sellOrder = trade.getSell();
-        Broker sellerBroker = sellOrder.getBroker();
-        long tradeValue = trade.getTradedValue();
+	private void updateSellerCreditAtTrade(Trade trade) {
+		Order sellOrder = trade.getSell();
+		Broker sellerBroker = sellOrder.getBroker();
+		long tradeValue = trade.getTradedValue();
 
-        sellerBroker.increaseCreditBy(tradeValue);
-    }
+		sellerBroker.increaseCreditBy(tradeValue);
+	}
 
-    private void updateBuyerCreditAtRollbackTrade(Trade trade) {
-        Order buyOrder = trade.getBuy();
-        Broker buyerBroker = buyOrder.getBroker();
-        long tradeValue = trade.getTradedValue();
+	private void updateBuyerCreditAtRollbackTrade(Trade trade) {
+		Order buyOrder = trade.getBuy();
+		Broker buyerBroker = buyOrder.getBroker();
+		long tradeValue = trade.getTradedValue();
 
-        if (!buyOrder.isQueued()) {
-            buyerBroker.increaseCreditBy(tradeValue);
-        }
-    }
+		if (!buyOrder.isQueued()) {
+			buyerBroker.increaseCreditBy(tradeValue);
+		}
+	}
 
-    private void updateSellerCreditAtRollbackTrade(Trade trade) {
-        Order sellOrder = trade.getSell();
-        Broker sellerBroker = sellOrder.getBroker();
-        long tradeValue = trade.getTradedValue();
+	private void updateSellerCreditAtRollbackTrade(Trade trade) {
+		Order sellOrder = trade.getSell();
+		Broker sellerBroker = sellOrder.getBroker();
+		long tradeValue = trade.getTradedValue();
 
-        sellerBroker.decreaseCreditBy(tradeValue);
-    }
+		sellerBroker.decreaseCreditBy(tradeValue);
+	}
 }
