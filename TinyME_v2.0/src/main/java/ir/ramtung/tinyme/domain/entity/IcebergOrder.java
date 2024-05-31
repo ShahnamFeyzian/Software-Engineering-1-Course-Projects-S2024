@@ -5,7 +5,6 @@ import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -253,7 +252,7 @@ public class IcebergOrder extends Order {
 		if (status != OrderStatus.QUEUED) {
 			return super.getQuantity();
 		}
-		
+
 		return displayedQuantity;
 	}
 

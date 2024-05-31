@@ -1,57 +1,51 @@
 package ir.ramtung.tinyme.domain.service.controls;
 
-import java.util.List;
-
 import ir.ramtung.tinyme.domain.entity.Order;
 import ir.ramtung.tinyme.domain.entity.OrderBook;
 import ir.ramtung.tinyme.domain.entity.Trade;
+import java.util.List;
 
 public abstract class MatchingControl {
-    protected PositionControl positionControl;
-    protected CreditControl creditControl;
-    protected QuantityControl quantityControl;
-   
-    public MatchingControl(PositionControl positionControl, CreditControl creditControl, QuantityControl quantityControl) {
-        this.positionControl = positionControl;
-        this.creditControl = creditControl;
-        this.quantityControl = quantityControl;
-    }
 
-    public ControlResult checkBeforeMatching(Order targetOrder, OrderBook orderBook) {
-        return ControlResult.OK;
-    }
+	protected PositionControl positionControl;
+	protected CreditControl creditControl;
+	protected QuantityControl quantityControl;
 
-    public void actionAtBeforeMatching(Order targetOrder, OrderBook orderBook) {
+	public MatchingControl(
+		PositionControl positionControl,
+		CreditControl creditControl,
+		QuantityControl quantityControl
+	) {
+		this.positionControl = positionControl;
+		this.creditControl = creditControl;
+		this.quantityControl = quantityControl;
+	}
 
-    }
+	public ControlResult checkBeforeMatching(Order targetOrder, OrderBook orderBook) {
+		return ControlResult.OK;
+	}
 
-    public void actionAtFailedBeforeMatching(Order targetOrder, OrderBook orderBook) {
-        
-    }
+	public void actionAtBeforeMatching(Order targetOrder, OrderBook orderBook) {}
 
-    public ControlResult checkBeforeMatch(Trade trade) {
-        return ControlResult.OK;
-    }
+	public void actionAtFailedBeforeMatching(Order targetOrder, OrderBook orderBook) {}
 
-    public void actionAtMatch(Trade trade, OrderBook orderBook) {
-        creditControl.updateCreditsAtTrade(trade);
-        quantityControl.updateQuantitiesAtTrade(trade, orderBook);
-        positionControl.updatePositionsAtTrade(trade);
-    }
+	public ControlResult checkBeforeMatch(Trade trade) {
+		return ControlResult.OK;
+	}
 
-    public void actionAtFailedBeforeMatch(List<Trade> trades, OrderBook orderBook) {
-        
-    }
+	public void actionAtMatch(Trade trade, OrderBook orderBook) {
+		creditControl.updateCreditsAtTrade(trade);
+		quantityControl.updateQuantitiesAtTrade(trade, orderBook);
+		positionControl.updatePositionsAtTrade(trade);
+	}
 
-    public ControlResult checkAfterMatching(Order targetOrder, List<Trade> trades) {
-        return ControlResult.OK;
-    }
+	public void actionAtFailedBeforeMatch(List<Trade> trades, OrderBook orderBook) {}
 
-    public void actionAtAfterMatching(Order targetOrder, OrderBook orderBook) {
-        
-    }
+	public ControlResult checkAfterMatching(Order targetOrder, List<Trade> trades) {
+		return ControlResult.OK;
+	}
 
-    public void actionAtfailedAfterMatching(List<Trade> trades, OrderBook orerrBook) {
-        
-    }
+	public void actionAtAfterMatching(Order targetOrder, OrderBook orderBook) {}
+
+	public void actionAtfailedAfterMatching(List<Trade> trades, OrderBook orerrBook) {}
 }

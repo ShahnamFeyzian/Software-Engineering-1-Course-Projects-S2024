@@ -72,6 +72,7 @@ public class CreditControl {
 		long tradeValue = trade.getTradedValue();
 
 		// FIXME: need refactoring
+        // I don't understand why it needs refactoring. :(
 		if (!isBuyOrderQueued) {
 			buyerBroker.decreaseCreditBy(tradeValue);
 		} else if (trade.getPrice() < buyOrder.getPrice()) {

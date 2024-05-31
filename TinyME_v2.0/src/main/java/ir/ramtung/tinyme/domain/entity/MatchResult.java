@@ -1,10 +1,9 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-
-import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 
 public final class MatchResult {
 
@@ -30,10 +29,14 @@ public final class MatchResult {
 
 	public static MatchResult createFromControlResult(ControlResult controlResult) {
 		switch (controlResult) {
-			case NOT_ENOUGH_POSITION  : return notEnoughPositions();
-			case NOT_ENOUGH_CREDIT    : return notEnoughCredit();
-			case NOT_ENOUGH_EXECUTION : return notEnoughExecution();
-			default : throw new UnknownError("Unknown Control Result");
+			case NOT_ENOUGH_POSITION:
+				return notEnoughPositions();
+			case NOT_ENOUGH_CREDIT:
+				return notEnoughCredit();
+			case NOT_ENOUGH_EXECUTION:
+				return notEnoughExecution();
+			default:
+				throw new UnknownError("Unknown Control Result");
 		}
 	}
 

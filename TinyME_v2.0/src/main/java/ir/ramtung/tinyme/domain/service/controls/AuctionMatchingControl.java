@@ -4,7 +4,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuctionMatchingControl extends MatchingControl {
-    public AuctionMatchingControl(PositionControl positionControl, CreditControl creditControl, QuantityControl quantityControl) {
-        super(positionControl, creditControl, quantityControl);
-    }
+
+	public AuctionMatchingControl(
+		PositionControl positionControl,
+		CreditControl creditControl,
+		QuantityControl quantityControl
+	) {
+		super(positionControl, creditControl, quantityControl);
+	}
 }
