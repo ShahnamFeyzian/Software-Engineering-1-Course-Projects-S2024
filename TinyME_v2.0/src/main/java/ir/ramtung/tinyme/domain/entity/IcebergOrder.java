@@ -283,6 +283,8 @@ public class IcebergOrder extends Order {
 			security.deleteOrder(side, orderId);
 			if (quantity != 0) {
 				this.entryTimes.add(LocalDateTime.now());
+				if (this.side == Side.BUY) //FIXME: refactor
+					this.broker.decreaseCreditBy(getValue());
 				security.getOrderBook().enqueue(this);
 			}
 		}

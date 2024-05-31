@@ -281,7 +281,6 @@ public class OrderHandlerTest {
 			new Order(1, security, Side.BUY, 20, 15, broker1, shareholder),
 			new Order(7, security, Side.SELL, 10, 20, broker2, shareholder)
 		);
-		broker1.increaseCreditBy(400);
 		orders.forEach(order -> security.getOrderBook().enqueue(order));
 		shareholder.incPosition(security, 10);
 
@@ -1041,7 +1040,6 @@ public class OrderHandlerTest {
 
 	@Test
 	void increase_quantity_stop_limit_order_quantity_not_enough_credit() {
-		broker1.increaseCreditBy(4000);
 		StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 400, broker1, shareholder, 500);
 		security.getOrderBook().enqueue(order);
 
@@ -1066,7 +1064,6 @@ public class OrderHandlerTest {
 
 	@Test
 	void increase_price_stop_limit_order_quantity_not_enough_credit() {
-		broker1.increaseCreditBy(4000);
 		StopLimitOrder order = new StopLimitOrder(6, security, Side.BUY, 10, 400, broker1, shareholder, 500);
 		security.getOrderBook().enqueue(order);
 

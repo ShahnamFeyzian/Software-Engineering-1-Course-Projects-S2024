@@ -50,15 +50,11 @@ public class Security {
 	private SecurityState state = SecurityState.CONTINUOUS;
 
 	public SecurityResponse addNewOrder(Order newOrder) {
-		try {
-			if (positionControl.checkPositionForOrder(newOrder, orderBook) != ControlResult.OK) {
-				return new SecurityResponse(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId()));
-			}
-			List<SecurityStats> stats = handleAdd(newOrder);
-			return new SecurityResponse(stats);
-		} catch (NotEnoughCreditException exp) {
-			return new SecurityResponse(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
+		if (positionControl.checkPositionForOrder(newOrder, orderBook) != ControlResult.OK) {
+			return new SecurityResponse(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId()));
 		}
+		List<SecurityStats> stats = handleAdd(newOrder);
+		return new SecurityResponse(stats);
 	}
 
 	private List<SecurityStats> handleAdd(Order newOrder) {
@@ -72,6 +68,11 @@ public class Security {
 	}
 
 	private List<SecurityStats> handleAddInAuctionState(Order newOrder) {
+		if (creditControl.checkCreditForBeingQueued(newOrder) != ControlResult.OK) {
+			return List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
+		}
+
+		creditControl.updateCreditForBeingQueued(newOrder);
 		orderBook.enqueue(newOrder);
 
 		List<SecurityStats> stats = new ArrayList<>();
@@ -98,6 +99,11 @@ public class Security {
 	}
 
 	private List<SecurityStats> addNewStopLimitOrder(StopLimitOrder newOrder) {
+		if (creditControl.checkCreditForBeingQueued(newOrder) != ControlResult.OK) {
+			return List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
+		}
+
+		creditControl.updateCreditForBeingQueued(newOrder);
 		orderBook.enqueue(newOrder);
 		return List.of(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
 	}
@@ -201,6 +207,7 @@ public class Security {
 
 	private List<SecurityStats> reAddUpdatedOrder(Order updatedOrder, Order originalOrder) {
 		if (positionControl.checkPositionForOrder(updatedOrder, orderBook) != ControlResult.OK) {
+			creditControl.updateCreditForBeingQueued(originalOrder);
 			orderBook.enqueue(originalOrder);
 			return List.of(SituationalStats.createNotEnoughPositionsStats(originalOrder.getOrderId()));
 		}
@@ -224,16 +231,19 @@ public class Security {
 	}
 
 	private List<SecurityStats> reAddUpdatedOrderInAuctionState(Order updatedOrder, Order originalOrder) {
-		try {
-			orderBook.enqueue(updatedOrder);
-			List<SecurityStats> stats = new LinkedList<>();
-			stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
-			stats.add(createAuctionStats());
-			return stats;
-		} catch (NotEnoughCreditException e) {
+		if (creditControl.checkCreditForBeingQueued(updatedOrder) != ControlResult.OK) {
+			creditControl.updateCreditForBeingQueued(originalOrder);
 			orderBook.enqueue(originalOrder);
 			return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
 		}
+
+		creditControl.updateCreditForBeingQueued(updatedOrder);
+		orderBook.enqueue(updatedOrder);
+
+		List<SecurityStats> stats = new LinkedList<>();
+		stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
+		stats.add(createAuctionStats());
+		return stats;
 	}
 
 	private List<SecurityStats> reAddActiveOrderInContinuousState(Order updatedOrder, Order originalOrder) {
@@ -243,6 +253,7 @@ public class Security {
 		MatchResult updatedOrderResult = matcher.continuousExecuting(updatedOrder, orderBook);
 
 		if (!updatedOrderResult.isSuccessful()) {
+			creditControl.updateCreditForBeingQueued(originalOrder);
 			orderBook.enqueue(originalOrder);
 			stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(updatedOrderResult, originalOrder.getOrderId()));
 		} 
@@ -256,16 +267,19 @@ public class Security {
 	}
 
 	private List<SecurityStats> reAddUpdatedSloInContinuousState(StopLimitOrder updatedOrder,StopLimitOrder originalOrder) {
-		try {
+			if (creditControl.checkCreditForBeingQueued(updatedOrder) != ControlResult.OK) {
+				creditControl.updateCreditForBeingQueued(originalOrder);
+				orderBook.enqueue(originalOrder);
+				return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
+			}
+
+			creditControl.updateCreditForBeingQueued(updatedOrder);
+			orderBook.enqueue(updatedOrder);
+
 			List<SecurityStats> stats = new LinkedList<>();
 			stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
-			orderBook.enqueue(updatedOrder);
 			stats.addAll(activateStopLimitOrders());
 			return stats;
-		} catch (NotEnoughCreditException exp) {
-			orderBook.enqueue(originalOrder);
-			return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
-		}
 	}
 
 	public List<String> checkEnterOrderRq(EnterOrderRq order) {
@@ -320,6 +334,7 @@ public class Security {
 	}
 
 	private List<SecurityStats> activateOrderInAuctionState(Order activatedOrder) {
+		creditControl.updateCreditForBeingQueued(activatedOrder);
 		orderBook.enqueue(activatedOrder);
 		return List.of();
 	}

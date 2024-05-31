@@ -1457,7 +1457,7 @@ public class SecurityTest {
 	void setup() {
 		security = Security.builder().lastTradePrice(550).build();
 		sellerBroker = Broker.builder().credit(0).build();
-		buyerBroker = Broker.builder().credit(32500).build();
+		buyerBroker = Broker.builder().credit(0).build();
 		sellerShareholder = Shareholder.builder().build();
 		buyerShareholder = Shareholder.builder().build();
 		sellerShareholder.incPosition(security, 85);
