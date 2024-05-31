@@ -56,13 +56,13 @@ public class ApplicationServiceResponse {
 	}
 
 	public long getRequestId() {
-		// Fixme:
+		// FIXME:
 		BaseOrderRq baseOrderRq = (BaseOrderRq) this.req;
 		return baseOrderRq.getRequestId();
 	}
 
 	public long getOrderId() {
-		// Fixme:
+		// FIXME:
 		BaseOrderRq baseOrderRq = (BaseOrderRq) this.req;
 		return baseOrderRq.getOrderId();
 	}

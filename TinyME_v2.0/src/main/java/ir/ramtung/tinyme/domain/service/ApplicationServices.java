@@ -33,11 +33,9 @@ import ir.ramtung.tinyme.messaging.request.MatchingState;
 import ir.ramtung.tinyme.repository.BrokerRepository;
 import ir.ramtung.tinyme.repository.SecurityRepository;
 import ir.ramtung.tinyme.repository.ShareholderRepository;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.springframework.stereotype.Service;
 
 @Service
@@ -90,8 +88,10 @@ public class ApplicationServices {
 			throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
 		}
 
-		if(security.getState() == SecurityState.AUCTION &&
-				security.isStopLimitOrder(deleteOrderRq.getSide(), deleteOrderRq.getOrderId())) {
+		if (
+			security.getState() == SecurityState.AUCTION &&
+			security.isStopLimitOrder(deleteOrderRq.getSide(), deleteOrderRq.getOrderId())
+		) {
 			throw new InvalidRequestException(Message.CAN_NOT_DELETE_SLO_IN_AUCTION_STATE);
 		}
 	}
@@ -165,33 +165,53 @@ public class ApplicationServices {
 	}
 
 	private Event createOpeningPriceEvent(AuctionStats auctionStats) {
-		return new OpeningPriceEvent(security.getIsin(), auctionStats.getOpeningPrice(), auctionStats.getTradableQuantity());
+		return new OpeningPriceEvent(
+			security.getIsin(),
+			auctionStats.getOpeningPrice(),
+			auctionStats.getTradableQuantity()
+		);
 	}
 
 	private Event createSecurityStateChangedEvent(StateStats stateStats) {
-		MatchingState state = (stateStats.getTo() == SecurityState.AUCTION) ? MatchingState.AUCTION : MatchingState.CONTINUOUS;
+		MatchingState state = (stateStats.getTo() == SecurityState.AUCTION)
+			? MatchingState.AUCTION
+			: MatchingState.CONTINUOUS;
 		return new SecurityStateChangedEvent(security.getIsin(), state);
 	}
 
 	private Event createEventFromSituationalStats(SituationalStats situationalStats, long requestId) {
 		long orderId = situationalStats.getOrderId();
 		switch (situationalStats.getType()) {
-            case SituationalStatsType.DELETE_ORDER         : return new OrderDeletedEvent(requestId, orderId); 
-            case SituationalStatsType.ADD_ORDER            : return new OrderAcceptedEvent(requestId, orderId);
-            case SituationalStatsType.UPDATE_ORDER         : return new OrderUpdatedEvent(requestId, orderId);
-            case SituationalStatsType.ORDER_ACTIVATED      : return new OrderActivatedEvent(orderId);
-            case SituationalStatsType.NOT_ENOUGH_CREDIT    : return new OrderRejectedEvent(requestId, orderId, List.of(Message.BUYER_HAS_NOT_ENOUGH_CREDIT));
-            case SituationalStatsType.NOT_ENOUGH_POSITIONS : return new OrderRejectedEvent(requestId, orderId, List.of(Message.SELLER_HAS_NOT_ENOUGH_POSITIONS));
-            case SituationalStatsType.NOT_ENOUGH_EXECUTION : return new OrderRejectedEvent(requestId, orderId, List.of(Message.MINIMUM_EXECUTION_QUANTITY_NOT_MET));
-            default : throw new UnknownError("Unknown SituationalStatsType");
-        }
+			case SituationalStatsType.DELETE_ORDER:
+				return new OrderDeletedEvent(requestId, orderId);
+			case SituationalStatsType.ADD_ORDER:
+				return new OrderAcceptedEvent(requestId, orderId);
+			case SituationalStatsType.UPDATE_ORDER:
+				return new OrderUpdatedEvent(requestId, orderId);
+			case SituationalStatsType.ORDER_ACTIVATED:
+				return new OrderActivatedEvent(orderId);
+			case SituationalStatsType.NOT_ENOUGH_CREDIT:
+				return new OrderRejectedEvent(requestId, orderId, List.of(Message.BUYER_HAS_NOT_ENOUGH_CREDIT));
+			case SituationalStatsType.NOT_ENOUGH_POSITIONS:
+				return new OrderRejectedEvent(requestId, orderId, List.of(Message.SELLER_HAS_NOT_ENOUGH_POSITIONS));
+			case SituationalStatsType.NOT_ENOUGH_EXECUTION:
+				return new OrderRejectedEvent(requestId, orderId, List.of(Message.MINIMUM_EXECUTION_QUANTITY_NOT_MET));
+			default:
+				throw new UnknownError("Unknown SituationalStatsType");
+		}
 	}
 
 	private List<Event> createEventsFromExecuteStats(ExecuteStats executeStats, long requestId) {
-		if (executeStats.isCountinues()) {
+		if (executeStats.isContinuous()) {
 			long orderId = executeStats.getOrderId();
 			long finalRequestId = (executeStats.isForActivatedOrder()) ? executeStats.getRequestId() : requestId;
-			return List.of(new OrderExecutedEvent(finalRequestId, orderId, executeStats.getTrades().stream().map(TradeDTO::new).collect(Collectors.toList())));
+			return List.of(
+				new OrderExecutedEvent(
+					finalRequestId,
+					orderId,
+					executeStats.getTrades().stream().map(TradeDTO::new).collect(Collectors.toList())
+				)
+			);
 		} else {
 			return createTradeEvents(executeStats);
 		}
@@ -280,7 +300,9 @@ public class ApplicationServices {
 	public ApplicationServiceResponse changeMatchingState(ChangeMatchingStateRq req) {
 		validateChangeMatchingState(req);
 		setEntitiesByRq(req);
-		SecurityState targetSecurityState = (req.getTargetState() == MatchingState.AUCTION) ? SecurityState.AUCTION : SecurityState.CONTINUOUS;
+		SecurityState targetSecurityState = (req.getTargetState() == MatchingState.AUCTION)
+			? SecurityState.AUCTION
+			: SecurityState.CONTINUOUS;
 		SecurityResponse response = security.changeMatchingState(targetSecurityState);
 		List<Event> events = createEventsFormSecurityStats(response.getStats(), 0);
 

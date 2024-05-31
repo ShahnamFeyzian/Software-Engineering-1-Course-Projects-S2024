@@ -3,6 +3,4 @@ package ir.ramtung.tinyme.domain.entity.security_stats;
 import lombok.Getter;
 
 @Getter
-public abstract class SecurityStats {
-	
-}
+public abstract class SecurityStats {}
