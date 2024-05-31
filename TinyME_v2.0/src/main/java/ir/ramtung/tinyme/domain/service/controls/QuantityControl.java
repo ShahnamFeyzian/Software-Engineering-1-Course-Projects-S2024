@@ -1,9 +1,11 @@
 package ir.ramtung.tinyme.domain.service.controls;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import ir.ramtung.tinyme.domain.entity.IcebergOrder;
 import ir.ramtung.tinyme.domain.entity.Order;
 import ir.ramtung.tinyme.domain.entity.OrderBook;
 import ir.ramtung.tinyme.domain.entity.Trade;
@@ -35,7 +37,10 @@ public class QuantityControl {
     }
 
     public void enqueueOrderToOrderBook(Order targetOrder, OrderBook orderBook) {
-        if (targetOrder.getQuantity() != 0) {
+        if (targetOrder instanceof IcebergOrder icebergOrder) {
+            icebergOrder.replenish();
+        }
+        if (targetOrder.getTotalQuantity() != 0) {
             orderBook.enqueue(targetOrder);
         }
     }
@@ -63,8 +68,21 @@ public class QuantityControl {
     }
 
     private void checkQuantityForUnqueue(Order order, OrderBook orderBook) {
+        if (order instanceof IcebergOrder icebergOrder) {
+            checkIcebergQuantityForReplenish(icebergOrder, orderBook);
+        }
+
         if (order.isDone()) {
             orderBook.removeOrder(order);
+        }
+    }
+
+    private void checkIcebergQuantityForReplenish(IcebergOrder icebergOrder, OrderBook orderBook) {
+        if (icebergOrder.isDisplayZero() && !icebergOrder.isDone()) {
+            orderBook.removeOrder(icebergOrder);
+            icebergOrder.replenish();
+            icebergOrder.addUpdateTime(LocalDateTime.now());
+            orderBook.enqueue(icebergOrder);
         }
     }
 
@@ -85,7 +103,7 @@ public class QuantityControl {
     }
 
     private void checkQuantityForEnqueue(Order order, OrderBook orderBook) {
-        if (order.isDone()) {
+        if (order.isDeleted()) {
             orderBook.enqueue(order);
         }
     }

@@ -221,7 +221,7 @@ public class Order {
 			price,
 			broker,
 			shareholder,
-			entryTimes,
+			new ArrayList<>(entryTimes),
 			OrderStatus.SNAPSHOT
 		);
 	}
@@ -266,9 +266,12 @@ public class Order {
 
 	public void rollback(Order firstVersion) {
 		this.quantity = firstVersion.quantity;
-		if (status == OrderStatus.DONE) {
-			security.getOrderBook().enqueue(this);
-		}
+		copyEntryTimes(firstVersion.entryTimes);
+	}
+
+	private void copyEntryTimes(List<LocalDateTime> entryTimes) {
+		this.entryTimes.clear();
+		entryTimes.forEach(time -> this.entryTimes.add(time));
 	}
 
 	public void makeQuantityZero() {
@@ -348,6 +351,10 @@ public class Order {
 		return this.status == OrderStatus.DONE;
 	}
 
+	public boolean isDeleted() {
+		return this.status == OrderStatus.DELETED;
+	}
+
 	public boolean isMinimumExecuteQuantitySatisfied(int executedQuantity) {
 		return this.minimumExecutionQuantity <= executedQuantity;
 	}
@@ -359,7 +366,7 @@ public class Order {
 	}
 
 	public void delete() {
-		
+		this.status = OrderStatus.DELETED;
 	}
 
 	public boolean willPriorityLostInUpdate(Order tempOrder) {

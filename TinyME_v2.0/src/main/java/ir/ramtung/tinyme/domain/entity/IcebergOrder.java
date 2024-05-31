@@ -3,8 +3,12 @@ package ir.ramtung.tinyme.domain.entity;
 import ir.ramtung.tinyme.domain.exception.InvalidIcebergPeakSizeException;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.jms.artemis.ArtemisAutoConfiguration;
+
+import io.netty.channel.local.LocalAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -224,7 +228,7 @@ public class IcebergOrder extends Order {
 			price,
 			broker,
 			shareholder,
-			entryTimes,
+			new ArrayList<>(entryTimes),
 			peakSize,
 			OrderStatus.SNAPSHOT
 		);
@@ -257,12 +261,6 @@ public class IcebergOrder extends Order {
 	}
 
 	@Override
-	public void queue() {
-		super.queue();
-		this.replenish();
-	}
-
-	@Override
 	public void decreaseQuantity(int amount) {
 		if (status != OrderStatus.QUEUED) {
 			super.decreaseQuantity(amount);
@@ -274,20 +272,13 @@ public class IcebergOrder extends Order {
 
 		quantity -= amount;
 		displayedQuantity -= amount;
-		checkEmptyDisplayQuantity();
+		if (quantity == 0) {
+			this.status = OrderStatus.DONE;
+		}
 	}
 
-	private void checkEmptyDisplayQuantity() {
-		if (displayedQuantity == 0) {
-			status = OrderStatus.DONE;
-			security.deleteOrder(side, orderId);
-			if (quantity != 0) {
-				this.entryTimes.add(LocalDateTime.now());
-				if (this.side == Side.BUY) //FIXME: refactor
-					this.broker.decreaseCreditBy(getValue());
-				security.getOrderBook().enqueue(this);
-			}
-		}
+	public boolean isDisplayZero() {
+		return displayedQuantity == 0;
 	}
 
 	@Override
@@ -328,5 +319,9 @@ public class IcebergOrder extends Order {
 
 		IcebergOrder tempIcebergOrder = (IcebergOrder) tempOrder;
 		return this.peakSize < tempIcebergOrder.peakSize;
+	}
+
+	public void addUpdateTime(LocalDateTime updateTime) {
+		entryTimes.add(updateTime);
 	}
 }

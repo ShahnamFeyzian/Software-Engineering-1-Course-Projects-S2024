@@ -7,4 +7,5 @@ public enum OrderStatus {
 	SNAPSHOT,
 	LOADING,
 	DONE,
+	DELETED,
 }
