@@ -124,7 +124,9 @@ public class Security {
 	}
 
 	public SecurityResponse deleteOrder(Side side, long orderId) {
-		orderBook.removeByOrderId(side, orderId);
+		Order order = findByOrderId(side, orderId);
+		creditControl.updateCreditAtDelete(order);
+		orderBook.removeOrder(order);
 
 		List<SecurityStats> stats = new ArrayList<>();
 		stats.add(SituationalStats.createDeleteOrderStats(orderId));
@@ -173,7 +175,8 @@ public class Security {
 		boolean losesPriority = mainOrder.willPriorityLostInUpdate(tempOrder);
 		if (losesPriority) {
 			Order originalOrder = mainOrder.snapshot();
-			orderBook.removeByOrderId(originalOrder.getSide(), originalOrder.getOrderId());
+			creditControl.updateCreditAtDelete(mainOrder);
+			orderBook.removeOrder(mainOrder);
 			mainOrder.updateFromTempOrder(tempOrder);
 			return reAddUpdatedOrder(mainOrder, originalOrder);
 		} else {
@@ -309,6 +312,7 @@ public class Security {
 		StopLimitOrder slo;
 
 		while ((slo = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
+			creditControl.updateCreditAtDelete(slo);
 			stats.add(SituationalStats.createOrderActivatedStats(slo.getOrderId(), slo.getRequestId()));
 			Order activatedOrder = new Order(slo);
 			if (this.state == SecurityState.CONTINUOUS) {

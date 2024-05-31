@@ -59,6 +59,14 @@ public class CreditControl {
         }
     }
 
+    public void updateCreditAtDelete(Order order) {
+        if (order.isBuy()) {
+            Broker buyerBroker = order.getBroker();
+            long orderValue = order.getValue();
+            buyerBroker.increaseCreditBy(orderValue);
+        }
+    }
+
     private void updateBuyerCreditAtTrade(Trade trade) {
         Order buyOrder = trade.getBuy();
         Broker buyerBroker = buyOrder.getBroker();

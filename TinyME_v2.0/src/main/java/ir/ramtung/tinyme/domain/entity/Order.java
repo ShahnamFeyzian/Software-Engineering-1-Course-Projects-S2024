@@ -359,9 +359,7 @@ public class Order {
 	}
 
 	public void delete() {
-		if (side == Side.BUY) {
-			broker.increaseCreditBy(getValue());
-		}
+		
 	}
 
 	public boolean willPriorityLostInUpdate(Order tempOrder) {
