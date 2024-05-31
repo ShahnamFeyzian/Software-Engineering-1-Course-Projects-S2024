@@ -34,7 +34,7 @@ public class QuantityControl {
         updateSellQuantityAtRollbackTrade(trade);
     }
 
-    public void updateQuantityAfterContinuousMatching(Order targetOrder, OrderBook orderBook) {
+    public void enqueueOrderToOrderBook(Order targetOrder, OrderBook orderBook) {
         if (targetOrder.getQuantity() != 0) {
             orderBook.enqueue(targetOrder);
         }

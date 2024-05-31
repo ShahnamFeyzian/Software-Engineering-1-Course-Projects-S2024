@@ -21,7 +21,7 @@ public class ContinuousMatchingControl extends MatchingControl {
 
     @Override
     public ControlResult checkBeforeMatch(Trade trade) {
-        return creditControl.chekCreditForContinousMatching(trade);
+        return creditControl.chekCreditForTrade(trade);
     }
 
     @Override
@@ -36,13 +36,13 @@ public class ContinuousMatchingControl extends MatchingControl {
             return controlResult;
         }
 
-        return creditControl.checkCreditForBeQueued(targetOrder);
+        return creditControl.checkCreditForBeingQueued(targetOrder);
     }
 
     @Override
     public void actionAtAfterMatching(Order targetOrder, OrderBook orderBook) {
-        creditControl.updateCreditAfterContinuousMatching(targetOrder);
-        quantityControl.updateQuantityAfterContinuousMatching(targetOrder, orderBook);
+        creditControl.updateCreditForBeingQueued(targetOrder);
+        quantityControl.enqueueOrderToOrderBook(targetOrder, orderBook);
     }
 
     @Override

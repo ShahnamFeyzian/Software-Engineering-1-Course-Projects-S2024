@@ -8,7 +8,7 @@ import ir.ramtung.tinyme.domain.entity.Trade;
 
 @Service
 public class CreditControl {
-    public ControlResult chekCreditForContinousMatching(Trade trade) {
+    public ControlResult chekCreditForTrade(Trade trade) {
         if (trade.isBuyQueued()) {
             return ControlResult.OK;
         }
@@ -25,7 +25,7 @@ public class CreditControl {
         }
     }
 
-    public ControlResult checkCreditForBeQueued(Order order) {
+    public ControlResult checkCreditForBeingQueued(Order order) {
         if (order.isSell()) {
             return ControlResult.OK;
         }
@@ -51,13 +51,12 @@ public class CreditControl {
         updateSellerCreditAtRollbackTrade(trade);
     }
 
-    public void updateCreditAfterContinuousMatching(Order targetOrder) {
-        // FIXME: need refactoring
-        // if (targetOrder.isBuy()) {
-        //     Broker buyerBroker = targetOrder.getBroker();
-        //     long remainderValue = targetOrder.getValue();
-        //     buyerBroker.decreaseCreditBy(remainderValue);
-        // }
+    public void updateCreditForBeingQueued(Order targetOrder) {
+        if (targetOrder.isBuy()) {
+            Broker buyerBroker = targetOrder.getBroker();
+            long remainderValue = targetOrder.getValue();
+            buyerBroker.decreaseCreditBy(remainderValue);
+        }
     }
 
     private void updateBuyerCreditAtTrade(Trade trade) {
