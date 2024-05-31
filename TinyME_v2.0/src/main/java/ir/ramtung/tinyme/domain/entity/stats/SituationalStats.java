@@ -1,4 +1,4 @@
-package ir.ramtung.tinyme.domain.entity.security_stats;
+package ir.ramtung.tinyme.domain.entity.stats;
 
 import ir.ramtung.tinyme.domain.entity.MatchResult;
 import ir.ramtung.tinyme.domain.entity.MatchingOutcome;

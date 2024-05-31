@@ -3,12 +3,12 @@ package ir.ramtung.tinyme.domain.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import ir.ramtung.tinyme.domain.entity.security_stats.AuctionStats;
-import ir.ramtung.tinyme.domain.entity.security_stats.ExecuteStats;
-import ir.ramtung.tinyme.domain.entity.security_stats.SecurityStats;
-import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStats;
-import ir.ramtung.tinyme.domain.entity.security_stats.SituationalStatsType;
-import ir.ramtung.tinyme.domain.entity.security_stats.StateStats;
+import ir.ramtung.tinyme.domain.entity.stats.AuctionStats;
+import ir.ramtung.tinyme.domain.entity.stats.ExecuteStats;
+import ir.ramtung.tinyme.domain.entity.stats.SecurityStats;
+import ir.ramtung.tinyme.domain.entity.stats.SituationalStats;
+import ir.ramtung.tinyme.domain.entity.stats.SituationalStatsType;
+import ir.ramtung.tinyme.domain.entity.stats.StateStats;
 import ir.ramtung.tinyme.domain.exception.NotFoundException;
 
 import java.time.LocalDateTime;

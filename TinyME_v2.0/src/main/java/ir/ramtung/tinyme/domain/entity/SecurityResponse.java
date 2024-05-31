@@ -3,7 +3,7 @@ package ir.ramtung.tinyme.domain.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import ir.ramtung.tinyme.domain.entity.security_stats.SecurityStats;
+import ir.ramtung.tinyme.domain.entity.stats.SecurityStats;
 import lombok.Getter;
 
 @Getter

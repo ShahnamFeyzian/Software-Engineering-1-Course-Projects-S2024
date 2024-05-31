@@ -1,4 +1,4 @@
-package ir.ramtung.tinyme.domain.entity.security_stats;
+package ir.ramtung.tinyme.domain.entity.stats;
 
 import ir.ramtung.tinyme.domain.entity.SecurityState;
 import lombok.Getter;
