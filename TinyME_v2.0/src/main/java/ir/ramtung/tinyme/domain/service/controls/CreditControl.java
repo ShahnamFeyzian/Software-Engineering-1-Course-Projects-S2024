@@ -68,17 +68,16 @@ public class CreditControl {
 	private void updateBuyerCreditAtTrade(Trade trade) {
 		Order buyOrder = trade.getBuy();
 		Broker buyerBroker = buyOrder.getBroker();
-		boolean isBuyOrderQueued = buyOrder.isQueued();
 		long tradeValue = trade.getTradedValue();
 
-		// FIXME: need refactoring
-        // I don't understand why it needs refactoring. :(
-		if (!isBuyOrderQueued) {
+		if (!buyOrder.isQueued()) {
 			buyerBroker.decreaseCreditBy(tradeValue);
-		} else if (trade.getPrice() < buyOrder.getPrice()) {
-			long backCredit = (long) ((buyOrder.getPrice() - trade.getPrice()) * trade.getQuantity());
-			buyOrder.getBroker().increaseCreditBy(backCredit);
-		}
+		} else {
+			if (trade.getPrice() < buyOrder.getPrice()) {
+				long backCredit = (long) ((buyOrder.getPrice() - trade.getPrice()) * trade.getQuantity());
+				buyOrder.getBroker().increaseCreditBy(backCredit);
+			}
+		} 
 	}
 
 	private void updateSellerCreditAtTrade(Trade trade) {

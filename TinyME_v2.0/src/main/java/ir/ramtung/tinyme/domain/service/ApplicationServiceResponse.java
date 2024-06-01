@@ -1,5 +1,6 @@
 package ir.ramtung.tinyme.domain.service;
 
+import ir.ramtung.tinyme.domain.exception.InvalidRequestFieldAccess;
 import ir.ramtung.tinyme.messaging.event.Event;
 import ir.ramtung.tinyme.messaging.request.BaseOrderRq;
 import java.util.List;
@@ -55,15 +56,17 @@ public class ApplicationServiceResponse {
 		);
 	}
 
-	public long getRequestId() {
-		// FIXME:
-		BaseOrderRq baseOrderRq = (BaseOrderRq) this.req;
-		return baseOrderRq.getRequestId();
+	public long getRequestId() throws InvalidRequestFieldAccess {
+		if (this.req instanceof BaseOrderRq baseOrderRq) {
+			return baseOrderRq.getRequestId();
+		}
+		throw new InvalidRequestFieldAccess();
 	}
 
-	public long getOrderId() {
-		// FIXME:
-		BaseOrderRq baseOrderRq = (BaseOrderRq) this.req;
-		return baseOrderRq.getOrderId();
+	public long getOrderId() throws InvalidRequestFieldAccess {
+		if (this.req instanceof BaseOrderRq baseOrderRq) {
+			return baseOrderRq.getOrderId();
+		}
+		throw new InvalidRequestFieldAccess();
 	}
 }
