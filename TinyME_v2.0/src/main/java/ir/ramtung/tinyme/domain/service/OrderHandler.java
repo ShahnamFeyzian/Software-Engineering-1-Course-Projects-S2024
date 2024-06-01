@@ -29,11 +29,13 @@ public class OrderHandler {
 			ApplicationServiceResponse response = callService(baseRq);
 			publishApplicationServiceResponse(response);
 		} catch (InvalidRequestException ex) {
-			BaseOrderRq baseOrderRq = (BaseOrderRq) baseRq;
-			//FIXME: Add line -1 to fix line +2
-			eventPublisher.publish(
-					new OrderRejectedEvent(baseOrderRq.getRequestId(), baseOrderRq.getOrderId(), ex.getReasons())
-			);
+			if (baseRq instanceof BaseOrderRq baseOrderRq) {
+				eventPublisher.publish(
+						new OrderRejectedEvent(baseOrderRq.getRequestId(), baseOrderRq.getOrderId(), ex.getReasons())
+				);
+			} else {
+				throw ex;
+			}
 		}
 	}
 
