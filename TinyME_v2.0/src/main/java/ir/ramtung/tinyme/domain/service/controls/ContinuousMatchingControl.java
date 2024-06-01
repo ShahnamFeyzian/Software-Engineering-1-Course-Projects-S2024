@@ -43,13 +43,13 @@ public class ContinuousMatchingControl extends MatchingControl {
 	}
 
 	@Override
-	public void actionAtAfterMatching(Order targetOrder, OrderBook orderBook) {
+	public void actionAfterMatching(Order targetOrder, OrderBook orderBook) {
 		creditControl.updateCreditForBeingQueued(targetOrder);
 		quantityControl.enqueueOrderToOrderBook(targetOrder, orderBook);
 	}
 
 	@Override
-	public void actionAtfailedAfterMatching(List<Trade> trades, OrderBook orerrBook) {
+	public void actionAfterFailedMatching(List<Trade> trades, OrderBook orerrBook) {
 		rollbackTrades(trades, orerrBook);
 	}
 

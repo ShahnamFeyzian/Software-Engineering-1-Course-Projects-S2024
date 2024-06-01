@@ -45,7 +45,7 @@ public abstract class MatchingControl {
 		return ControlResult.OK;
 	}
 
-	public void actionAtAfterMatching(Order targetOrder, OrderBook orderBook) {}
+	public void actionAfterMatching(Order targetOrder, OrderBook orderBook) {}
 
-	public void actionAtfailedAfterMatching(List<Trade> trades, OrderBook orerrBook) {}
+	public void actionAfterFailedMatching(List<Trade> trades, OrderBook orerrBook) {}
 }

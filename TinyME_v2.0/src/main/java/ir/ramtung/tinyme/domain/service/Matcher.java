@@ -84,9 +84,9 @@ public class Matcher {
 
 		controlResult = continuousMatchingControl.checkAfterMatching(order, trades);
 		if (controlResult == ControlResult.OK) {
-			continuousMatchingControl.actionAtAfterMatching(order, orderBook);	
+			continuousMatchingControl.actionAfterMatching(order, orderBook);	
 		} else {
-			continuousMatchingControl.actionAtfailedAfterMatching(trades, orderBook);
+			continuousMatchingControl.actionAfterFailedMatching(trades, orderBook);
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
@@ -110,9 +110,9 @@ public class Matcher {
 		
 		controlResult = auctionMatchingControl.checkAfterMatching(null, trades);
 		if (controlResult == ControlResult.OK) {
-			auctionMatchingControl.actionAtAfterMatching(null, orderBook);	
+			auctionMatchingControl.actionAfterMatching(null, orderBook);	
 		} else {
-			auctionMatchingControl.actionAtfailedAfterMatching(trades, orderBook);
+			auctionMatchingControl.actionAfterFailedMatching(trades, orderBook);
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
