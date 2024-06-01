@@ -22,13 +22,13 @@ public class Matcher {
 	}
 
 	private boolean hasOrderForAuction(OrderBook orderBook) {
-		return orderBook.hasOrderOfType(Side.BUY) &&
-				orderBook.hasOrderOfType(Side.SELL);
+		return orderBook.hasOrderOfType(Side.BUY) && orderBook.hasOrderOfType(Side.SELL);
 	}
 
 	public int calcOpeningAuctionPrice(OrderBook orderBook, int lastTradePrice) {
-		if(!hasOrderForAuction(orderBook))
+		if(!hasOrderForAuction(orderBook)) {
 			return lastTradePrice;
+		}
 
 		int maxTradableQuantity = 0;
 		int openingPrice = lastTradePrice; 
@@ -37,16 +37,19 @@ public class Matcher {
 		
 		for (int price = minPrice; price <= maxPrice; price++) {
 			int currentTradableQuantity = calcTradableQuantity(orderBook, price);
-			if (currentTradableQuantity > maxTradableQuantity) {
+			if (shouldUpdateOpeningAuctionPrice(openingPrice, price, lastTradePrice, maxTradableQuantity, currentTradableQuantity)) {
 				openingPrice = price;
 				maxTradableQuantity = currentTradableQuantity;
-			} 
-			else if (currentTradableQuantity == maxTradableQuantity && Math.abs(price - lastTradePrice) < Math.abs(openingPrice - lastTradePrice)) {
-				openingPrice = price;
 			}
 		}
 		
 		return openingPrice;
+	}
+
+	private boolean shouldUpdateOpeningAuctionPrice(int openingPrice, int newOpeningPrice, int lastTradePrice, int openingTradableQuantity, int newOpeningTradableQuantity) {
+		return newOpeningTradableQuantity > openingTradableQuantity || 
+				(newOpeningTradableQuantity == openingTradableQuantity && 
+				Math.abs(newOpeningPrice - lastTradePrice) < Math.abs(openingPrice - lastTradePrice));
 	}
 
 	public int calcTradableQuantity(OrderBook orderBook, int openingPrice) {
