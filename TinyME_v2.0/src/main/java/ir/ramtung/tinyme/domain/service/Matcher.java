@@ -58,14 +58,11 @@ public class Matcher {
 		return Math.min(buysQuantity, sellsQuantity);
 	}
 
-	public int calcTradableQuantityInQueue(List<Order> queue, int price) {
-		int quantity = 0;
-		for (Order order : queue) {
-			if (order.canTradeWithPrice(price)) {
-				quantity += order.getTotalQuantity();
-			}
-		}
-		return quantity;
+	private int calcTradableQuantityInQueue(List<Order> queue, int price) {
+		return queue.stream()
+			 		.filter(order -> order.canTradeWithPrice(price))
+			 		.mapToInt(Order::getTotalQuantity)
+			 		.sum();
 	}
 
 	public MatchResult continuousMatch(Order order, OrderBook orderBook) {
@@ -100,6 +97,7 @@ public class Matcher {
 		ControlResult controlResult;
 		List<Trade> trades = new ArrayList<>();
 		Trade currentTrade;
+
 		while((currentTrade = createTradeForAuctionMatching(orderBook, openingPrice)) != null) {
 			controlResult = auctionMatchingControl.checkBeforeMatch(currentTrade);
 			if (controlResult == ControlResult.OK) {
@@ -141,7 +139,6 @@ public class Matcher {
 		if (controlResult != ControlResult.OK) {
 			return MatchResult.createFromControlResult(controlResult);
 		}
-
 		return continuousMatch(targetOrder, orderBook);
 	}
 
@@ -150,7 +147,6 @@ public class Matcher {
 		if (controlResult != ControlResult.OK) {
 			return MatchResult.createFromControlResult(controlResult);
 		}
-
 		int openingPrice = calcOpeningAuctionPrice(orderBook, lastTradePrice);
 		return auctionMatch(orderBook, openingPrice);
 	}
@@ -169,7 +165,6 @@ public class Matcher {
 		if (targetOrder.getQuantity() == 0) {
 			return null;
 		}
-
 		return orderBook.findOrderToMatchWith(targetOrder);
 	}
 
