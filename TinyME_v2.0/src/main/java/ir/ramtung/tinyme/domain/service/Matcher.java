@@ -82,11 +82,8 @@ public class Matcher {
 			}
 		}
 
-		controlResult = continuousMatchingControl.checkAfterMatching(order, trades);
-		if (controlResult == ControlResult.OK) {
-			continuousMatchingControl.actionAfterMatching(order, orderBook);	
-		} else {
-			continuousMatchingControl.actionAfterFailedMatching(trades, orderBook);
+		controlResult = endMatching(continuousMatchingControl, order, orderBook, trades);
+		if (controlResult != ControlResult.OK) {
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
@@ -109,15 +106,23 @@ public class Matcher {
 			}
 		}
 		
-		controlResult = auctionMatchingControl.checkAfterMatching(null, trades);
-		if (controlResult == ControlResult.OK) {
-			auctionMatchingControl.actionAfterMatching(null, orderBook);	
-		} else {
-			auctionMatchingControl.actionAfterFailedMatching(trades, orderBook);
+		controlResult = endMatching(auctionMatchingControl, null, orderBook, trades);
+		if (controlResult != ControlResult.OK) {
 			return MatchResult.createFromControlResult(controlResult);
 		}
 
 		return MatchResult.executed(null, trades);
+	}
+
+	private ControlResult endMatching(MatchingControl control, Order targetOrder, OrderBook orderBook, List<Trade> trades) {
+		ControlResult result = control.checkAfterMatching(targetOrder, trades);
+		if (result == ControlResult.OK) {
+			control.actionAfterMatching(targetOrder, orderBook);	
+		} else {
+			control.actionAfterFailedMatching(trades, orderBook);
+		}
+
+		return result;
 	}
 
 	private Trade createTradeForAuctionMatching(OrderBook orderBook, int openingPrice) {
