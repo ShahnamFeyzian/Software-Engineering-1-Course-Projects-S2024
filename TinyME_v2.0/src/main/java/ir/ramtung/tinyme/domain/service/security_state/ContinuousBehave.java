@@ -35,7 +35,7 @@ public class ContinuousBehave implements SecurityBehave {
     @Override
     public List<SecurityStats> addNewOrder(Order newOrder, OrderBook orderBook, int lastTradePrice) {
         if (positionControl.checkPositionForOrder(newOrder, orderBook) != ControlResult.OK) {
-			return List.of(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId()));
+			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId())));
 		}
 
         if (newOrder instanceof StopLimitOrder newStopLimitOrder) {
@@ -56,7 +56,7 @@ public class ContinuousBehave implements SecurityBehave {
 			return reAddUpdatedOrder(mainOrder, originalOrder, orderBook);
 		} else {
 			mainOrder.updateFromTempOrder(tempOrder);
-		    return List.of(SituationalStats.createUpdateOrderStats(mainOrder.getOrderId()));
+		    return new ArrayList<SecurityStats>(List.of(SituationalStats.createUpdateOrderStats(mainOrder.getOrderId())));
 		}
     }
 
@@ -64,7 +64,7 @@ public class ContinuousBehave implements SecurityBehave {
     public List<SecurityStats> deleteOrder(Order targetOrder, OrderBook orderBook, int lastTradePrice) {
         creditControl.updateCreditAtDelete(targetOrder);
 		orderBook.removeOrder(targetOrder);
-        return List.of(SituationalStats.createDeleteOrderStats(targetOrder.getOrderId()));
+        return new ArrayList<SecurityStats>(List.of(SituationalStats.createDeleteOrderStats(targetOrder.getOrderId())));
     }
 
     @Override
@@ -89,17 +89,17 @@ public class ContinuousBehave implements SecurityBehave {
 
     @Override
     public List<SecurityStats> changeMatchingState(OrderBook orderBook, int lastTradePrice, SecurityState newState) {
-        return List.of(StateStats.createStateStats(SecurityState.CONTINUOUS, newState));
+        return new ArrayList<SecurityStats>(List.of(StateStats.createStateStats(SecurityState.CONTINUOUS, newState)));
     }
     
     private List<SecurityStats> addNewStopLimitOrder(StopLimitOrder newOrder, OrderBook orderBook) {
 		if (creditControl.checkCreditForBeingQueued(newOrder) != ControlResult.OK) {
-			return List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
+			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId())));
 		}
 
 		creditControl.updateCreditForBeingQueued(newOrder);
 		orderBook.enqueue(newOrder);
-		return List.of(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
+		return new ArrayList<SecurityStats>(List.of(SituationalStats.createAddOrderStats(newOrder.getOrderId())));
 	}
 
     private List<SecurityStats> addNewLimitOrder(Order newOrder, OrderBook orderBook) {
@@ -120,7 +120,7 @@ public class ContinuousBehave implements SecurityBehave {
 		if (positionControl.checkPositionForOrder(updatedOrder, orderBook) != ControlResult.OK) {
 			creditControl.updateCreditForBeingQueued(originalOrder);
 			orderBook.enqueue(originalOrder);
-			return List.of(SituationalStats.createNotEnoughPositionsStats(originalOrder.getOrderId()));
+			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughPositionsStats(originalOrder.getOrderId())));
 		}
 		
 		if (updatedOrder instanceof StopLimitOrder updatedSlo) {
@@ -135,7 +135,7 @@ public class ContinuousBehave implements SecurityBehave {
 			if (creditControl.checkCreditForBeingQueued(updatedOrder) != ControlResult.OK) {
 				creditControl.updateCreditForBeingQueued(originalOrder);
 				orderBook.enqueue(originalOrder);
-				return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
+				return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId())));
 			}
 
 			creditControl.updateCreditForBeingQueued(updatedOrder);

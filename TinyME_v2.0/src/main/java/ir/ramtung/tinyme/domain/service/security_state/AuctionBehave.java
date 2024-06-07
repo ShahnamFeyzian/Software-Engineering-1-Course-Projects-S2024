@@ -36,10 +36,10 @@ public class AuctionBehave implements SecurityBehave{
     @Override
     public List<SecurityStats> addNewOrder(Order newOrder, OrderBook orderBook, int lastTradePrice) {
         if (positionControl.checkPositionForOrder(newOrder, orderBook) != ControlResult.OK) {
-			return List.of(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId()));
+			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId())));
 		}
         if (creditControl.checkCreditForBeingQueued(newOrder) != ControlResult.OK) {
-			return List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
+			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId())));
 		}
 
 		creditControl.updateCreditForBeingQueued(newOrder);
@@ -119,12 +119,12 @@ public class AuctionBehave implements SecurityBehave{
 		if (positionControl.checkPositionForOrder(updatedOrder, orderBook) != ControlResult.OK) {
 			creditControl.updateCreditForBeingQueued(originalOrder);
 			orderBook.enqueue(originalOrder);
-			return List.of(SituationalStats.createNotEnoughPositionsStats(originalOrder.getOrderId()));
+			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughPositionsStats(originalOrder.getOrderId())));
 		}
 		if (creditControl.checkCreditForBeingQueued(updatedOrder) != ControlResult.OK) {
 			creditControl.updateCreditForBeingQueued(originalOrder);
 			orderBook.enqueue(originalOrder);
-			return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
+			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId())));
 		}
 
 		creditControl.updateCreditForBeingQueued(updatedOrder);

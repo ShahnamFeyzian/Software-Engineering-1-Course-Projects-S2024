@@ -1,15 +1,10 @@
 package ir.ramtung.tinyme.domain.entity;
 
-import ir.ramtung.tinyme.domain.entity.stats.AuctionStats;
 import ir.ramtung.tinyme.domain.entity.stats.ExecuteStats;
 import ir.ramtung.tinyme.domain.entity.stats.SecurityStats;
-import ir.ramtung.tinyme.domain.entity.stats.SituationalStats;
-import ir.ramtung.tinyme.domain.entity.stats.StateStats;
-import ir.ramtung.tinyme.domain.exception.UnknownSecurityStateException;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.domain.service.controls.AuctionMatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.ContinuousMatchingControl;
-import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.CreditControl;
 import ir.ramtung.tinyme.domain.service.controls.PositionControl;
 import ir.ramtung.tinyme.domain.service.controls.QuantityControl;
@@ -18,7 +13,6 @@ import ir.ramtung.tinyme.domain.service.security_state.ContinuousBehave;
 import ir.ramtung.tinyme.domain.service.security_state.SecurityBehave;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,239 +51,47 @@ public class Security {
 	private SecurityState state = SecurityState.CONTINUOUS;
 
 	public SecurityResponse addNewOrder(Order newOrder) {
-		if (positionControl.checkPositionForOrder(newOrder, orderBook) != ControlResult.OK) {
-			return new SecurityResponse(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId()));
-		}
-		List<SecurityStats> stats = handleAdd(newOrder);
+		List<SecurityStats> stats = currentBehave.addNewOrder(newOrder, orderBook, lastTradePrice);
+		updateLastTradePrice(stats);
+		stats.addAll(currentBehave.activateStopLimitOrders(orderBook, lastTradePrice));
+		updateLastTradePrice(stats);
 		return new SecurityResponse(stats);
-	}
-
-	private List<SecurityStats> handleAdd(Order newOrder) {
-		if (this.state == SecurityState.CONTINUOUS) {
-			return handleAddInContinuousState(newOrder);
-		} else if (this.state == SecurityState.AUCTION) {
-			return handleAddInAuctionState(newOrder);
-		} else {
-			throw new UnknownSecurityStateException();
-		}
-	}
-
-	private List<SecurityStats> handleAddInAuctionState(Order newOrder) {
-		if (creditControl.checkCreditForBeingQueued(newOrder) != ControlResult.OK) {
-			return List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
-		}
-
-		creditControl.updateCreditForBeingQueued(newOrder);
-		orderBook.enqueue(newOrder);
-
-		List<SecurityStats> stats = new ArrayList<>();
-		stats.add(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
-		stats.add(createAuctionStats());
-		return stats;
-	}
-
-	private List<SecurityStats> handleAddInContinuousState(Order newOrder) {
-		List<SecurityStats> stats = new ArrayList<>();
-		if (newOrder instanceof StopLimitOrder newStopLimitOrder) {
-			stats.addAll(addNewStopLimitOrder(newStopLimitOrder));
-		} else {
-			stats.addAll(addNewLimitOrderInContinuousState(newOrder));
-		}
-		stats.addAll(activateStopLimitOrders());
-		return stats;
-	}
-
-	private void updateLastTradePrice(List<Trade> trades) {
-		if (!trades.isEmpty()) {
-			lastTradePrice = trades.getLast().getPrice();
-		}
-	}
-
-	private List<SecurityStats> addNewStopLimitOrder(StopLimitOrder newOrder) {
-		if (creditControl.checkCreditForBeingQueued(newOrder) != ControlResult.OK) {
-			return List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId()));
-		}
-
-		creditControl.updateCreditForBeingQueued(newOrder);
-		orderBook.enqueue(newOrder);
-		return List.of(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
-	}
-
-	private List<SecurityStats> addNewLimitOrderInContinuousState(Order newOrder) {
-		List<SecurityStats> stats = new ArrayList<>();
-		stats.add(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
-
-		MatchResult newOrderMatchResult = matcher.continuousExecuting(newOrder, orderBook);
-		if (!newOrderMatchResult.isSuccessful()) {
-			stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(newOrderMatchResult, newOrder.getOrderId()));
-		}
-		if(!newOrderMatchResult.trades().isEmpty()) {
-			stats.add(ExecuteStats.createContinuousExecuteStats(newOrderMatchResult.trades(), newOrder.getOrderId()));
-		}
-		updateLastTradePrice(newOrderMatchResult.trades());
-		return stats;
-	}
-
-	public SecurityResponse deleteOrder(Side side, long orderId) {
-		Order order = findByOrderId(side, orderId);
-		creditControl.updateCreditAtDelete(order);
-		orderBook.removeOrder(order);
-
-		List<SecurityStats> stats = new ArrayList<>();
-		stats.add(SituationalStats.createDeleteOrderStats(orderId));
-		if (this.state == SecurityState.AUCTION) {
-			stats.add(createAuctionStats());
-		}
-		return new SecurityResponse(stats);
-	}
-
-	public SecurityResponse changeMatchingState(SecurityState newState) { //TODO: dont forget to call activateStopLimitOrders after changeMatchingState when you want to use SecurityBehave
-		StateStats stateStats = StateStats.createStateStats(this.state, newState);
-		SecurityState prevState = this.state;
-		this.state = newState;
-		if (prevState == SecurityState.CONTINUOUS) {
-			return new SecurityResponse(stateStats);
-		} else if (prevState == SecurityState.AUCTION) {
-			List<SecurityStats> stats = openAuction();
-			stats.add(stateStats);
-			stats.addAll(activateStopLimitOrders());
-			return new SecurityResponse(stats);
-		} else {
-			throw new UnknownSecurityStateException();
-		}
-	}
-
-	private List<SecurityStats> openAuction() {
-		List<SecurityStats> stats = new ArrayList<>();
-
-		List<Trade> trades = matcher.auctionExecuting(orderBook, lastTradePrice).trades();
-		if (!trades.isEmpty()) {
-			stats.add(ExecuteStats.createAuctionExecuteStats(trades));
-		}
-
-		updateLastTradePrice(trades);
-
-		return stats;
 	}
 
 	public SecurityResponse updateOrder(Order tempOrder) {
 		Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
-		List<SecurityStats> stats = handleUpdate(tempOrder, mainOrder);
+		List<SecurityStats> stats = currentBehave.updateOrder(tempOrder, mainOrder, orderBook, lastTradePrice);
+		updateLastTradePrice(stats);
+		stats.addAll(currentBehave.activateStopLimitOrders(orderBook, lastTradePrice));
+		updateLastTradePrice(stats);
 		return new SecurityResponse(stats);
 	}
 
-	private List<SecurityStats> handleUpdate(Order tempOrder, Order mainOrder) {
-		boolean losesPriority = mainOrder.willPriorityLostInUpdate(tempOrder);
-		if (losesPriority) {
-			Order originalOrder = mainOrder.snapshot();
-			creditControl.updateCreditAtDelete(mainOrder);
-			orderBook.removeOrder(mainOrder);
-			mainOrder.updateFromTempOrder(tempOrder);
-			return reAddUpdatedOrder(mainOrder, originalOrder);
-		} else {
-			return updateByKeepingPriority(tempOrder, mainOrder);
-		}
+	public SecurityResponse deleteOrder(Side side, long orderId) {
+		Order order = findByOrderId(side, orderId);
+		List<SecurityStats> stats = currentBehave.deleteOrder(order, orderBook, lastTradePrice);
+		return new SecurityResponse(stats);
 	}
 
-	private List<SecurityStats> updateByKeepingPriority(Order tempOrder, Order mainOrder) {
-		if (this.state == SecurityState.CONTINUOUS) {
-			return updateByKeepingPriorityInContinuousState(tempOrder, mainOrder);
-		} else if (this.state == SecurityState.AUCTION) {
-			return updateByKeepingPriorityInAuctionState(tempOrder, mainOrder);
-		} else {
-			throw new UnknownSecurityStateException();
-		}
+	public SecurityResponse changeMatchingState(SecurityState newState) {
+		//FIXME: maybe refactor!!!
+		List<SecurityStats> stats = currentBehave.changeMatchingState(orderBook, lastTradePrice, newState);
+		updateLastTradePrice(stats);
+		currentBehave = (newState == SecurityState.AUCTION) ? auctionBehave : continuousBehave;
+		if (this.state == SecurityState.AUCTION)
+			stats.addAll(currentBehave.activateStopLimitOrders(orderBook, lastTradePrice));
+		updateLastTradePrice(stats);
+		this.state = newState;
+		return new SecurityResponse(stats);
 	}
 
-	private List<SecurityStats> updateByKeepingPriorityInContinuousState(Order tempOrder, Order mainOrder) {
-		mainOrder.updateFromTempOrder(tempOrder);
-		return List.of(SituationalStats.createUpdateOrderStats(mainOrder.getOrderId()));
-	}
-
-	private List<SecurityStats> updateByKeepingPriorityInAuctionState(Order tempOrder, Order mainOrder) {
-		mainOrder.updateFromTempOrder(tempOrder);
-		
-		List<SecurityStats> stats = new ArrayList<>();
-		stats.add(SituationalStats.createUpdateOrderStats(mainOrder.getOrderId()));
-		stats.add(createAuctionStats());
-		return stats;
-	}
-
-	private List<SecurityStats> reAddUpdatedOrder(Order updatedOrder, Order originalOrder) {
-		if (positionControl.checkPositionForOrder(updatedOrder, orderBook) != ControlResult.OK) {
-			creditControl.updateCreditForBeingQueued(originalOrder);
-			orderBook.enqueue(originalOrder);
-			return List.of(SituationalStats.createNotEnoughPositionsStats(originalOrder.getOrderId()));
-		}
-		
-		if (this.state == SecurityState.CONTINUOUS) {
-			return reAddUpdatedOrderInContinuousState(updatedOrder, originalOrder);
-		} else if (this.state == SecurityState.AUCTION) {
-			return reAddUpdatedOrderInAuctionState(updatedOrder, originalOrder);
-		} else {
-			throw new UnknownSecurityStateException();
-		}
-	}
-
-	private List<SecurityStats> reAddUpdatedOrderInContinuousState(Order updatedOrder, Order originalOrder) {
-		if (updatedOrder instanceof StopLimitOrder updatedSlo) {
-			StopLimitOrder originalSlo = (StopLimitOrder) originalOrder;
-			return reAddUpdatedSloInContinuousState(updatedSlo, originalSlo);
-		} else {
-			return reAddActiveOrderInContinuousState(updatedOrder, originalOrder);
-		}
-	}
-
-	private List<SecurityStats> reAddUpdatedOrderInAuctionState(Order updatedOrder, Order originalOrder) {
-		if (creditControl.checkCreditForBeingQueued(updatedOrder) != ControlResult.OK) {
-			creditControl.updateCreditForBeingQueued(originalOrder);
-			orderBook.enqueue(originalOrder);
-			return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
-		}
-
-		creditControl.updateCreditForBeingQueued(updatedOrder);
-		orderBook.enqueue(updatedOrder);
-
-		List<SecurityStats> stats = new LinkedList<>();
-		stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
-		stats.add(createAuctionStats());
-		return stats;
-	}
-
-	private List<SecurityStats> reAddActiveOrderInContinuousState(Order updatedOrder, Order originalOrder) {
-		List<SecurityStats> stats = new LinkedList<>();
-		stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
-		
-		MatchResult updatedOrderResult = matcher.continuousExecuting(updatedOrder, orderBook);
-
-		if (!updatedOrderResult.isSuccessful()) {
-			creditControl.updateCreditForBeingQueued(originalOrder);
-			orderBook.enqueue(originalOrder);
-			stats.set(0, SituationalStats.createExecutionStatsFromUnsuccessfulMatchResult(updatedOrderResult, originalOrder.getOrderId()));
-		} 
-		if (!updatedOrderResult.trades().isEmpty()) {
-			stats.add(ExecuteStats.createContinuousExecuteStats(updatedOrderResult.trades(), originalOrder.getOrderId()));
-		}
-
-		updateLastTradePrice(updatedOrderResult.trades());
-		stats.addAll(activateStopLimitOrders());
-		return stats;
-	}
-
-	private List<SecurityStats> reAddUpdatedSloInContinuousState(StopLimitOrder updatedOrder,StopLimitOrder originalOrder) {
-			if (creditControl.checkCreditForBeingQueued(updatedOrder) != ControlResult.OK) {
-				creditControl.updateCreditForBeingQueued(originalOrder);
-				orderBook.enqueue(originalOrder);
-				return List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()));
+	private void updateLastTradePrice(List<SecurityStats> stats) {
+		for (SecurityStats stat : stats.reversed()) {
+			if (stat instanceof ExecuteStats exeStat) {
+				lastTradePrice = exeStat.getTrades().getLast().getPrice();
+				return;
 			}
-
-			creditControl.updateCreditForBeingQueued(updatedOrder);
-			orderBook.enqueue(updatedOrder);
-
-			List<SecurityStats> stats = new LinkedList<>();
-			stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
-			stats.addAll(activateStopLimitOrders());
-			return stats;
+		}
 	}
 
 	public List<String> checkEnterOrderRq(EnterOrderRq order) {
@@ -314,42 +116,6 @@ public class Security {
 		return errors;
 	}
 
-	private List<SecurityStats> activateStopLimitOrders() {
-		List<SecurityStats> stats = new LinkedList<>();
-		StopLimitOrder slo;
-
-		while ((slo = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
-			creditControl.updateCreditAtDelete(slo);
-			stats.add(SituationalStats.createOrderActivatedStats(slo.getOrderId(), slo.getRequestId()));
-			Order activatedOrder = new Order(slo);
-			if (this.state == SecurityState.CONTINUOUS) {
-				stats.addAll(activateOrderInContinuousState(activatedOrder, slo.getRequestId()));
-			} else if (this.state == SecurityState.AUCTION) {
-				stats.addAll(activateOrderInAuctionState(activatedOrder));
-			} else {
-				throw new UnknownSecurityStateException();
-			}
-		}
-
-		return stats;
-	}
-
-	private List<SecurityStats> activateOrderInContinuousState(Order activatedOrder, long requestId) {
-		MatchResult result = matcher.continuousExecuting(activatedOrder, orderBook);
-		updateLastTradePrice(result.trades());
-		if(!result.trades().isEmpty()) {
-			return List.of(ExecuteStats.createContinuousExecuteStatsForActivatedOrder(result.trades(), activatedOrder.getOrderId(), requestId));
-		} else {
-			return List.of();
-		}
-	}
-
-	private List<SecurityStats> activateOrderInAuctionState(Order activatedOrder) {
-		creditControl.updateCreditForBeingQueued(activatedOrder);
-		orderBook.enqueue(activatedOrder);
-		return List.of();
-	}
-
 	public Order findByOrderId(Side side, long orderId) {
 		return orderBook.findByOrderId(side, orderId);
 	}
@@ -361,10 +127,5 @@ public class Security {
 	public boolean isStopLimitOrder(Side side, long orderId) {
 		Order order = orderBook.findByOrderId(side, orderId);
 		return (order instanceof StopLimitOrder);
-	}
-	private AuctionStats createAuctionStats() {
-		int openingPrice = matcher.calcOpeningAuctionPrice(orderBook, lastTradePrice);
-		int tradableQuantity = matcher.calcTradableQuantity(orderBook, openingPrice);
-		return AuctionStats.createAuctionStats(openingPrice, tradableQuantity);
 	}
 }
