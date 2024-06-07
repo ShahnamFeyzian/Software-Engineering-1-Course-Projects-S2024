@@ -1,11 +1,5 @@
 package ir.ramtung.tinyme.domain.service.security_state;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
 import ir.ramtung.tinyme.domain.entity.Order;
 import ir.ramtung.tinyme.domain.entity.OrderBook;
 import ir.ramtung.tinyme.domain.entity.SecurityState;
@@ -20,9 +14,14 @@ import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.CreditControl;
 import ir.ramtung.tinyme.domain.service.controls.PositionControl;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import org.springframework.stereotype.Service;
 
 @Service
-public class AuctionBehave implements SecurityBehave{
+public class AuctionBehave implements SecurityBehave {
+
 	private PositionControl positionControl;
 	private CreditControl creditControl;
 	private Matcher matcher;
@@ -33,13 +32,13 @@ public class AuctionBehave implements SecurityBehave{
 		this.matcher = matcher;
 	}
 
-    @Override
-    public List<SecurityStats> addNewOrder(Order newOrder, OrderBook orderBook, int lastTradePrice) {
-        if (positionControl.checkPositionForOrder(newOrder, orderBook) != ControlResult.OK) {
-			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughPositionsStats(newOrder.getOrderId())));
+	@Override
+	public List<SecurityStats> addNewOrder(Order newOrder, OrderBook orderBook, int lastTradePrice) {
+		if (positionControl.checkPositionForOrder(newOrder, orderBook) != ControlResult.OK) {
+			return createNotEnoughPositionsStats(newOrder);
 		}
-        if (creditControl.checkCreditForBeingQueued(newOrder) != ControlResult.OK) {
-			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughCreditStats(newOrder.getOrderId())));
+		if (creditControl.checkCreditForBeingQueued(newOrder) != ControlResult.OK) {
+			return createNotEnoughCreditStats(newOrder);
 		}
 
 		creditControl.updateCreditForBeingQueued(newOrder);
@@ -49,11 +48,11 @@ public class AuctionBehave implements SecurityBehave{
 		stats.add(SituationalStats.createAddOrderStats(newOrder.getOrderId()));
 		stats.add(createAuctionStats(orderBook, lastTradePrice));
 		return stats;
-    }
+	}
 
-    @Override
-    public List<SecurityStats> updateOrder(Order tempOrder, Order mainOrder, OrderBook orderBook, int lastTradePrice) {
-        boolean losesPriority = mainOrder.willPriorityLostInUpdate(tempOrder);
+	@Override
+	public List<SecurityStats> updateOrder(Order tempOrder, Order mainOrder, OrderBook orderBook, int lastTradePrice) {
+		boolean losesPriority = mainOrder.willPriorityLostInUpdate(tempOrder);
 		if (losesPriority) {
 			Order originalOrder = mainOrder.snapshot();
 			creditControl.updateCreditAtDelete(mainOrder);
@@ -63,47 +62,47 @@ public class AuctionBehave implements SecurityBehave{
 		} else {
 			return updateByKeepingPriority(tempOrder, mainOrder, orderBook, lastTradePrice);
 		}
-    }
+	}
 
-    @Override
-    public List<SecurityStats> deleteOrder(Order targetOrder, OrderBook orderBook, int lastTradePrice) {
-        creditControl.updateCreditAtDelete(targetOrder);
+	@Override
+	public List<SecurityStats> deleteOrder(Order targetOrder, OrderBook orderBook, int lastTradePrice) {
+		creditControl.updateCreditAtDelete(targetOrder);
 		orderBook.removeOrder(targetOrder);
 
-        List<SecurityStats> stats = new ArrayList<>();
-        stats.add(SituationalStats.createDeleteOrderStats(targetOrder.getOrderId()));
-        stats.add(createAuctionStats(orderBook, lastTradePrice));
-        return stats;
-    }
+		List<SecurityStats> stats = new ArrayList<>();
+		stats.add(SituationalStats.createDeleteOrderStats(targetOrder.getOrderId()));
+		stats.add(createAuctionStats(orderBook, lastTradePrice));
+		return stats;
+	}
 
-    @Override
-    public List<SecurityStats> activateStopLimitOrders(OrderBook orderBook, int lastTradePrice) {
-        List<SecurityStats> stats = new LinkedList<>();
+	@Override
+	public List<SecurityStats> activateStopLimitOrders(OrderBook orderBook, int lastTradePrice) {
+		List<SecurityStats> stats = new LinkedList<>();
 		StopLimitOrder slo;
 
 		while ((slo = orderBook.getStopLimitOrder(lastTradePrice)) != null) {
 			stats.add(SituationalStats.createOrderActivatedStats(slo.getOrderId(), slo.getRequestId()));
 			Order activatedOrder = new Order(slo);
-		    orderBook.enqueue(activatedOrder);	
+			orderBook.enqueue(activatedOrder);
 		}
 
 		return stats;
-    }
+	}
 
-    @Override
-    public List<SecurityStats> changeMatchingState(OrderBook orderBook, int lastTradePrice, SecurityState newState) {
+	@Override
+	public List<SecurityStats> changeMatchingState(OrderBook orderBook, int lastTradePrice, SecurityState newState) {
 		List<SecurityStats> stats = openAuction(orderBook, lastTradePrice);
-        stats.add(StateStats.createStateStats(SecurityState.AUCTION, newState));
-        return stats;
-    }
+		stats.add(StateStats.createStateStats(SecurityState.AUCTION, newState));
+		return stats;
+	}
 
-    private AuctionStats createAuctionStats(OrderBook orderBook, int lastTradePrice) {
+	private AuctionStats createAuctionStats(OrderBook orderBook, int lastTradePrice) {
 		int openingPrice = matcher.calcOpeningAuctionPrice(orderBook, lastTradePrice);
 		int tradableQuantity = matcher.calcTradableQuantity(orderBook, openingPrice);
 		return AuctionStats.createAuctionStats(openingPrice, tradableQuantity);
 	}
 
-    private List<SecurityStats> openAuction(OrderBook orderBook, int lastTradePrice) {
+	private List<SecurityStats> openAuction(OrderBook orderBook, int lastTradePrice) {
 		List<SecurityStats> stats = new ArrayList<>();
 
 		List<Trade> trades = matcher.auctionExecuting(orderBook, lastTradePrice).trades();
@@ -114,34 +113,63 @@ public class AuctionBehave implements SecurityBehave{
 		return stats;
 	}
 
-	private List<SecurityStats> reAddUpdatedOrder(Order updatedOrder, Order originalOrder, OrderBook orderBook, int lastTradePrice) {
-		//FIXME: refactor this shit
+	private List<SecurityStats> reAddUpdatedOrder(Order updatedOrder, Order originalOrder, 
+												  OrderBook orderBook, int lastTradePrice) {
+													
 		if (positionControl.checkPositionForOrder(updatedOrder, orderBook) != ControlResult.OK) {
-			creditControl.updateCreditForBeingQueued(originalOrder);
-			orderBook.enqueue(originalOrder);
-			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughPositionsStats(originalOrder.getOrderId())));
+			return handleNotEnoughPositions(originalOrder, orderBook);
 		}
+		
 		if (creditControl.checkCreditForBeingQueued(updatedOrder) != ControlResult.OK) {
-			creditControl.updateCreditForBeingQueued(originalOrder);
-			orderBook.enqueue(originalOrder);
-			return new ArrayList<SecurityStats>(List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId())));
+			return handleNotEnoughCredit(originalOrder, orderBook);
 		}
 
+		return handleUpdateOrder(updatedOrder, originalOrder, orderBook, lastTradePrice);
+	}
+
+	private List<SecurityStats> handleUpdateOrder(Order updatedOrder, Order originalOrder, OrderBook orderBook,
+			int lastTradePrice) {
 		creditControl.updateCreditForBeingQueued(updatedOrder);
 		orderBook.enqueue(updatedOrder);
 
+		return createUpdateStats(originalOrder, orderBook, lastTradePrice);
+	}
+
+	private List<SecurityStats> createUpdateStats(Order originalOrder, OrderBook orderBook, int lastTradePrice) {
 		List<SecurityStats> stats = new LinkedList<>();
 		stats.add(SituationalStats.createUpdateOrderStats(originalOrder.getOrderId()));
 		stats.add(createAuctionStats(orderBook, lastTradePrice));
 		return stats;
 	}
 
-	private List<SecurityStats> updateByKeepingPriority(Order tempOrder, Order mainOrder, OrderBook orderBook, int lastTradePrice) {
+	private List<SecurityStats> handleNotEnoughCredit(Order originalOrder, OrderBook orderBook) {
+		creditControl.updateCreditForBeingQueued(originalOrder);
+		orderBook.enqueue(originalOrder);
+		return createNotEnoughCreditStats(originalOrder);
+	}
+
+	private List<SecurityStats> createNotEnoughCreditStats(Order originalOrder) {
+		return new ArrayList<SecurityStats>(
+			List.of(SituationalStats.createNotEnoughCreditStats(originalOrder.getOrderId()))
+		);
+	}
+
+	private List<SecurityStats> handleNotEnoughPositions(Order originalOrder, OrderBook orderBook) {
+		creditControl.updateCreditForBeingQueued(originalOrder);
+		orderBook.enqueue(originalOrder);
+		return createNotEnoughPositionsStats(originalOrder);
+	}
+
+	private List<SecurityStats> createNotEnoughPositionsStats(Order originalOrder) {
+		return new ArrayList<SecurityStats>(
+			List.of(SituationalStats.createNotEnoughPositionsStats(originalOrder.getOrderId()))
+		);
+	}
+
+	private List<SecurityStats> updateByKeepingPriority(Order tempOrder, Order mainOrder, 
+														OrderBook orderBook, int lastTradePrice) {
+
 		mainOrder.updateFromTempOrder(tempOrder);
-		
-		List<SecurityStats> stats = new ArrayList<>();
-		stats.add(SituationalStats.createUpdateOrderStats(mainOrder.getOrderId()));
-		stats.add(createAuctionStats(orderBook, lastTradePrice));
-		return stats;
+		return createUpdateStats(mainOrder, orderBook, lastTradePrice);
 	}
 }
