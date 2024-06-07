@@ -135,7 +135,7 @@ public class Security {
 		return new SecurityResponse(stats);
 	}
 
-	public SecurityResponse changeMatchingState(SecurityState newState) {
+	public SecurityResponse changeMatchingState(SecurityState newState) { //TODO: dont forget to call activateStopLimitOrders after changeMatchingState when you want to use SecurityBehave
 		StateStats stateStats = StateStats.createStateStats(this.state, newState);
 		SecurityState prevState = this.state;
 		this.state = newState;
