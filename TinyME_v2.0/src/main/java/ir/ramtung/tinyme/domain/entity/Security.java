@@ -13,6 +13,9 @@ import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.CreditControl;
 import ir.ramtung.tinyme.domain.service.controls.PositionControl;
 import ir.ramtung.tinyme.domain.service.controls.QuantityControl;
+import ir.ramtung.tinyme.domain.service.security_state.AuctionBehave;
+import ir.ramtung.tinyme.domain.service.security_state.ContinuousBehave;
+import ir.ramtung.tinyme.domain.service.security_state.SecurityBehave;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.util.ArrayList;
@@ -44,6 +47,11 @@ public class Security {
 	private static CreditControl creditControl = new CreditControl();
 	private static QuantityControl quantityControl = new QuantityControl();
 	private static Matcher matcher = new Matcher(new ContinuousMatchingControl(positionControl, creditControl, quantityControl), new AuctionMatchingControl(positionControl, creditControl, quantityControl));
+	private static ContinuousBehave continuousBehave = new ContinuousBehave(positionControl, creditControl, matcher);
+	private static AuctionBehave auctionBehave = new AuctionBehave(positionControl, creditControl, matcher);
+
+	@Builder.Default
+	private SecurityBehave currentBehave = continuousBehave;
 
 	@Builder.Default
 	private SecurityState state = SecurityState.CONTINUOUS;

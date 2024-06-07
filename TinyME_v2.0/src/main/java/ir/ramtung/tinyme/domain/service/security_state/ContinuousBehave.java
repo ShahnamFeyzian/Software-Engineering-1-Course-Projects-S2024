@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import ir.ramtung.tinyme.domain.entity.MatchResult;
 import ir.ramtung.tinyme.domain.entity.Order;
 import ir.ramtung.tinyme.domain.entity.OrderBook;
@@ -14,19 +16,21 @@ import ir.ramtung.tinyme.domain.entity.stats.SecurityStats;
 import ir.ramtung.tinyme.domain.entity.stats.SituationalStats;
 import ir.ramtung.tinyme.domain.entity.stats.StateStats;
 import ir.ramtung.tinyme.domain.service.Matcher;
-import ir.ramtung.tinyme.domain.service.controls.AuctionMatchingControl;
-import ir.ramtung.tinyme.domain.service.controls.ContinuousMatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.ControlResult;
 import ir.ramtung.tinyme.domain.service.controls.CreditControl;
 import ir.ramtung.tinyme.domain.service.controls.PositionControl;
-import ir.ramtung.tinyme.domain.service.controls.QuantityControl;
 
+@Service
 public class ContinuousBehave implements SecurityBehave {
-    	//FIXME: this is turning to something really ugly
-	private static PositionControl positionControl = new PositionControl();
-	private static CreditControl creditControl = new CreditControl();
-	private static QuantityControl quantityControl = new QuantityControl();
-	private static Matcher matcher = new Matcher(new ContinuousMatchingControl(positionControl, creditControl, quantityControl), new AuctionMatchingControl(positionControl, creditControl, quantityControl));
+	private PositionControl positionControl;
+	private CreditControl creditControl;
+	private Matcher matcher;
+
+    public ContinuousBehave(PositionControl positionControl, CreditControl creditControl, Matcher matcher) {
+        this.positionControl = positionControl;
+        this.creditControl = creditControl;
+        this.matcher = matcher;
+    }
 
     @Override
     public List<SecurityStats> addNewOrder(Order newOrder, OrderBook orderBook, int lastTradePrice) {
