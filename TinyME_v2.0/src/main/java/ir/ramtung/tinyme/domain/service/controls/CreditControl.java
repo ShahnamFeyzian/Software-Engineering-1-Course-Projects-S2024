@@ -77,7 +77,7 @@ public class CreditControl {
 				long backCredit = (long) ((buyOrder.getPrice() - trade.getPrice()) * trade.getQuantity());
 				buyOrder.getBroker().increaseCreditBy(backCredit);
 			}
-		} 
+		}
 	}
 
 	private void updateSellerCreditAtTrade(Trade trade) {

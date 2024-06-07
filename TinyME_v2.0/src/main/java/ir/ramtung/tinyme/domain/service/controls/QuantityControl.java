@@ -54,7 +54,7 @@ public class QuantityControl {
 		int tradeQuantity = trade.getQuantity();
 
 		buyOrder.decreaseQuantity(tradeQuantity);
-		checkQuantityForUnqueue(buyOrder, orderBook);
+		checkQuantityForUnqueued(buyOrder, orderBook);
 	}
 
 	private void updateSellQuantityAtTrade(Trade trade, OrderBook orderBook) {
@@ -62,10 +62,10 @@ public class QuantityControl {
 		int tradeQuantity = trade.getQuantity();
 
 		sellOrder.decreaseQuantity(tradeQuantity);
-		checkQuantityForUnqueue(sellOrder, orderBook);
+		checkQuantityForUnqueued(sellOrder, orderBook);
 	}
 
-	private void checkQuantityForUnqueue(Order order, OrderBook orderBook) {
+	private void checkQuantityForUnqueued(Order order, OrderBook orderBook) {
 		if (order instanceof IcebergOrder icebergOrder) {
 			checkIcebergQuantityForReplenish(icebergOrder, orderBook);
 		}
@@ -86,10 +86,10 @@ public class QuantityControl {
 
 	private void updateBuyQuantityAtRollbackTrade(Trade trade, OrderBook orderBook) {
 		Order buyOrder = trade.getBuy();
-		Order orginalBuyOrder = trade.getBuyFirstVersion();
+		Order originalBuyOrder = trade.getBuyFirstVersion();
 
 		checkQuantityForEnqueue(buyOrder, orderBook);
-		buyOrder.rollback(orginalBuyOrder);
+		buyOrder.rollback(originalBuyOrder);
 	}
 
 	private void updateSellQuantityAtRollbackTrade(Trade trade, OrderBook orderBook) {

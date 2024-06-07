@@ -49,8 +49,8 @@ public class ContinuousMatchingControl extends MatchingControl {
 	}
 
 	@Override
-	public void actionAfterFailedMatching(List<Trade> trades, OrderBook orerrBook) {
-		rollbackTrades(trades, orerrBook);
+	public void actionAfterFailedMatching(List<Trade> trades, OrderBook orderBook) {
+		rollbackTrades(trades, orderBook);
 	}
 
 	private void rollbackTrades(List<Trade> trades, OrderBook orderBook) {
