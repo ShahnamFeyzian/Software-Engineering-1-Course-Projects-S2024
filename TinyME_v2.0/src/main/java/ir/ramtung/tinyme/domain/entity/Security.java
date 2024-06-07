@@ -15,7 +15,6 @@ import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import java.util.LinkedList;
 import java.util.List;
-
 import lombok.Builder;
 import lombok.Getter;
 
@@ -36,11 +35,14 @@ public class Security {
 
 	private int lastTradePrice;
 
-	//FIXME: this is turning to something really ugly
+	// TODO: find a better way to inject these dependencies
 	private static PositionControl positionControl = new PositionControl();
 	private static CreditControl creditControl = new CreditControl();
 	private static QuantityControl quantityControl = new QuantityControl();
-	private static Matcher matcher = new Matcher(new ContinuousMatchingControl(positionControl, creditControl, quantityControl), new AuctionMatchingControl(positionControl, creditControl, quantityControl));
+	private static Matcher matcher = new Matcher(
+		new ContinuousMatchingControl(positionControl, creditControl, quantityControl),
+		new AuctionMatchingControl(positionControl, creditControl, quantityControl)
+	);
 	private static ContinuousBehave continuousBehave = new ContinuousBehave(positionControl, creditControl, matcher);
 	private static AuctionBehave auctionBehave = new AuctionBehave(positionControl, creditControl, matcher);
 
@@ -53,8 +55,7 @@ public class Security {
 	public SecurityResponse addNewOrder(Order newOrder) {
 		List<SecurityStats> stats = currentBehave.addNewOrder(newOrder, orderBook, lastTradePrice);
 		updateLastTradePrice(stats);
-		stats.addAll(currentBehave.activateStopLimitOrders(orderBook, lastTradePrice));
-		updateLastTradePrice(stats);
+		activateStopLimitOrders(stats);
 		return new SecurityResponse(stats);
 	}
 
@@ -62,9 +63,13 @@ public class Security {
 		Order mainOrder = findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
 		List<SecurityStats> stats = currentBehave.updateOrder(tempOrder, mainOrder, orderBook, lastTradePrice);
 		updateLastTradePrice(stats);
+		activateStopLimitOrders(stats);
+		return new SecurityResponse(stats);
+	}
+
+	private void activateStopLimitOrders(List<SecurityStats> stats) {
 		stats.addAll(currentBehave.activateStopLimitOrders(orderBook, lastTradePrice));
 		updateLastTradePrice(stats);
-		return new SecurityResponse(stats);
 	}
 
 	public SecurityResponse deleteOrder(Side side, long orderId) {
@@ -74,15 +79,26 @@ public class Security {
 	}
 
 	public SecurityResponse changeMatchingState(SecurityState newState) {
-		//FIXME: maybe refactor!!!
 		List<SecurityStats> stats = currentBehave.changeMatchingState(orderBook, lastTradePrice, newState);
 		updateLastTradePrice(stats);
-		currentBehave = (newState == SecurityState.AUCTION) ? auctionBehave : continuousBehave;
-		if (this.state == SecurityState.AUCTION)
-			stats.addAll(currentBehave.activateStopLimitOrders(orderBook, lastTradePrice));
-		updateLastTradePrice(stats);
-		this.state = newState;
+		currentBehave = getBehaveForState(newState);
+		processChangeToAuctionState(stats);
+		setState(newState);
 		return new SecurityResponse(stats);
+	}
+
+	private void processChangeToAuctionState(List<SecurityStats> stats) {
+		if (this.state == SecurityState.AUCTION) {
+			activateStopLimitOrders(stats);
+		}
+	}
+
+	private void setState(SecurityState newState) {
+		this.state = newState;
+	}
+
+	private SecurityBehave getBehaveForState(SecurityState newState) {
+		return (newState == SecurityState.AUCTION) ? auctionBehave : continuousBehave;
 	}
 
 	private void updateLastTradePrice(List<SecurityStats> stats) {
@@ -96,7 +112,7 @@ public class Security {
 
 	public List<String> checkEnterOrderRq(EnterOrderRq order) {
 		List<String> errors = new LinkedList<>();
-		
+
 		if (order.getQuantity() % lotSize != 0) {
 			errors.add(Message.QUANTITY_NOT_MULTIPLE_OF_LOT_SIZE);
 		}
@@ -105,11 +121,11 @@ public class Security {
 			errors.add(Message.PRICE_NOT_MULTIPLE_OF_TICK_SIZE);
 		}
 
-		if(this.state == SecurityState.AUCTION && order.getMinimumExecutionQuantity() != 0) {
+		if (this.state == SecurityState.AUCTION && order.getMinimumExecutionQuantity() != 0) {
 			errors.add(Message.MINIMUM_EXECUTION_IN_AUCTION_STATE);
 		}
 
-		if(this.state == SecurityState.AUCTION && order.getStopPrice() != 0) {
+		if (this.state == SecurityState.AUCTION && order.getStopPrice() != 0) {
 			errors.add(Message.STOP_PRICE_IN_AUCTION_STATE);
 		}
 
