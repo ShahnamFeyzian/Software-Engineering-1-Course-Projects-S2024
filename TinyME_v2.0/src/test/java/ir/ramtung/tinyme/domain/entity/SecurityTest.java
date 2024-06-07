@@ -119,10 +119,10 @@ public class SecurityTest {
 
 		private void assertAuctionStats(AuctionStats stats, int openingPrice, int tradableQuantity) {
 			int actualOpeningPrice = stats.getOpeningPrice();
-			int acutalTradableQuantity = stats.getTradableQuantity();
+			int actualTradableQuantity = stats.getTradableQuantity();
 
 			assertThat(actualOpeningPrice).isEqualTo(openingPrice);
-			assertThat(acutalTradableQuantity).isEqualTo(tradableQuantity);
+			assertThat(actualTradableQuantity).isEqualTo(tradableQuantity);
 		}
 
 		private void assertSituationalStats(SituationalStats stats, SituationalStatsType type, long orderId) {
