@@ -10,6 +10,7 @@
   - [Assignment 5: Stop Limit Order](#assignment-5-stop-limit-order)
   - [Assignment 6: Technical Debt](#assignment-6-technical-debt)
   - [Assignment 7: Auction Matching](#assignment-7-auction-matching)
+  - [Assignment 8: Improving Design](#assignment-8-improving-design)
 
 ## Intro
 
@@ -46,3 +47,7 @@ In this assignment, we were supposed to refactor the `TinyME` application to rem
 ## Assignment 7: Auction Matching
 
 In this assignment, we were supposed to add a new feature to the `TinyME` application. The new feature was to add an auction mechanism to the application. For more information, please refer to the description file in the `A7` folder.
+
+## Assignment 8: Improving Design
+
+In this assignment, we were supposed to improve the design of the `TinyME` application. The design was supposed to be improved in a way that the existing tests would not fail. For more information, please refer to the description file in the `A8` folder. All the changes and improvements are in the report file in the `A8` folder.
