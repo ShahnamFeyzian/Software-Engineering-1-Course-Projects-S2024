@@ -794,6 +794,7 @@ public class SecurityTest {
 				buyerBroker,
 				buyerShareholder,
 				entryTime.plusHours(1),
+				null,
 				10
 			);
 			IcebergOrder order2 = new IcebergOrder(
@@ -806,6 +807,7 @@ public class SecurityTest {
 				buyerBroker,
 				buyerShareholder,
 				entryTime.plusHours(2),
+				null,
 				10
 			);
 
@@ -854,6 +856,7 @@ public class SecurityTest {
 				sellerBroker,
 				sellerShareholder,
 				entryTime.plusHours(1),
+				null,
 				10
 			);
 			IcebergOrder order2 = new IcebergOrder(
@@ -866,6 +869,7 @@ public class SecurityTest {
 				sellerBroker,
 				sellerShareholder,
 				entryTime.plusHours(2),
+				null,
 				10
 			);
 
@@ -1409,7 +1413,7 @@ public class SecurityTest {
 			security.changeMatchingState(SecurityState.AUCTION);
 			List<Order> orders = Arrays.asList(
 				new Order(10, security, Side.BUY, 15, 500, buyerBroker, buyerShareholder, entryTime.plusNanos(1)),	
-				new IcebergOrder(11, security, Side.BUY, 35, 0, 1000, buyerBroker, buyerShareholder, entryTime, 10),	
+				new IcebergOrder(11, security, Side.BUY, 35, 0, 1000, buyerBroker, buyerShareholder, entryTime, null, 10),	
 				new Order(12, security, Side.BUY, 50, 1200, buyerBroker, buyerShareholder, entryTime),
 				new Order(13, security, Side.SELL, 30, 500, sellerBroker, sellerShareholder, entryTime),	
 				new Order(14, security, Side.SELL, 15, 1100, sellerBroker, sellerShareholder, entryTime),
@@ -1469,12 +1473,12 @@ public class SecurityTest {
 				new Order(2, security, Side.BUY, 10, 200, buyerBroker, buyerShareholder, entryTime),
 				new Order(3, security, Side.BUY, 10, 300, buyerBroker, buyerShareholder, entryTime),
 				new Order(4, security, Side.BUY, 10, 400, buyerBroker, buyerShareholder, entryTime),
-				new IcebergOrder(5, security, Side.BUY, 45, 0, 500, buyerBroker, buyerShareholder, entryTime, 10),
+				new IcebergOrder(5, security, Side.BUY, 45, 0, 500, buyerBroker, buyerShareholder, entryTime, null, 10),
 				new Order(1, security, Side.SELL, 10, 600, sellerBroker, sellerShareholder, entryTime),
 				new Order(2, security, Side.SELL, 10, 700, sellerBroker, sellerShareholder, entryTime),
 				new Order(3, security, Side.SELL, 10, 800, sellerBroker, sellerShareholder, entryTime),
 				new Order(4, security, Side.SELL, 10, 900, sellerBroker, sellerShareholder, entryTime),
-				new IcebergOrder(5, security, Side.SELL, 45, 0, 1000, sellerBroker, sellerShareholder, entryTime, 10)
+				new IcebergOrder(5, security, Side.SELL, 45, 0, 1000, sellerBroker, sellerShareholder, entryTime, null, 10)
 			);
 		orders.forEach(order -> orderBook.enqueue(order));
 		assertPack = new AssertingPack();

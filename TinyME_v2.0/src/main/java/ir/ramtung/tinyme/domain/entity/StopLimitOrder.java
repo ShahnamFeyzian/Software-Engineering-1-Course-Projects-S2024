@@ -40,11 +40,12 @@ public class StopLimitOrder extends Order {
 		Broker broker,
 		Shareholder shareholder,
 		LocalDateTime entryTime,
+		LocalDateTime expiryDate,
 		int stopPrice,
 		long requestId,
 		OrderStatus status
 	) {
-		super(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime, status);
+		super(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime, expiryDate, status);
 		this.stopPrice = stopPrice;
 		this.requestId =  requestId;
 	}
@@ -60,7 +61,7 @@ public class StopLimitOrder extends Order {
 		int stopPrice,
 		long requestId
 	) {
-		super(orderId, security, side, quantity, 0, price, broker, shareholder, LocalDateTime.now(), OrderStatus.NEW);
+		super(orderId, security, side, quantity, 0, price, broker, shareholder, LocalDateTime.now(), null, OrderStatus.NEW);
 		this.stopPrice = stopPrice;
 		this.requestId =  requestId;
 	}
@@ -96,6 +97,7 @@ public class StopLimitOrder extends Order {
 			broker,
 			shareholder,
 			req.getEntryTime(),
+			req.getExpiryDate(),
 			req.getStopPrice(),
 			req.getRequestId(),
 			OrderStatus.NEW

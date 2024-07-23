@@ -2,6 +2,8 @@ package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.entity.stats.ExecuteStats;
 import ir.ramtung.tinyme.domain.entity.stats.SecurityStats;
+import ir.ramtung.tinyme.domain.service.ScheduleexpiryDate;
+import ir.ramtung.tinyme.domain.service.ExpiringService;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.domain.service.controls.AuctionMatchingControl;
 import ir.ramtung.tinyme.domain.service.controls.ContinuousMatchingControl;
@@ -13,8 +15,13 @@ import ir.ramtung.tinyme.domain.service.security_state.ContinuousBehave;
 import ir.ramtung.tinyme.domain.service.security_state.SecurityBehave;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Timer;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -52,10 +59,15 @@ public class Security {
 	@Builder.Default
 	private SecurityState state = SecurityState.CONTINUOUS;
 
+	private ExpiringService expiringService = new ExpiringService();
+
 	public SecurityResponse addNewOrder(Order newOrder) {
 		List<SecurityStats> stats = currentBehave.addNewOrder(newOrder, orderBook, lastTradePrice);
 		updateLastTradePrice(stats);
 		activateStopLimitOrders(stats);
+		if (newOrder.getExpiryDate() != null) {
+			expiringService.scheduleexpiryDate(newOrder);
+		}
 		return new SecurityResponse(stats);
 	}
 

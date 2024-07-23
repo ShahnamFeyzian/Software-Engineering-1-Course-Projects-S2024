@@ -29,9 +29,36 @@ public class Order {
 	protected Broker broker;
 	protected Shareholder shareholder;
 	protected final List<LocalDateTime> entryTimes = new ArrayList<>();
+	protected LocalDateTime expiryDate;
 
 	@Builder.Default
 	protected OrderStatus status = OrderStatus.NEW;
+
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int minimumExecutionQuantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		LocalDateTime entryTime,
+		LocalDateTime expiryDate,
+		OrderStatus status
+	) {
+		this.orderId = orderId;
+		this.security = security;
+		this.side = side;
+		this.quantity = quantity;
+		this.minimumExecutionQuantity = minimumExecutionQuantity;
+		this.price = price;
+		this.entryTimes.add(entryTime);
+		this.broker = broker;
+		this.shareholder = shareholder;
+		this.status = status;
+		this.expiryDate = expiryDate;
+	}
 
 	public Order(
 		long orderId,
@@ -55,6 +82,7 @@ public class Order {
 		this.broker = broker;
 		this.shareholder = shareholder;
 		this.status = status;
+		this.expiryDate = null;
 	}
 
 	public Order(
@@ -124,6 +152,7 @@ public class Order {
 			broker,
 			shareholder,
 			entryTime,
+			null,
 			OrderStatus.NEW
 		);
 	}
@@ -176,6 +205,20 @@ public class Order {
 		this(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime);
 	}
 
+	public Order(
+		long orderId,
+		Security security,
+		Side side,
+		int quantity,
+		int price,
+		Broker broker,
+		Shareholder shareholder,
+		LocalDateTime entryTime,
+		LocalDateTime expiryDate
+	) {
+		this(orderId, security, side, quantity, 0, price, broker, shareholder, entryTime, expiryDate, OrderStatus.NEW);
+	}
+
 	public Order(Order other) {
 		this(
 			other.orderId,
@@ -187,6 +230,7 @@ public class Order {
 			other.broker,
 			other.shareholder,
 			LocalDateTime.now(),
+			null,
 			OrderStatus.NEW
 		);
 	}
@@ -207,6 +251,7 @@ public class Order {
 			broker,
 			shareholder,
 			req.getEntryTime(),
+			req.getExpiryDate(),
 			OrderStatus.NEW
 		);
 	}

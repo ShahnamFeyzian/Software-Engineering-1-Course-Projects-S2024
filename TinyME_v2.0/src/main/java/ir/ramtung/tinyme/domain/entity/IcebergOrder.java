@@ -27,6 +27,7 @@ public class IcebergOrder extends Order {
 		Broker broker,
 		Shareholder shareholder,
 		LocalDateTime entryTime,
+		LocalDateTime expiryDate,
 		int peakSize,
 		int displayedQuantity,
 		OrderStatus status
@@ -41,6 +42,7 @@ public class IcebergOrder extends Order {
 			broker,
 			shareholder,
 			entryTime,
+			expiryDate,
 			status
 		);
 		this.peakSize = peakSize;
@@ -87,6 +89,7 @@ public class IcebergOrder extends Order {
 		Broker broker,
 		Shareholder shareholder,
 		LocalDateTime entryTime,
+		LocalDateTime expiryDate,
 		int peakSize,
 		OrderStatus status
 	) {
@@ -100,6 +103,7 @@ public class IcebergOrder extends Order {
 			broker,
 			shareholder,
 			entryTime,
+			expiryDate,
 			peakSize,
 			Math.min(peakSize, quantity),
 			status
@@ -116,6 +120,7 @@ public class IcebergOrder extends Order {
 		Broker broker,
 		Shareholder shareholder,
 		List<LocalDateTime> entryTimes,
+		LocalDateTime expiryDate,
 		int peakSize,
 		OrderStatus status
 	) {
@@ -129,6 +134,7 @@ public class IcebergOrder extends Order {
 			broker,
 			shareholder,
 			entryTimes.getFirst(),
+			expiryDate,
 			peakSize,
 			Math.min(peakSize, quantity),
 			status
@@ -146,6 +152,7 @@ public class IcebergOrder extends Order {
 		Broker broker,
 		Shareholder shareholder,
 		LocalDateTime entryTime,
+		LocalDateTime expiryDate,
 		int peakSize
 	) {
 		this(
@@ -158,6 +165,7 @@ public class IcebergOrder extends Order {
 			broker,
 			shareholder,
 			entryTime,
+			expiryDate,
 			peakSize,
 			OrderStatus.NEW
 		);
@@ -208,6 +216,7 @@ public class IcebergOrder extends Order {
 			broker,
 			shareholder,
 			req.getEntryTime(),
+			req.getExpiryDate(),
 			req.getPeakSize(),
 			OrderStatus.NEW
 		);
@@ -225,6 +234,7 @@ public class IcebergOrder extends Order {
 			broker,
 			shareholder,
 			new ArrayList<>(entryTimes),
+			expiryDate,
 			peakSize,
 			OrderStatus.SNAPSHOT
 		);
@@ -242,6 +252,7 @@ public class IcebergOrder extends Order {
 			broker,
 			shareholder,
 			entryTimes,
+			expiryDate,
 			peakSize,
 			this.status
 		);

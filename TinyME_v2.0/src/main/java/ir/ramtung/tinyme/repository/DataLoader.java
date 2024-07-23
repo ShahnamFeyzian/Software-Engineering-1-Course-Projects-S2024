@@ -178,6 +178,7 @@ public class DataLoader {
 								broker,
 								shareholder,
 								LocalDateTime.parse(line[8]),
+								null,
 								Integer.parseInt(line[9]),
 								Integer.parseInt(line[10]),
 								OrderStatus.LOADING

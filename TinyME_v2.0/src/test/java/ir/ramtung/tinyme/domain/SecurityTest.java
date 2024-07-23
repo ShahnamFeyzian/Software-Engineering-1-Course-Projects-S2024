@@ -109,7 +109,7 @@ class SecurityTest {
 			Arrays.asList(
 				new Order(1, security, Side.BUY, 304, 15700, broker, shareholder, entryTime),
 				new Order(2, security, Side.BUY, 43, 15500, broker, shareholder, entryTime),
-				new IcebergOrder(3, security, Side.BUY, 445, 0, 15450, broker, shareholder, entryTime, 100),
+				new IcebergOrder(3, security, Side.BUY, 445, 0, 15450, broker, shareholder, entryTime, null, 100),
 				new Order(4, security, Side.BUY, 526, 15450, broker, shareholder, entryTime),
 				new Order(5, security, Side.BUY, 1000, 15400, broker, shareholder, entryTime)
 			);

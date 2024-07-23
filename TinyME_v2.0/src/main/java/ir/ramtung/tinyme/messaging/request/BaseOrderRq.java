@@ -21,6 +21,7 @@ public abstract class BaseOrderRq extends BaseRq {
 	@JsonSerialize(using = LocalDateTimeSerializer.class)
 	@JsonDeserialize(using = LocalDateTimeDeserializer.class)
 	protected LocalDateTime entryTime = LocalDateTime.now();
+	protected LocalDateTime expiryDate = null;
 
 	protected BaseOrderRq(long requestId, String securityIsin, Side side, long orderId) {
 		this.requestId = requestId;
