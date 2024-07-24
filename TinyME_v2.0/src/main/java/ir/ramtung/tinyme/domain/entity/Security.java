@@ -2,7 +2,6 @@ package ir.ramtung.tinyme.domain.entity;
 
 import ir.ramtung.tinyme.domain.entity.stats.ExecuteStats;
 import ir.ramtung.tinyme.domain.entity.stats.SecurityStats;
-import ir.ramtung.tinyme.domain.service.ScheduleexpiryDate;
 import ir.ramtung.tinyme.domain.service.ExpiringService;
 import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.domain.service.controls.AuctionMatchingControl;
@@ -16,11 +15,8 @@ import ir.ramtung.tinyme.domain.service.security_state.SecurityBehave;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -65,8 +61,8 @@ public class Security {
 		List<SecurityStats> stats = currentBehave.addNewOrder(newOrder, orderBook, lastTradePrice);
 		updateLastTradePrice(stats);
 		activateStopLimitOrders(stats);
-		if (newOrder.getExpiryDate() != null) {
-			expiringService.scheduleexpiryDate(newOrder);
+		if (newOrder.getExpiryDate() != null && orderBook.isThereOrderWithId(newOrder.getSide(), newOrder.orderId)) {
+			expiringService.addOrder(newOrder);
 		}
 		return new SecurityResponse(stats);
 	}
@@ -76,6 +72,15 @@ public class Security {
 		List<SecurityStats> stats = currentBehave.updateOrder(tempOrder, mainOrder, orderBook, lastTradePrice);
 		updateLastTradePrice(stats);
 		activateStopLimitOrders(stats);
+		if (orderBook.isThereOrderWithId(tempOrder.getSide(), tempOrder.getOrderId())) {
+			Order targetOrder = orderBook.findByOrderId(tempOrder.getSide(), tempOrder.getOrderId());
+			if (targetOrder.getExpiryDate() == null) {
+				expiringService.deleteOrder(targetOrder);
+			}
+			else {
+				expiringService.updateOrder(targetOrder);
+			}
+		}
 		return new SecurityResponse(stats);
 	}
 
@@ -87,6 +92,7 @@ public class Security {
 	public SecurityResponse deleteOrder(Side side, long orderId) {
 		Order order = findByOrderId(side, orderId);
 		List<SecurityStats> stats = currentBehave.deleteOrder(order, orderBook, lastTradePrice);
+		expiringService.deleteOrder(order);
 		return new SecurityResponse(stats);
 	}
 
