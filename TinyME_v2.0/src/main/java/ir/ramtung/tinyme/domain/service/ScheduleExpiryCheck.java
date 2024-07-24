@@ -18,10 +18,13 @@ public class ScheduleExpiryCheck extends TimerTask {
 
     @Override
     public void run() {
-        for(Order order : todayOrders) {
-            if (LocalDateTime.now().isBefore(order.getExpiryDate())) {
+        for(int i = 0; i < todayOrders.size(); i++) {
+            if (LocalDateTime.now().isBefore(todayOrders.get(i).getExpiryDate())) {
+                Order order = todayOrders.get(i);
+                todayOrders.remove(i);
                 Security security = order.getSecurity();
                 security.deleteOrder(order.getSide(), order.getOrderId());
+                i--;
             }
         }
     }

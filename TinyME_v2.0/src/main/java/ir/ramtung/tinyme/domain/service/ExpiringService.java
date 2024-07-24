@@ -1,6 +1,5 @@
 package ir.ramtung.tinyme.domain.service;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +62,17 @@ public class ExpiringService {
         }
         if (futureOrders.contains(order)) {
             futureOrders.remove(order);
+        }
+    }
+
+    private void updateOrderLists() {
+        for (int i = 0; i < futureOrders.size(); i++) {
+            Order futureOrder = futureOrders.get(i);
+            if (isOrderForToday(futureOrder)) {
+                futureOrders.remove(i);
+                todayOrders.add(futureOrder);
+                i--;
+            }
         }
     }
 
